@@ -1,21 +1,10 @@
 from typing import Callable
-from torch.utils.data import DataLoader, random_split
-from torchvision.datasets import MNIST
+from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
-from torchvision import transforms
 import pandas as pd
 from sklearn.model_selection import StratifiedShuffleSplit
 from dataset.AudioSet import AudioSet
-from pathlib import Path
 from config.configuration import DataConfig, ScriptConfig, SystemConfig, LearningConfig
-from audiomentations import (
-    Compose,
-    AddGaussianNoise,
-    TimeStretch,
-    PitchShift,
-    Shift,
-)
-import albumentations as A
 
 
 class AmmodSingleLabelModule(LightningDataModule):
@@ -54,16 +43,6 @@ class AmmodSingleLabelModule(LightningDataModule):
         self.fit_transform_image = fit_transform_image
         self.val_transform_audio = val_transform_audio
         self.val_transform_image = val_transform_image
-
-        # self.augment_audio = Compose(
-        #     [
-        #         AddGaussianNoise(min_amplitude=0.001, max_amplitude=0.015, p=0.2),
-        #         TimeStretch(min_rate=0.95, max_rate=1.05, p=0.5),
-        #         PitchShift(min_semitones=-4, max_semitones=4, p=0.5),
-        #         Shift(min_fraction=-0.5, max_fraction=0.5, p=0.5),
-        #     ]
-        # )
-        self.augment_image = A.Compose([A.Resize(224, 224)])
 
     def prepare_data(self):
         # called only on 1 GPU
