@@ -33,7 +33,7 @@ class CnnBirdDetector(pl.LightningModule):
         # self.feature_extractor.eval()
         # # use the pretrained model to classify cifar-10 (10 image classes)
         # self.classifier = nn.Linear(2048, num_target_classes)
-        self.model = models.resnet152(pretrained=True)
+        self.model = models.resnet50(pretrained=True)
         # set input layer to output of mnist
         self.model.conv1 = torch.nn.Conv2d(
             1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
