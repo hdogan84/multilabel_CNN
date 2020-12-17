@@ -8,34 +8,37 @@ import pytorch_lightning as pl
 from pytorch_lightning.metrics.functional import accuracy
 import torchvision.models as models
 
+CLASS_COUNT = 23
+IMAGE_SIZE = 224
+IMAGE_DIM = 3
+
 
 class CnnBirdDetector(pl.LightningModule):
-    def __init__(self, hidden_size=64, learning_rate=2e-4):
+    def __init__(self, num_target_classes=23, image_size=256, learning_rate=2e-4):
 
         super().__init__()
 
         # Set our init args as class attributes
-        self.hidden_size = hidden_size
+
         self.learning_rate = learning_rate
 
         # Hardcode some dataset specific attributes
-        self.num_classes = 10
-        self.dims = (1, 28, 28)
+        self.num_classes = CLASS_COUNT
+        self.dims = (IMAGE_DIM, IMAGE_SIZE, IMAGE_SIZE)
         channels, width, height = self.dims
 
         # Define PyTorch model
 
         # self.feature_extractor = models.resnet50(pretrained=True)
         # self.feature_extractor.eval()
-        num_target_classes = 10
         # # use the pretrained model to classify cifar-10 (10 image classes)
         # self.classifier = nn.Linear(2048, num_target_classes)
-        self.model = models.resnet50(pretrained=True)
+        self.model = models.resnet152(pretrained=True)
         # set input layer to output of mnist
         self.model.conv1 = torch.nn.Conv2d(
             1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
         )
-        self.model.fc = nn.Linear(2048, num_target_classes)
+        self.model.fc = nn.Linear(2048, self.num_classes)
 
         print(self.model)
 
@@ -55,6 +58,7 @@ class CnnBirdDetector(pl.LightningModule):
 
         logits = self(x)
         train_loss = F.nll_loss(logits, y)
+        # train_loss = F.cross_entropy(logits, y)
 
         logs = {"train_loss": train_loss}
         batch_dictionary = {

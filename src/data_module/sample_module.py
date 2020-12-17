@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader, random_split
-from torchvision.datasets import MNIST
+from torchvision.datasets import FashionMNIST
 from pytorch_lightning import LightningDataModule
 from torchvision import transforms
 
@@ -31,25 +31,24 @@ class SampleModule(LightningDataModule):
         self.normalize = normalize
         self.seed = seed
         self.batch_size = batch_size
-        self.transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
-        )
 
     def prepare_data(self):
         # called only on 1 GPU
-        MNIST(self.data_dir, train=True, download=True)
-        MNIST(self.data_dir, train=False, download=True)
+        FashionMNIST(self.data_dir, train=True, download=True)
+        FashionMNIST(self.data_dir, train=False, download=True)
 
     def setup(self, stage=None):
         # called on every GPU
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
-            mnist_full = MNIST(self.data_dir, train=True, transform=self.transform)
+            mnist_full = FashionMNIST(
+                self.data_dir, train=True, transform=self.transform
+            )
             self.mnist_train, self.mnist_val = random_split(mnist_full, [55000, 5000])
 
         # Assign test dataset for use in dataloader(s)
         if stage == "test" or stage is None:
-            self.mnist_test = MNIST(
+            self.mnist_test = FashionMNIST(
                 self.data_dir, train=False, transform=self.transform
             )
 

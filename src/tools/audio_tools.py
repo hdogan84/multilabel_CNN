@@ -6,12 +6,12 @@ import librosa
 from enum import Enum
 
 
-class Padding(Enum):
+class Padding:
     SILENCE = "silence"
     CYCLIC = "cyclic"
 
 
-class Mixing(Enum):
+class Mixing:
     TAKE_FIRST = "take_first"
     RANDOM_MIX = "random_mix"
 
@@ -27,6 +27,8 @@ def read_audio_segment(
 ):
     duration = stop - start
     audio_data = []
+    if filepath.exists() == False:
+        print("File does not exsts")
     if (
         duration >= desired_length
     ):  # desired_length of audio chunk is greater then wanted part
@@ -58,7 +60,7 @@ def read_audio_segment(
 
     if len(audio_data) < desired_sample_length:
         if padding_strategy == Padding.CYCLIC:
-            print("cylic")
+            # print("cylic")
             padded_audio_data = audio_data.copy()
             # change starting position
             padded_audio_data = padded_audio_data[

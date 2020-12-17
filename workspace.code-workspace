@@ -5,7 +5,17 @@
     }
   ],
   "settings": {
-    "python.pythonPath": "/opt/conda/bin/python",
-   
+    "python.pythonPath": "/home/bewr/anaconda3/envs/audio/bin/python",
+    "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+    "terminal.integrated.env.linux": {
+      "PYTHONPATH": "${workspaceFolder}/src",
+    },
+    "python.linting.pylintArgs": [
+      "--init-hook",
+      "--disable=C0114", // (missing-module-docstring)
+      "--disable=C0115", // (missing-class-docstring)
+      "--disable=C0116", // (missing-function-docstring)
+      "import sys; sys.path.append('/home/bewr/projects/mfn/libro_animalis/import_script');"
+    ]
   }
 }
