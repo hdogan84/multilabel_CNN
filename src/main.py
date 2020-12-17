@@ -32,38 +32,11 @@ if __name__ == "__main__":
         help="config file for all settings",
     )
     parser.add_argument(
-        "--data_dir",
-        metavar="path",
-        type=Path,
-        nargs="?",
-        help="ovewrite data directory",
+        "--env", metavar="path", type=str, nargs="?", help="Environment Var Prefix",
     )
-    parser.add_argument(
-        "--data_list",
-        metavar="path",
-        type=Path,
-        nargs="?",
-        help="ovewrite data path to data csv",
-    )
-    parser.add_argument(
-        "--class_list",
-        metavar="path",
-        type=Path,
-        nargs="?",
-        help="overwrite class list",
-    )
+
     args = parser.parse_args()
     config_filepath = args.config
-    data_dir = args.data_dir
-    data_list_filepath = args.data_list
-    class_list_filepath = args.class_list
-
-    config = parse_config(config_filepath)
-    if data_dir is not None:
-        config.data.data_dir = data_dir
-    if class_list_filepath is not None:
-        config.data.class_list_filepath = class_list_filepath
-    if data_list_filepath is not None:
-        config.data.data_list_filepath = data_list_filepath
-
+    print(args.env)
+    config = parse_config(config_filepath, enviroment_prefix=args.env)
     start_train(config)

@@ -54,7 +54,9 @@ def parse_config(config_filepath: Path, enviroment_prefix: str = None) -> Script
     if config_filepath.exists() is False:
         raise FileNotFoundError(config_filepath)
     config = ScriptConfig()
+
     if enviroment_prefix is not None:
+        print(enviroment_prefix)
         config.add_source(EnvironmentConfigSource(prefix=enviroment_prefix))
     config.add_source(IniFileConfigSource(config_filepath))
     config.read()
