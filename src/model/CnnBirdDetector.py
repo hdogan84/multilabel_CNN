@@ -8,13 +8,9 @@ import pytorch_lightning as pl
 from pytorch_lightning.metrics.functional import accuracy
 import torchvision.models as models
 
-CLASS_COUNT = 23
-IMAGE_SIZE = 224
-IMAGE_DIM = 3
-
 
 class CnnBirdDetector(pl.LightningModule):
-    def __init__(self, num_target_classes=23, image_size=256, learning_rate=2e-4):
+    def __init__(self, num_target_classes, learning_rate=2e-4):
 
         super().__init__()
 
@@ -23,9 +19,7 @@ class CnnBirdDetector(pl.LightningModule):
         self.learning_rate = learning_rate
 
         # Hardcode some dataset specific attributes
-        self.num_classes = CLASS_COUNT
-        self.dims = (IMAGE_DIM, IMAGE_SIZE, IMAGE_SIZE)
-        channels, width, height = self.dims
+        self.num_classes = num_target_classes
 
         # Define PyTorch model
 

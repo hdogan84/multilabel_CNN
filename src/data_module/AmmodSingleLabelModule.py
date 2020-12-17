@@ -43,14 +43,15 @@ class AmmodSingleLabelModule(LightningDataModule):
         self.fit_transform_image = fit_transform_image
         self.val_transform_audio = val_transform_audio
         self.val_transform_image = val_transform_image
-
-    def prepare_data(self):
-        # called only on 1 GPU
-        # split data into train val and test
         class_list = pd.read_csv(
             self.class_list_filepath, delimiter=";", quotechar="|",
         )
         self.class_dict = {class_list.iloc[i, 0]: i for i in range(0, len(class_list))}
+        self.class_count = len(class_list)
+
+    def prepare_data(self):
+        # called only on 1 GPU
+        # split data into train val and test
 
         dataframe = pd.read_csv(self.data_list_filepath, delimiter=";", quotechar="|",)
         test_sss = StratifiedShuffleSplit(

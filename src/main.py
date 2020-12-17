@@ -1,10 +1,11 @@
 import pytorch_lightning as pl
 import argparse
 from pathlib import Path
-
 from config.configuration import parse_config, ScriptConfig
 from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
+
+from audiomentations import Compose, AddGaussianNoise, TimeStretch, PitchShift, Shift
 
 # nd without changing a single line of code, you could run on GPUs/TPUs
 # 8 GPUs
@@ -15,8 +16,19 @@ from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
 # TPUs
 # trainer = Trainer(tpu_cores=8)
 def start_train(config: ScriptConfig):
-    data_module = AmmodSingleLabelModule(config)
-    model = CnnBirdDetector()
+
+    fit_transform_audio = Compose(
+        [
+            AddGaussianNoise(min_amplitude=0.001, max_amplitude=0.015, p=0.2),
+            TimeStretch(min_rate=0.9, max_rate=1.10, p=0.2),
+            PitchShift(min_semitones=-2, max_semitones=2, p=0.2),
+        ]
+    )
+
+    data_module = AmmodSingleLabelModule(
+        config, fit_transform_audio=fit_transform_audio
+    )
+    model = CnnBirdDetector(data_module.class_count)
     trainer = pl.Trainer(gpus=1, max_epochs=30, progress_bar_refresh_rate=20)
     trainer.fit(model, data_module)
 
