@@ -44,11 +44,7 @@ if __name__ == "__main__":
         help="config file for all settings",
     )
     parser.add_argument(
-        "--env",
-        metavar="path",
-        type=str,
-        nargs="?",
-        help="Environment Var Prefix",
+        "--env", metavar="path", type=str, nargs="?", help="Environment Var Prefix",
     )
 
     args = parser.parse_args()

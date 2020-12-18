@@ -36,5 +36,6 @@ RUN pip install typed-config
 RUN pip install soundfile 
 RUN pip install audiomentations
 RUN pip install -U albumentations
+RUN useradd -ms /bin/bash vscode
 
 #create user 
