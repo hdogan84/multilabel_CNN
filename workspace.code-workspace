@@ -5,7 +5,7 @@
     }
   ],
   "settings": {
-    "python.pythonPath": "/home/bewr/anaconda3/envs/audio/bin/python",
+    "python.pythonPath": "/root/miniconda3/envs/lightning/bin/python",
     "python.analysis.extraPaths": ["${workspaceFolder}/src"],
     "terminal.integrated.env.linux": {
       "PYTHONPATH": "${workspaceFolder}/src",
