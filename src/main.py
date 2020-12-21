@@ -4,7 +4,7 @@ from pathlib import Path
 from config.configuration import parse_config, ScriptConfig
 from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
-
+from pytorch_lightning import loggers as pl_loggers
 from audiomentations import Compose, AddGaussianNoise, TimeStretch, PitchShift, Shift
 
 # nd without changing a single line of code, you could run on GPUs/TPUs
@@ -29,7 +29,18 @@ def start_train(config: ScriptConfig):
         config, fit_transform_audio=fit_transform_audio
     )
     model = CnnBirdDetector(data_module.class_count)
-    trainer = pl.Trainer(gpus=1, max_epochs=30, progress_bar_refresh_rate=20)
+
+    tb_logger = pl_loggers.TensorBoardLogger(
+        config.system.log_dir, name=config.learning.expriment_name
+    )
+
+    trainer = pl.Trainer(
+        gpus=1,
+        max_epochs=30,
+        progress_bar_refresh_rate=20,
+        logger=tb_logger,
+        log_every_n_steps=config.system.log_every_n_steps,
+    )
     trainer.fit(model, data_module)
 
 

@@ -5,8 +5,10 @@
     }
   ],
   "settings": {
-    "python.pythonPath": "/root/miniconda3/envs/lightning/bin/python",
-    "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+    "python.pythonPath": "/opt/conda/bin/python",
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}/src"
+    ],
     "terminal.integrated.env.linux": {
       "PYTHONPATH": "${workspaceFolder}/src",
     },

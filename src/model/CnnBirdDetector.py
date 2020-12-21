@@ -54,12 +54,11 @@ class CnnBirdDetector(pl.LightningModule):
         train_loss = F.nll_loss(logits, y)
         # train_loss = F.cross_entropy(logits, y)
 
-        logs = {"train_loss": train_loss}
+        self.log("train_loss", train_loss)
+
         batch_dictionary = {
             # REQUIRED: It ie required for us to return "loss"
             "loss": train_loss,
-            # optional for batch logging purposes
-            "log": logs,
             # info to be used at epoch end
             "correct": correct,
             "total": total,
@@ -74,7 +73,8 @@ class CnnBirdDetector(pl.LightningModule):
         correct = sum([x["correct"] for x in outputs])
         total = sum([x["total"] for x in outputs])
         # creating log dictionary
-        tensorboard_logs = {"loss": avg_loss, "Accuracy": correct / total}
+        self.log("loss", avg_loss)
+        self.log("Accuracy", correct / total)
         epoch_dictionary = {
             # required
             "loss": avg_loss,

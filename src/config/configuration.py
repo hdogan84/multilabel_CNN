@@ -19,6 +19,7 @@ class DataConfig(Config):
 @section("system")
 class SystemConfig(Config):
     log_dir: str = key(cast=str)
+    log_every_n_steps = key(cast=int)
     gpus: int = key(cast=int)
     num_workers: int = key(cast=int)
     random_seed: int = key(cast=int)
@@ -26,6 +27,7 @@ class SystemConfig(Config):
 
 @section("learning")
 class LearningConfig(Config):
+    expriment_name: str = key(cast=str)
     batch_size: int = key(cast=int)
     max_epochs: int = key(cast=int)
 
