@@ -86,6 +86,7 @@ class AmmodSingleLabelModule(LightningDataModule):
                 self.class_dict,
                 transform_image=self.fit_transform_image,
                 transform_audio=self.fit_transform_audio,
+                randomize_audio_segment=True,
             )
             self.val_set = AudioSet(
                 self.config,
@@ -93,6 +94,7 @@ class AmmodSingleLabelModule(LightningDataModule):
                 self.class_dict,
                 transform_image=self.val_transform_image,
                 transform_audio=self.val_transform_audio,
+                randomize_audio_segment=False,
             )
         # Assign test dataset for use in dataloader(s)
         if stage == "test" or stage is None:
@@ -102,6 +104,7 @@ class AmmodSingleLabelModule(LightningDataModule):
                 self.class_dict,
                 transform_image=self.val_transform_image,
                 transform_audio=self.val_transform_audio,
+                randomize_audio_segment=False,
             )
 
     def train_dataloader(self):

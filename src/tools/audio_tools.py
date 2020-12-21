@@ -24,6 +24,7 @@ def read_audio_segment(
     sample_rate: int,
     mixing_strategy=Mixing.TAKE_FIRST,
     padding_strategy=Padding.SILENCE,
+    randomize_audio_segment: bool = False,
 ):
     duration = stop - start
     audio_data = []
@@ -33,7 +34,7 @@ def read_audio_segment(
         duration >= desired_length
     ):  # desired_length of audio chunk is greater then wanted part
         max_offset = duration - desired_length
-        offset = max_offset * random.random() + start
+        offset = max_offset * random.random() if randomize_audio_segment else 0 + start
         reading_start = int(offset * sample_rate)
         reading_stop = reading_start + int(desired_length * sample_rate)
         audio_data = sf.read(
@@ -63,17 +64,20 @@ def read_audio_segment(
             # print("cylic")
             padded_audio_data = audio_data.copy()
             # change starting position
-            padded_audio_data = padded_audio_data[
-                int(len(audio_data) * random.random()) : len(audio_data) - 1
-            ]
+            if randomize_audio_segment:
+                padded_audio_data = padded_audio_data[
+                    int(len(audio_data) * random.random()) : len(audio_data) - 1
+                ]
             while desired_sample_length > len(padded_audio_data):
                 padded_audio_data = np.append(padded_audio_data, audio_data)
             audio_data = padded_audio_data[:desired_sample_length]
         elif padding_strategy == Padding.SILENCE:
             padding_length = desired_sample_length - len(audio_data)
-            audio_data = np.append(
-                np.full(int(random.random() * padding_length), 0.0000001), audio_data
-            )
+            if randomize_audio_segment:
+                audio_data = np.append(
+                    np.full(int(random.random() * padding_length), 0.0000001),
+                    audio_data,
+                )
             audio_data = np.append(
                 audio_data, np.full(desired_sample_length - len(audio_data), 0.0000001)
             )

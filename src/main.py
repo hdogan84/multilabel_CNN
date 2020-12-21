@@ -33,13 +33,14 @@ def start_train(config: ScriptConfig):
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.learning.expriment_name
     )
-
+    pl.seed_everything(config.system.random_seed)
     trainer = pl.Trainer(
         gpus=1,
         max_epochs=30,
         progress_bar_refresh_rate=20,
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
+        deterministic=True,
     )
     trainer.fit(model, data_module)
 

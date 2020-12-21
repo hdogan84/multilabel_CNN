@@ -7,6 +7,7 @@ from torchvision import transforms
 import pytorch_lightning as pl
 from pytorch_lightning.metrics.functional import accuracy
 import torchvision.models as models
+import numpy as np
 
 
 class CnnBirdDetector(pl.LightningModule):
@@ -34,15 +35,26 @@ class CnnBirdDetector(pl.LightningModule):
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
 
-        print(self.model)
+        # print(self.model)
 
     def forward(self, x):
+
         x = self.model(x)
         return F.log_softmax(x, dim=1)
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
 
+        # self.logger.experiment.image("Training data", batch, 0)
+
+        x, y = batch
+        # first step print out n images
+        if batch_idx == 0 and self.current_epoch == 0:
+            ##images_tensor = torch.cat(x, 0)
+            images = x.cpu().detach().numpy()
+            writer = self.logger.experiment
+            writer.add_images("First Batch", images, 0, dataformats="NCHW")
+            # show model
+            writer.add_graph(self.model, x, verbose=False)
         # forward pass on a batch
         pred = self.forward(x)
         # identifying number of correct predections in a given batch
@@ -68,6 +80,7 @@ class CnnBirdDetector(pl.LightningModule):
     def training_epoch_end(self, outputs):
         #  the function is called after every epoch is completed
         # calculating average loss
+
         avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
         # calculating correect and total predictions
         correct = sum([x["correct"] for x in outputs])
@@ -75,13 +88,7 @@ class CnnBirdDetector(pl.LightningModule):
         # creating log dictionary
         self.log("loss", avg_loss)
         self.log("Accuracy", correct / total)
-        epoch_dictionary = {
-            # required
-            "loss": avg_loss,
-            # for logging purposes
-            "log": tensorboard_logs,
-        }
-        return epoch_dictionary
+        return
 
     def validation_step(self, batch, batch_idx):
         x, y = batch

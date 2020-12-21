@@ -32,6 +32,7 @@ class AudioSet(Dataset):
         class_dict: dict,
         transform_image: Callable = None,
         transform_audio: Callable = None,
+        randomize_audio_segment: bool = False,
     ):
         """
         Args:
@@ -54,6 +55,7 @@ class AudioSet(Dataset):
         self.transform_audio = transform_audio
         self.transform_image = transform_image
 
+        self.randomize_audio_segment = randomize_audio_segment
         self.segment_length = a.segment_length
         self.sample_rate = a.sample_rate
         self.mixing_strategy = a.mixing_strategy
@@ -89,6 +91,7 @@ class AudioSet(Dataset):
             self.sample_rate,
             mixing_strategy=self.mixing_strategy,
             padding_strategy=self.padding_strategy,
+            randomize_audio_segment=self.randomize_audio_segment,
         )
         # print(len(audio_data))
 
@@ -117,7 +120,7 @@ class AudioSet(Dataset):
         augmented_image_data = (
             self.transform_image(image=image_data)["image"]
             if self.transform_image is not None
-            else mel_spec
+            else image_data
         )
         tensor = transforms.ToTensor()(augmented_image_data).float()
         # plt.imshow(augmented_image_data, interpolation="nearest")
