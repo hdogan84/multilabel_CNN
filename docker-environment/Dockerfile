@@ -27,7 +27,7 @@ FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-runtime
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 # USER $USERNAME
-
+RUN CONDA install scikit-image
 RUN conda install pytorch-lightning -c conda-forge
 RUN conda install pandas
 RUN conda install -c conda-forge librosa

@@ -14,7 +14,7 @@ class CnnBirdDetector(pl.LightningModule):
     def __init__(self, num_target_classes, learning_rate=2e-4):
 
         super().__init__()
-
+        self.save_hyperparameters()
         # Set our init args as class attributes
 
         self.learning_rate = learning_rate
@@ -52,7 +52,9 @@ class CnnBirdDetector(pl.LightningModule):
             ##images_tensor = torch.cat(x, 0)
             images = x.cpu().detach().numpy()
             writer = self.logger.experiment
-            writer.add_images("First Batch", images, 0, dataformats="NCHW")
+            writer.add_images(
+                "First Batch Training Data", images, 0, dataformats="NCHW"
+            )
             # show model
             writer.add_graph(self.model, x, verbose=False)
         # forward pass on a batch

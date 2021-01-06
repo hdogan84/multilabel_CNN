@@ -5,7 +5,7 @@
     }
   ],
   "settings": {
-    "python.pythonPath": "/home/stana/anaconda3/envs/rank/bin/python"
+    "python.pythonPath": "/home/stana/anaconda3/envs/rank/bin/python",
     "python.analysis.extraPaths": [
       "${workspaceFolder}/src"
     ],
@@ -18,6 +18,13 @@
       "--disable=C0115", // (missing-class-docstring)
       "--disable=C0116", // (missing-function-docstring)
       "import sys; sys.path.append('/home/bewr/projects/mfn/libro_animalis/import_script');"
-    ]
+    ],
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/*/**": true,
+      "**/logs/*/**": true,
+      "**/lightning_logs/*/**": true
+    }
   }
 }

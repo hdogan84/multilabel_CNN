@@ -1,4 +1,5 @@
 from typing import Callable
+import multiprocessing
 from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 import pandas as pd
@@ -35,7 +36,9 @@ class AmmodSingleLabelModule(LightningDataModule):
         self.class_list_filepath = d.class_list_filepath
         self.test_split = d.test_split
         self.val_split = d.val_split
-        self.num_workers = s.num_workers
+        self.num_workers = (
+            s.num_workers if s.num_workers >= 0 else multiprocessing.cpu_count()
+        )
         self.random_seed = s.random_seed
         self.batch_size = l.batch_size
         self.index_label = d.index_label
@@ -54,26 +57,38 @@ class AmmodSingleLabelModule(LightningDataModule):
         # split data into train val and test
 
         dataframe = pd.read_csv(self.data_list_filepath, delimiter=";", quotechar="|",)
-        test_sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=self.test_split, random_state=self.random_seed
-        )
-        val_sss = StratifiedShuffleSplit(
-            n_splits=1, test_size=self.val_split, random_state=self.random_seed
-        )
+        if self.test_split > 0:
+            test_sss = StratifiedShuffleSplit(
+                n_splits=1, test_size=self.test_split, random_state=self.random_seed
+            )
+            val_sss = StratifiedShuffleSplit(
+                n_splits=1, test_size=self.val_split, random_state=self.random_seed
+            )
 
-        fit_index, test_index = next(test_sss.split(dataframe, y=dataframe["labels"]))
-        fit_dataframe = dataframe.loc[fit_index, :].reset_index(drop=True)
-        self.test_dataframe = dataframe.loc[test_index, :].reset_index(drop=True)
+            fit_index, test_index = next(
+                test_sss.split(dataframe, y=dataframe["labels"])
+            )
+            fit_dataframe = dataframe.loc[fit_index, :].reset_index(drop=True)
+            self.test_dataframe = dataframe.loc[test_index, :].reset_index(drop=True)
 
-        train_index, val_index = next(
-            val_sss.split(fit_dataframe, y=fit_dataframe["labels"])
-        )
-        self.train_dataframe = fit_dataframe.loc[train_index, :].reset_index(drop=True)
-        self.val_dataframe = fit_dataframe.loc[val_index, :].reset_index(drop=True)
+            train_index, val_index = next(
+                val_sss.split(fit_dataframe, y=fit_dataframe["labels"])
+            )
+            self.train_dataframe = fit_dataframe.loc[train_index, :].reset_index(
+                drop=True
+            )
+            self.val_dataframe = fit_dataframe.loc[val_index, :].reset_index(drop=True)
+            print(len(self.test_dataframe))
+        else:
+            val_sss = StratifiedShuffleSplit(
+                n_splits=1, test_size=self.val_split, random_state=self.random_seed
+            )
+            fit_index, val_index = next(val_sss.split(dataframe, y=dataframe["labels"]))
+            self.train_dataframe = dataframe.loc[fit_index, :].reset_index(drop=True)
+            self.val_dataframe = dataframe.loc[val_index, :].reset_index(drop=True)
 
         print(len(self.train_dataframe))
         print(len(self.val_dataframe))
-        print(len(self.test_dataframe))
 
     def setup(self, stage=None):
         # called on every GPU
