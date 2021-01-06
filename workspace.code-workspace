@@ -24,7 +24,8 @@
       "**/.git/subtree-cache/**": true,
       "**/node_modules/*/**": true,
       "**/logs/*/**": true,
-      "**/lightning_logs/*/**": true
+      "**/lightning_logs/*/**": true,
+      "**/data/*/**": true
     }
   }
 }

@@ -5,7 +5,15 @@ from config.configuration import parse_config, ScriptConfig
 from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
 from pytorch_lightning import loggers as pl_loggers
-from audiomentations import Compose, AddGaussianNoise, TimeStretch, PitchShift, Shift
+from audiomentations import (
+    Compose,
+    AddGaussianNoise,
+    TimeStretch,
+    PitchShift,
+    Shift,
+    TimeMask,
+    FrequencyMask,
+)
 from augmentation.AddBackgroundNoiseFromCsv import AddBackgroundNoiseFromCsv
 import albumentations as A
 
@@ -18,9 +26,11 @@ import albumentations as A
 # TPUs
 # trainer = Trainer(tpu_cores=8)
 def start_train(config: ScriptConfig):
-
+    fit_transform_audio = None
+    fit_transform_image = None
     fit_transform_audio = Compose(
         [
+            TimeMask(min_band_part=0.05, max_band_part=0.5, fade=False, p=0.2),
             AddBackgroundNoiseFromCsv(
                 "./data/ammod-selection/noise_3000.csv",
                 min_snr_in_db=4,
@@ -30,16 +40,26 @@ def start_train(config: ScriptConfig):
             AddGaussianNoise(min_amplitude=0.001, max_amplitude=0.015, p=0.25),
             TimeStretch(min_rate=0.9, max_rate=1.10, p=0.25),
             PitchShift(min_semitones=-2, max_semitones=2, p=0.25),
+            Shift(min_fraction=-0.5, max_fraction=0.5, rollover=True, p=0.2),
         ]
     )
     fit_transform_image = A.Compose(
         [
-            A.HorizontalFlip(p=0.5),
-            A.RandomBrightnessContrast(p=0.2),
-            A.VerticalFlip(p=0.5),
+            # A.HorizontalFlip(p=0.5),
+            # A.VerticalFlip(p=0.5),
+            # FrequencyMask(min_frequency_band=0.0, max_frequency_band=0.5, p=0.1),
+            A.RandomBrightnessContrast(
+                brightness_limit=0.2,
+                contrast_limit=0.2,
+                brightness_by_max=True,
+                always_apply=False,
+                p=0.2,
+            ),
+            A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0, always_apply=False, p=0.2),
         ]
     )
-
+    # A.save(fit_transform_image, "./logs/fit_transform_image.json")
+    # A.save(fit_transform_audio, "/tmp/fit_transform_audio.json")
     data_module = AmmodSingleLabelModule(
         config,
         fit_transform_audio=fit_transform_audio,
