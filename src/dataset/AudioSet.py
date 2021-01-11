@@ -28,7 +28,7 @@ class AudioSet(Dataset):
     def __init__(
         self,
         config: ScriptConfig,
-        data_rows: ScriptConfig,
+        data_rows: list,
         class_dict: dict,
         transform_image: Callable = None,
         transform_audio: Callable = None,

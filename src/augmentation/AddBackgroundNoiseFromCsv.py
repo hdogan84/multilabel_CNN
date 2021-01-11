@@ -57,7 +57,7 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
                 p=p,
             )
         except AssertionError:
-            print("do Nothing")
+            pass
 
         dataframe = pd.read_csv(csv_filepath, delimiter=delimiter, quotechar=quotechar)
 

@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import MNIST
 from torchvision import transforms
 import pytorch_lightning as pl
-from pytorch_lightning.metrics.functional import accuracy
+from pytorch_lightning.metrics.functional import accuracy, average_precision, f1_score
 import torchvision.models as models
 import numpy as np
 
@@ -98,10 +98,13 @@ class CnnBirdDetector(pl.LightningModule):
         loss = F.nll_loss(logits, y)
         preds = torch.argmax(logits, dim=1)
         acc = accuracy(preds, y)
-
+        average_precision_value = average_precision(preds, y)  # multilabel will be lrap
+        f1_score_value = f1_score(preds, y)
         # Calling self.log will surface up scalars for you in TensorBoard
         self.log("val_loss", loss, prog_bar=True)
         self.log("val_acc", acc, prog_bar=True)
+        self.log("average_precision", average_precision_value, prog_bar=True)
+        self.log("f1_score", f1_score_value, prog_bar=True)
         return loss
 
     def test_step(self, batch, batch_idx):

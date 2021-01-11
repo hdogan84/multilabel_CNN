@@ -4,8 +4,10 @@ from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 import pandas as pd
 from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.utils import shuffle
 from dataset.AudioSet import AudioSet
 from config.configuration import DataConfig, ScriptConfig, SystemConfig, LearningConfig
+from pathlib import Path
 
 
 class AmmodSingleLabelModule(LightningDataModule):
@@ -32,7 +34,18 @@ class AmmodSingleLabelModule(LightningDataModule):
         s: SystemConfig = config.system
         l: LearningConfig = config.learning
         self.config = config
-        self.data_list_filepath = d.data_list_filepath
+        self.data_list_filepath = (
+            Path(d.data_list_filepath) if d.data_list_filepath != "None" else None
+        )
+        self.train_list_filepath = (
+            Path(d.train_list_filepath) if d.train_list_filepath != "None" else None
+        )
+        self.val_list_filepath = (
+            Path(d.val_list_filepath) if d.val_list_filepath != "None" else None
+        )
+        self.test_list_filepath = (
+            Path(d.test_list_filepath) if d.test_list_filepath != "None" else None
+        )
         self.class_list_filepath = d.class_list_filepath
         self.test_split = d.test_split
         self.val_split = d.val_split
@@ -55,40 +68,62 @@ class AmmodSingleLabelModule(LightningDataModule):
     def prepare_data(self):
         # called only on 1 GPU
         # split data into train val and test
+        # if data_list_filepath is defind dataset hast to be split
+        if self.data_list_filepath is not None:
+            dataframe = pd.read_csv(
+                self.data_list_filepath, delimiter=";", quotechar="|",
+            )
+            if self.test_split > 0:
+                test_sss = StratifiedShuffleSplit(
+                    n_splits=1, test_size=self.test_split, random_state=self.random_seed
+                )
+                val_sss = StratifiedShuffleSplit(
+                    n_splits=1, test_size=self.val_split, random_state=self.random_seed
+                )
 
-        dataframe = pd.read_csv(self.data_list_filepath, delimiter=";", quotechar="|",)
-        if self.test_split > 0:
-            test_sss = StratifiedShuffleSplit(
-                n_splits=1, test_size=self.test_split, random_state=self.random_seed
-            )
-            val_sss = StratifiedShuffleSplit(
-                n_splits=1, test_size=self.val_split, random_state=self.random_seed
-            )
+                fit_index, test_index = next(
+                    test_sss.split(dataframe, y=dataframe["labels"])
+                )
+                fit_dataframe = dataframe.loc[fit_index, :].reset_index(drop=True)
+                self.test_dataframe = dataframe.loc[test_index, :].reset_index(
+                    drop=True
+                )
 
-            fit_index, test_index = next(
-                test_sss.split(dataframe, y=dataframe["labels"])
-            )
-            fit_dataframe = dataframe.loc[fit_index, :].reset_index(drop=True)
-            self.test_dataframe = dataframe.loc[test_index, :].reset_index(drop=True)
-
-            train_index, val_index = next(
-                val_sss.split(fit_dataframe, y=fit_dataframe["labels"])
-            )
-            self.train_dataframe = fit_dataframe.loc[train_index, :].reset_index(
-                drop=True
-            )
-            self.val_dataframe = fit_dataframe.loc[val_index, :].reset_index(drop=True)
-            print(len(self.test_dataframe))
+                train_index, val_index = next(
+                    val_sss.split(fit_dataframe, y=fit_dataframe["labels"])
+                )
+                self.train_dataframe = fit_dataframe.loc[train_index, :].reset_index(
+                    drop=True
+                )
+                self.val_dataframe = fit_dataframe.loc[val_index, :].reset_index(
+                    drop=True
+                )
+                print(len(self.test_dataframe))
+            else:
+                val_sss = StratifiedShuffleSplit(
+                    n_splits=1, test_size=self.val_split, random_state=self.random_seed
+                )
+                fit_index, val_index = next(
+                    val_sss.split(dataframe, y=dataframe["labels"])
+                )
+                self.train_dataframe = dataframe.loc[fit_index, :].reset_index(
+                    drop=True
+                )
+                self.val_dataframe = dataframe.loc[val_index, :].reset_index(drop=True)
         else:
-            val_sss = StratifiedShuffleSplit(
-                n_splits=1, test_size=self.val_split, random_state=self.random_seed
+            self.train_dataframe = pd.read_csv(
+                self.train_list_filepath, delimiter=";", quotechar="|",
             )
-            fit_index, val_index = next(val_sss.split(dataframe, y=dataframe["labels"]))
-            self.train_dataframe = dataframe.loc[fit_index, :].reset_index(drop=True)
-            self.val_dataframe = dataframe.loc[val_index, :].reset_index(drop=True)
+            self.val_dataframe = pd.read_csv(
+                self.val_list_filepath, delimiter=";", quotechar="|",
+            )
+            if self.test_list_filepath is not None:
+                self.test_dataframe = pd.read_csv(
+                    self.test_list_filepath, delimiter=";", quotechar="|",
+                )
 
-        print(len(self.train_dataframe))
-        print(len(self.val_dataframe))
+        print("Train data sample length: {}".format(len(self.train_dataframe)))
+        print("Validation data sample length: {}".format(len(self.val_dataframe)))
 
     def setup(self, stage=None):
         # called on every GPU
