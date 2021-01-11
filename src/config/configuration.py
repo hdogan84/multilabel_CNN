@@ -75,7 +75,7 @@ class TimeMask(DictConfig):
     min_band_part: float = key(cast=float)
     max_band_part: float = key(cast=float)
     fade: bool = key(cast=bool)
-    p: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
 
 
 @section("AddBackgroundNoiseFromCsv")
@@ -83,14 +83,14 @@ class AddBackgroundNoiseFromCsv(DictConfig):
     filepath: Path = key(cast=Path)
     min_snr_in_db: int = key(cast=int)
     max_snr_in_db: int = key(cast=int)
-    p: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
 
 
 @section("AddGaussianNoise")
 class AddGaussianNoise(DictConfig):
     min_amplitude: float = key(cast=float)
     max_amplitude: float = key(cast=float)
-    p: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
 
 
 @section("TimeStretch")
@@ -98,14 +98,14 @@ class TimeStretch(DictConfig):
     min_rate: float = key(cast=float)
     max_rate: float = key(cast=float)
     leave_length_unchanged: bool = key(cast=bool)
-    p: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
 
 
 @section("PitchShift")
 class PitchShift(DictConfig):
     min_semitones: int = key(cast=int)
     max_semitones: int = key(cast=int)
-    p: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
 
 
 @section("Shift")
@@ -113,7 +113,7 @@ class Shift(DictConfig):
     min_fraction: float = key(cast=float)
     max_fraction: float = key(cast=float)
     rollover: bool = key(cast=bool)
-    p: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
 
 
 class ScriptConfig(DictConfig):

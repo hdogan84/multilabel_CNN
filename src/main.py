@@ -28,38 +28,59 @@ import albumentations as A
 def start_train(config: ScriptConfig):
     fit_transform_audio = None
     fit_transform_image = None
-    # fit_transform_audio = Compose(
-    #     [
-    #         TimeMask(min_band_part=0.05, max_band_part=0.1, fade=False, p=0.2),
-    #         AddBackgroundNoiseFromCsv(
-    #             "./data/ammod-selection/noise_3000.csv",
-    #             min_snr_in_db=4,
-    #             max_snr_in_db=20,
-    #             p=0.5,
-    #         ),
-    #         AddGaussianNoise(min_amplitude=0.001, max_amplitude=0.015, p=0.2),
-    #         TimeStretch(
-    #             min_rate=0.9, max_rate=1.10, leave_length_unchanged=True, p=0.2
-    #         ),
-    #         PitchShift(min_semitones=-2, max_semitones=2, p=0.2),
-    #         Shift(min_fraction=-0.5, max_fraction=0.5, rollover=True, p=0.2),
-    #     ]
-    # )
-    # fit_transform_image = A.Compose(
-    #     [
-    #         A.HorizontalFlip(p=0.5),
-    #         A.VerticalFlip(p=0.5),
-    #         FrequencyMask(min_frequency_band=0.0, max_frequency_band=0.5, p=0.1),
-    #         A.RandomBrightnessContrast(
-    #             brightness_limit=0.2,
-    #             contrast_limit=0.2,
-    #             brightness_by_max=True,
-    #             always_apply=False,
-    #             p=0.2,
-    #         ),
-    #         A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0, always_apply=False, p=0.1),
-    #     ]
-    # )
+    fit_transform_audio = Compose(
+        [
+            TimeMask(
+                min_band_part=config.time_mask.min_band_part,
+                max_band_part=config.time_mask.max_band_part,
+                fade=config.time_mask.fade,
+                p=config.time_mask.p,
+            ),
+            AddBackgroundNoiseFromCsv(
+                config.add_background_noise_from_csv.filepath,
+                min_snr_in_db=config.add_background_noise_from_csv.min_snr_in_db,
+                max_snr_in_db=config.add_background_noise_from_csv.max_snr_in_db,
+                p=config.add_background_noise_from_csv.p,
+            ),
+            AddGaussianNoise(
+                min_amplitude=config.add_gaussian_noise.min_amplitude,
+                max_amplitude=config.add_gaussian_noise.max_amplitude,
+                p=config.add_gaussian_noise.p,
+            ),
+            TimeStretch(
+                min_rate=config.time_strech.min_rate,
+                max_rate=config.time_strech.max_rate,
+                leave_length_unchanged=config.time_strech.leave_length_unchanged,
+                p=config.time_strech.p,
+            ),
+            PitchShift(
+                min_semitones=config.pitch_shift.min_semitones,
+                max_semitones=config.pitch_shift.max_semitones,
+                p=config.pitch_shift.p,
+            ),
+            Shift(
+                min_fraction=config.shift.min_fraction,
+                max_fraction=config.shift.max_fraction,
+                rollover=config.shift.rollover,
+                p=config.shift.p,
+            ),
+        ]
+    )
+    fit_transform_image = A.Compose(
+        [
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            FrequencyMask(min_frequency_band=0.0, max_frequency_band=0.5, p=0.1),
+            A.RandomBrightnessContrast(
+                brightness_limit=0.2,
+                contrast_limit=0.2,
+                brightness_by_max=True,
+                always_apply=False,
+                p=0.2,
+            ),
+            A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0, always_apply=False, p=0.1),
+        ]
+    )
     data_module = AmmodSingleLabelModule(
         config,
         fit_transform_audio=fit_transform_audio,

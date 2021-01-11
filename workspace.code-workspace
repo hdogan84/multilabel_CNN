@@ -5,7 +5,7 @@
     }
   ],
   "settings": {
-    "python.pythonPath": "/home/stana/anaconda3/envs/rank/bin/python",
+    "python.pythonPath": "/home/bewr/anaconda3/envs/pytorch/bin/python",
     "python.analysis.extraPaths": [
       "${workspaceFolder}/src"
     ],
