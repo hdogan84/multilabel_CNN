@@ -122,9 +122,6 @@ class AmmodSingleLabelModule(LightningDataModule):
                     self.test_list_filepath, delimiter=";", quotechar="|",
                 )
 
-        print("Train data sample length: {}".format(len(self.train_dataframe)))
-        print("Validation data sample length: {}".format(len(self.val_dataframe)))
-
     def setup(self, stage=None):
         # called on every GPU
         # Assign train/val datasets for use in dataloaders
@@ -145,7 +142,10 @@ class AmmodSingleLabelModule(LightningDataModule):
                 transform_image=self.val_transform_image,
                 transform_audio=self.val_transform_audio,
                 randomize_audio_segment=False,
+                extract_complete_segment=self.config.validation.complete_segment,
             )
+            print("Train set size: {}".format(len(self.train_set)))
+            print("Validation set size: {}".format(len(self.val_set)))
         # Assign test dataset for use in dataloader(s)
         if stage == "test" or stage is None:
             self.test_set = AudioSet(

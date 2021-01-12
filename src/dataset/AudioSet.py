@@ -13,6 +13,7 @@ from config.configuration import (
 )
 
 # import simpleaudio as sa
+from math import ceil
 import numpy as np
 import librosa
 import librosa.display
@@ -33,8 +34,9 @@ class AudioSet(Dataset):
     def __init__(
         self,
         config: ScriptConfig,
-        data_rows: list,
+        raw_data_rows: list,
         class_dict: dict,
+        extract_complete_segment: bool = False,
         transform_image: Callable = None,
         transform_audio: Callable = None,
         randomize_audio_segment: bool = False,
@@ -50,7 +52,6 @@ class AudioSet(Dataset):
         a: AudioLoadingConfig = config.audio_loading
         v: ValidationConfig = config.validation
 
-        data_rows
         self.class_dict = class_dict
         self.data_path = d.data_path
         self.index_start_time = d.index_start_time
@@ -73,18 +74,53 @@ class AudioSet(Dataset):
         self.mel_start_freq = a.mel_start_freq
         self.mel_end_freq = a.mel_end_freq
 
-        if v.complete_segment:
-            pass
-        else:
-            self.data_rows = list(
-                zip(
-                    data_rows.iloc[:, self.index_filepath],
-                    data_rows.iloc[:, self.index_label],
-                    data_rows.iloc[:, self.index_start_time],
-                    data_rows.iloc[:, self.index_end_time],
-                    range(len(data_rows)),  # annoation id
-                )
+        tmp_data_rows = list(
+            zip(
+                list(range(len(raw_data_rows))),
+                raw_data_rows.iloc[:, self.index_filepath],
+                raw_data_rows.iloc[:, self.index_label],
+                raw_data_rows.iloc[:, self.index_start_time,],
+                raw_data_rows.iloc[:, self.index_end_time,],
             )
+        )
+        if extract_complete_segment:
+            self.data_rows = []
+            overlap_time = v.step_overlap * a.segment_length
+            hop_length = a.segment_length - overlap_time
+            for data in tmp_data_rows:
+                id, filepath, label, start, end = data
+                duration = end - start
+                # add steps read complete file
+                steps_needed = ceil(duration / hop_length)
+                if steps_needed == 1:
+                    self.data_rows.append(data)
+                else:
+
+                    for step in range(steps_needed - 1):
+                        step_start = step * hop_length
+                        self.data_rows.append(
+                            (
+                                id,
+                                filepath,
+                                label,
+                                step_start,
+                                step_start + a.segment_length,
+                            )
+                        )
+                    # add last step only if length is half duration, prevent to short part of segment
+                    step_data = (
+                        id,
+                        filepath,
+                        label,
+                        (steps_needed - 1) * hop_length,
+                        end,
+                    )
+                    if step_data[4] - step_data[3] > a.segment_length / 2:
+                        self.data_rows.append(step_data)
+                pass
+
+        else:
+            self.data_rows = tmp_data_rows
 
     def __len__(self):
         return len(self.data_rows)
@@ -92,16 +128,16 @@ class AudioSet(Dataset):
     def __getitem__(self, idx):
         # if torch.is_tensor(idx):
         #     idx = idx.tolist()
-        filepath = Path(self.data_rows[idx][0])
-        label = self.data_rows[idx][1]
+        segment_id = self.data_rows[idx][0]
+        filepath = Path(self.data_rows[idx][1])
+        label = self.data_rows[idx][2]
         if self.data_path is not None:
             filepath = self.data_path.joinpath(
                 *filepath.parts[len(filepath.parts) - 6 :]
             )
 
-        start = self.data_rows[idx][2]
-        stop = self.data_rows[idx][3]
-        segment_id = self.data_rows[idx][4]
+        start = self.data_rows[idx][3]
+        stop = self.data_rows[idx][4]
         # print(filepath.as_posix())
         audio_data = read_audio_segment(
             filepath,
