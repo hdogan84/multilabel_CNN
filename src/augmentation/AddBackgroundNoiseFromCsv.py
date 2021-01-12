@@ -34,7 +34,7 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
     def __init__(
         self,
         csv_filepath,
-        csv_row_index="filepath",
+        index_filepath=0,
         min_snr_in_db=3,
         max_snr_in_db=30,
         p=0.5,
@@ -60,7 +60,6 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
             pass
 
         dataframe = pd.read_csv(csv_filepath, delimiter=delimiter, quotechar=quotechar)
-
-        self.sound_file_paths = dataframe[csv_row_index].tolist()
+        self.sound_file_paths = dataframe.iloc[:, index_filepath]
         self.min_snr_in_db = min_snr_in_db
         self.max_snr_in_db = max_snr_in_db

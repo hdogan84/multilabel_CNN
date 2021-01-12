@@ -36,10 +36,14 @@ def start_train(config: ScriptConfig):
                 fade=config.time_mask.fade,
                 p=config.time_mask.p,
             ),
+            FrequencyMask(min_frequency_band=0.01, max_frequency_band=0.05, p=0.1),
             AddBackgroundNoiseFromCsv(
                 config.add_background_noise_from_csv.filepath,
                 min_snr_in_db=config.add_background_noise_from_csv.min_snr_in_db,
                 max_snr_in_db=config.add_background_noise_from_csv.max_snr_in_db,
+                index_filepath=config.add_background_noise_from_csv.index_filepath,
+                delimiter=config.add_background_noise_from_csv.delimiter,
+                quotechar=config.add_background_noise_from_csv.quotechar,
                 p=config.add_background_noise_from_csv.p,
             ),
             AddGaussianNoise(
@@ -70,7 +74,6 @@ def start_train(config: ScriptConfig):
         [
             A.HorizontalFlip(p=0.5),
             A.VerticalFlip(p=0.5),
-            FrequencyMask(min_frequency_band=0.0, max_frequency_band=0.5, p=0.1),
             A.RandomBrightnessContrast(
                 brightness_limit=0.2,
                 contrast_limit=0.2,
@@ -88,7 +91,13 @@ def start_train(config: ScriptConfig):
     )
 
     model = CnnBirdDetector(
-        data_module.class_count, learning_rate=config.learning.learning_rate
+        data_module.class_count,
+        learning_rate=config.learning.learning_rate,
+        optimizer_type=config.learning.optimizer_type,
+        sgd_momentum=config.learning.sgd_momentum,
+        sgd_weight_decay=config.learning.sgd_weight_decay,
+        scheduler_type=config.learning.scheduler_type,
+        cosine_annealing_lr_t_max=config.learning.cosine_annealing_lr_t_max,
     )
     # LOAD CHECKPOINT
 
@@ -126,8 +135,8 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        default="./src/config/europe254.cfg",
-        # default="./src/config/default.cfg",
+        # default="./src/config/europe254.cfg",
+        default="./src/config/default.cfg",
         help="config file for all settings",
     )
     parser.add_argument(

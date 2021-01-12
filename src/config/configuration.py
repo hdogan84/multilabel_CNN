@@ -55,6 +55,11 @@ class LearningConfig(DictConfig):
     batch_size: int = key(cast=int)
     max_epochs: int = key(cast=int)
     learning_rate: float = key(cast=float)
+    optimizer_type: str = key(cast=str, required=False, default=None)
+    sgd_momentum: float = key(cast=float, required=False, default=0)
+    sgd_weight_decay: float = key(cast=float, required=False, default=0)
+    scheduler_type: str = key(cast=str, required=False, default=None)
+    cosine_annealing_lr_t_max: float = key(cast=float, required=False, default=0)
 
 
 @section("audio_loading")
@@ -78,11 +83,21 @@ class TimeMask(DictConfig):
     p: float = key(cast=float, required=False, default=0.0)
 
 
+# @section("FrequencyMask")
+# class TimeMask(DictConfig):
+#     min_frequency_band: float = key(cast=float)
+#     max_frequency_band: float = key(cast=float)
+#     p: float = key(cast=float, required=False, default=0.0)
+
+
 @section("AddBackgroundNoiseFromCsv")
 class AddBackgroundNoiseFromCsv(DictConfig):
     filepath: Path = key(cast=Path)
+    index_filepath: int = key(cast=int, required=False, default=0)
     min_snr_in_db: int = key(cast=int)
     max_snr_in_db: int = key(cast=int)
+    delimiter: str = key(cast=str, required=False, default=";")
+    quotechar: str = key(cast=str, required=False, default="|")
     p: float = key(cast=float, required=False, default=0.0)
 
 

@@ -11,13 +11,27 @@ import numpy as np
 
 
 class CnnBirdDetector(pl.LightningModule):
-    def __init__(self, num_target_classes, learning_rate=2e-4):
+    def __init__(
+        self,
+        num_target_classes: list,
+        learning_rate: float = 2e-4,
+        optimizer_type: str = "Adam",
+        sgd_momentum: float = 0,
+        sgd_weight_decay: float = 0,
+        scheduler_type: str = None,
+        cosine_annealing_lr_t_max: float = 0,
+    ):
 
         super().__init__()
         self.save_hyperparameters()
         # Set our init args as class attributes
 
         self.learning_rate = learning_rate
+        self.optimizer_type = optimizer_type
+        self.sgd_momentum = sgd_momentum
+        self.sgd_weight_decay = sgd_weight_decay
+        self.scheduler_type = scheduler_type
+        self.cosine_annealing_lr_t_max = cosine_annealing_lr_t_max
 
         # Hardcode some dataset specific attributes
         self.num_classes = num_target_classes
@@ -112,5 +126,27 @@ class CnnBirdDetector(pl.LightningModule):
         return self.validation_step(batch, batch_idx)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        return optimizer
+
+        if self.optimizer_type == "SGD":
+            optimizer = torch.optim.SGD(
+                self.parameters(),
+                self.learning_rate,
+                momentum=self.momentum,
+                weight_decay=self.weight_decay,
+            )
+
+        elif self.optimizer_type == "Adam":
+            optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        else:
+            optimizer = None
+
+        if self.scheduler_type == "CosineAnnealingLR":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, self.cosine_annealing_lr_t_max
+            )
+        else:
+            scheduler = None
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": scheduler,
+        }
