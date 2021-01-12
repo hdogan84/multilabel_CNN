@@ -15,6 +15,8 @@ from audiomentations import (
     FrequencyMask,
 )
 from augmentation.AddBackgroundNoiseFromCsv import AddBackgroundNoiseFromCsv
+
+from pytorch_lightning.callbacks import ModelCheckpoint
 import albumentations as A
 
 # nd without changing a single line of code, you could run on GPUs/TPUs
@@ -89,7 +91,6 @@ def start_train(config: ScriptConfig):
         fit_transform_audio=fit_transform_audio,
         fit_transform_image=fit_transform_image,
     )
-
     model = CnnBirdDetector(
         data_module.class_count,
         learning_rate=config.learning.learning_rate,
@@ -118,7 +119,7 @@ def start_train(config: ScriptConfig):
     trainer = pl.Trainer(
         gpus=1,
         max_epochs=config.learning.max_epochs,
-        progress_bar_refresh_rate=10,
+        progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=True,

@@ -3,6 +3,15 @@ from typedconfig.source import EnvironmentConfigSource, IniFileConfigSource
 from pathlib import Path
 
 
+def to_bool(value: str):
+    if value == "False":
+        return False
+    elif value == "True":
+        return True
+    else:
+        raise ValueError()
+
+
 class DictConfig(Config):
     def as_dict(self):
         raw_dic = vars(self)
@@ -62,6 +71,14 @@ class LearningConfig(DictConfig):
     cosine_annealing_lr_t_max: float = key(cast=float, required=False, default=0)
 
 
+@section("validation")
+class ValidationConfig(DictConfig):
+    complete_segment: bool = key(cast=to_bool, required=False, default=False)
+    step_overlap: float = key(cast=float, required=False, default=0)
+    # poolin_methods: mean | meanexp | max
+    pooling_method: str = key(cast=str, required=False, default="mean")
+
+
 @section("audio_loading")
 class AudioLoadingConfig(DictConfig):
     segment_length: int = key(cast=int)
@@ -79,7 +96,7 @@ class AudioLoadingConfig(DictConfig):
 class TimeMask(DictConfig):
     min_band_part: float = key(cast=float)
     max_band_part: float = key(cast=float)
-    fade: bool = key(cast=bool)
+    fade: bool = key(cast=to_bool)
     p: float = key(cast=float, required=False, default=0.0)
 
 
@@ -112,7 +129,7 @@ class AddGaussianNoise(DictConfig):
 class TimeStretch(DictConfig):
     min_rate: float = key(cast=float)
     max_rate: float = key(cast=float)
-    leave_length_unchanged: bool = key(cast=bool)
+    leave_length_unchanged: bool = key(cast=to_bool)
     p: float = key(cast=float, required=False, default=0.0)
 
 
@@ -127,7 +144,7 @@ class PitchShift(DictConfig):
 class Shift(DictConfig):
     min_fraction: float = key(cast=float)
     max_fraction: float = key(cast=float)
-    rollover: bool = key(cast=bool)
+    rollover: bool = key(cast=to_bool)
     p: float = key(cast=float, required=False, default=0.0)
 
 
@@ -135,6 +152,7 @@ class ScriptConfig(DictConfig):
     data: DataConfig = group_key(DataConfig)
     system: SystemConfig = group_key(SystemConfig)
     learning: LearningConfig = group_key(LearningConfig)
+    validation: ValidationConfig = group_key(ValidationConfig)
     audio_loading: AudioLoadingConfig = group_key(AudioLoadingConfig)
     time_mask: TimeMask = group_key(TimeMask)
     add_background_noise_from_csv: AddBackgroundNoiseFromCsv = group_key(

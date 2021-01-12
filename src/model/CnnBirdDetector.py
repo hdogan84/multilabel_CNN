@@ -5,8 +5,15 @@ from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import MNIST
 from torchvision import transforms
 import pytorch_lightning as pl
-from pytorch_lightning.metrics.functional import accuracy, average_precision, f1_score
 import torchvision.models as models
+from pytorch_lightning import metrics
+from pytorch_lightning.metrics.functional import accuracy, average_precision, f1_score
+from pytorch_lightning.metrics.classification import (
+    Accuracy,
+    AveragePrecision,
+    ConfusionMatrix,
+    F1,
+)
 import numpy as np
 
 
@@ -32,16 +39,8 @@ class CnnBirdDetector(pl.LightningModule):
         self.sgd_weight_decay = sgd_weight_decay
         self.scheduler_type = scheduler_type
         self.cosine_annealing_lr_t_max = cosine_annealing_lr_t_max
-
-        # Hardcode some dataset specific attributes
         self.num_classes = num_target_classes
-
-        # Define PyTorch model
-
-        # self.feature_extractor = models.resnet50(pretrained=True)
-        # self.feature_extractor.eval()
-        # # use the pretrained model to classify cifar-10 (10 image classes)
-        # self.classifier = nn.Linear(2048, num_target_classes)
+        # define model
         self.model = models.resnet50(pretrained=True)
         # set input layer to output of mnist
         self.model.conv1 = torch.nn.Conv2d(
@@ -49,7 +48,17 @@ class CnnBirdDetector(pl.LightningModule):
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
 
-        # print(self.model)
+        # initialise metrics
+        self.metrics_train = torch.nn.ModuleDict({"accuracy": Accuracy()},)
+        self.metrics_val = torch.nn.ModuleDict(
+            {
+                "accuracy": Accuracy(),
+                # "average_precision": AveragePrecision(num_classes=self.num_classes),
+                # # "c_map": AveragePrecision(num_classes=self.num_classes, average="macro"),
+                # "confusion_matrix": ConfusionMatrix(num_classes=self.num_classes),
+                # "f1": F1(num_classes=self.num_classes, average="micro"),
+            }
+        )
 
     def forward(self, x):
 
@@ -60,7 +69,7 @@ class CnnBirdDetector(pl.LightningModule):
 
         # self.logger.experiment.image("Training data", batch, 0)
 
-        x, y = batch
+        x, y, _ = batch
         # first step print out n images
         if batch_idx == 0 and self.current_epoch == 0:
             ##images_tensor = torch.cat(x, 0)
@@ -72,53 +81,46 @@ class CnnBirdDetector(pl.LightningModule):
             # show model
             writer.add_graph(self.model, x, verbose=False)
         # forward pass on a batch
-        pred = self.forward(x)
-        # identifying number of correct predections in a given batch
-        correct = pred.argmax(dim=1).eq(y).sum().item()
-        # identifying total number of labels in a given batch
-        total = len(y)
-
-        logits = self(x)
-        train_loss = F.nll_loss(logits, y)
-        # train_loss = F.cross_entropy(logits, y)
-
-        self.log("train_loss", train_loss)
+        pred = self(x)
+        train_loss = F.nll_loss(pred, y)
+        self.log("train_loss_step", train_loss)
 
         batch_dictionary = {
             # REQUIRED: It ie required for us to return "loss"
             "loss": train_loss,
-            # info to be used at epoch end
-            "correct": correct,
-            "total": total,
         }
+        # cacluate and log all metrics
+        for name, metric in self.metrics_train.items():
+            self.log(
+                "Train {}".format(name.title()),
+                metric(pred, y),
+                on_step=True,
+                on_epoch=False,
+            )
         return batch_dictionary
 
     def training_epoch_end(self, outputs):
         #  the function is called after every epoch is completed
         # calculating average loss
-
         avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
-        # calculating correect and total predictions
-        correct = sum([x["correct"] for x in outputs])
-        total = sum([x["total"] for x in outputs])
-        # creating log dictionary
-        self.log("loss", avg_loss)
-        self.log("Accuracy", correct / total)
+        self.log("train_loss_epoch", avg_loss, prog_bar=True)
         return
 
     def validation_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = F.nll_loss(logits, y)
-        preds = torch.argmax(logits, dim=1)
-        acc = accuracy(preds, y)
-        average_precision_value = average_precision(preds, y)  # multilabel will be lrap
-        f1_score_value = f1_score(preds, y)
+        x, y, segment_id = batch
+        preds = self(x)
+        loss = F.nll_loss(preds, y)
+
         # Calling self.log will surface up scalars for you in TensorBoard
-        self.log("val_loss", loss, prog_bar=True)
-        self.log("val_acc", acc, prog_bar=True)
-        self.log("average_precision", average_precision_value, prog_bar=True)
-        self.log("f1_score", f1_score_value, prog_bar=True)
+        self.log("val_loss_step", loss, prog_bar=True)
+        for name, metric in self.metrics_val.items():
+            self.log(
+                "Val {}".format(name.title()),
+                metric(preds, y),
+                on_step=False,
+                on_epoch=True,
+            )
+
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -136,16 +138,24 @@ class CnnBirdDetector(pl.LightningModule):
             )
 
         elif self.optimizer_type == "Adam":
+            print("Optimizer Adam learning rate: {}".format(self.learning_rate))
             optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         else:
             optimizer = None
 
         if self.scheduler_type == "CosineAnnealingLR":
+            print(
+                "Scheduler CosineAnnealingLR  with t_max: {}".format(
+                    self.cosine_annealing_lr_t_max
+                )
+            )
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer, self.cosine_annealing_lr_t_max
             )
         else:
-            scheduler = None
+            return {
+                "optimizer": optimizer,
+            }
         return {
             "optimizer": optimizer,
             "lr_scheduler": scheduler,

@@ -5,7 +5,12 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import matplotlib.pyplot as plt
 from torchvision import transforms
-from config.configuration import ScriptConfig, AudioLoadingConfig
+from config.configuration import (
+    ScriptConfig,
+    AudioLoadingConfig,
+    ValidationConfig,
+    DataConfig,
+)
 
 # import simpleaudio as sa
 import numpy as np
@@ -41,10 +46,11 @@ class AudioSet(Dataset):
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        d = config.data
-        a = config.audio_loading
+        d: DataConfig = config.data
+        a: AudioLoadingConfig = config.audio_loading
+        v: ValidationConfig = config.validation
 
-        self.data_rows = data_rows
+        data_rows
         self.class_dict = class_dict
         self.data_path = d.data_path
         self.index_start_time = d.index_start_time
@@ -67,21 +73,35 @@ class AudioSet(Dataset):
         self.mel_start_freq = a.mel_start_freq
         self.mel_end_freq = a.mel_end_freq
 
+        if v.complete_segment:
+            pass
+        else:
+            self.data_rows = list(
+                zip(
+                    data_rows.iloc[:, self.index_filepath],
+                    data_rows.iloc[:, self.index_label],
+                    data_rows.iloc[:, self.index_start_time],
+                    data_rows.iloc[:, self.index_end_time],
+                    range(len(data_rows)),  # annoation id
+                )
+            )
+
     def __len__(self):
         return len(self.data_rows)
 
     def __getitem__(self, idx):
         # if torch.is_tensor(idx):
         #     idx = idx.tolist()
-        filepath = Path(self.data_rows.iloc[idx, self.index_filepath])
-        label = self.data_rows.iloc[idx, self.index_label]
+        filepath = Path(self.data_rows[idx][0])
+        label = self.data_rows[idx][1]
         if self.data_path is not None:
             filepath = self.data_path.joinpath(
                 *filepath.parts[len(filepath.parts) - 6 :]
             )
 
-        start = self.data_rows.iloc[idx, self.index_start_time]
-        stop = self.data_rows.iloc[idx, self.index_end_time]
+        start = self.data_rows[idx][2]
+        stop = self.data_rows[idx][3]
+        segment_id = self.data_rows[idx][4]
         # print(filepath.as_posix())
         audio_data = read_audio_segment(
             filepath,
@@ -126,4 +146,4 @@ class AudioSet(Dataset):
         # plt.imshow(augmented_image_data, interpolation="nearest")
         # plt.show()
         label_id = self.class_dict[label]
-        return tensor, label_id
+        return tensor, label_id, segment_id
