@@ -74,7 +74,7 @@ class LearningConfig(DictConfig):
 @section("validation")
 class ValidationConfig(DictConfig):
     complete_segment: bool = key(cast=to_bool, required=False, default=False)
-    step_overlap: float = key(cast=float, required=False, default=0)
+    part_overlap: float = key(cast=float, required=False, default=0)
     # poolin_methods: mean | meanexp | max
     pooling_method: str = key(cast=str, required=False, default="mean")
 

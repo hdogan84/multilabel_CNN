@@ -123,6 +123,7 @@ def start_train(config: ScriptConfig):
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=True,
+        # fast_dev_run=True,
         # callbacks=[checkpoint_callback],
     )
 
@@ -136,8 +137,8 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        # default="./src/config/europe254.cfg",
-        default="./src/config/default.cfg",
+        default="./src/config/europe254.cfg",
+        # default="./src/config/default.cfg",
         help="config file for all settings",
     )
     parser.add_argument(

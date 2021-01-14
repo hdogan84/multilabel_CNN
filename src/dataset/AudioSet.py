@@ -85,38 +85,41 @@ class AudioSet(Dataset):
         )
         if extract_complete_segment:
             self.data_rows = []
-            overlap_time = v.step_overlap * a.segment_length
+            overlap_time = v.part_overlap * a.segment_length
             hop_length = a.segment_length - overlap_time
             for data in tmp_data_rows:
                 id, filepath, label, start, end = data
                 duration = end - start
-                # add steps read complete file
-                steps_needed = ceil(duration / hop_length)
-                if steps_needed == 1:
+                # add hops read complete file
+                hops_needed = ceil(duration / hop_length)
+                if hops_needed == 1:
                     self.data_rows.append(data)
                 else:
 
-                    for step in range(steps_needed - 1):
-                        step_start = step * hop_length
+                    for part in range(hops_needed - 1):
+                        part_start = part * hop_length
                         self.data_rows.append(
                             (
                                 id,
                                 filepath,
                                 label,
-                                step_start,
-                                step_start + a.segment_length,
+                                part_start,
+                                part_start + a.segment_length,
                             )
                         )
-                    # add last step only if length is half duration, prevent to short part of segment
-                    step_data = (
+                    # add last part only if length is half duration, prevent to short part of segment
+                    part_data = (
                         id,
                         filepath,
                         label,
-                        (steps_needed - 1) * hop_length,
+                        (hops_needed - 1) * hop_length,
                         end,
                     )
-                    if step_data[4] - step_data[3] > a.segment_length / 2:
-                        self.data_rows.append(step_data)
+                    if part_data[4] - part_data[3] == a.segment_length:
+                        self.data_rows.append(part_data)
+                    else:
+                        # TODO: last sample should start earlier and ends at end
+                        pass
                 pass
 
         else:
@@ -128,7 +131,7 @@ class AudioSet(Dataset):
     def __getitem__(self, idx):
         # if torch.is_tensor(idx):
         #     idx = idx.tolist()
-        segment_id = self.data_rows[idx][0]
+        segment_index = self.data_rows[idx][0]
         filepath = Path(self.data_rows[idx][1])
         label = self.data_rows[idx][2]
         if self.data_path is not None:
@@ -182,4 +185,4 @@ class AudioSet(Dataset):
         # plt.imshow(augmented_image_data, interpolation="nearest")
         # plt.show()
         label_id = self.class_dict[label]
-        return tensor, label_id, segment_id
+        return tensor, label_id, segment_index
