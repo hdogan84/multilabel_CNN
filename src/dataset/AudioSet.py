@@ -37,6 +37,7 @@ class AudioSet(Dataset):
         raw_data_rows: list,
         class_dict: dict,
         extract_complete_segment: bool = False,
+        max_segment_length: float = None,
         transform_image: Callable = None,
         transform_audio: Callable = None,
         randomize_audio_segment: bool = False,
@@ -90,6 +91,11 @@ class AudioSet(Dataset):
             for data in tmp_data_rows:
                 id, filepath, label, start, end = data
                 duration = end - start
+                if max_segment_length is not None:
+                    if duration > max_segment_length:
+                        duration = max_segment_length
+                        end = start + max_segment_length
+
                 # add hops read complete file
                 hops_needed = ceil(duration / hop_length)
                 if hops_needed == 1:

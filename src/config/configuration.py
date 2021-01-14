@@ -1,4 +1,5 @@
 from typedconfig import Config, key, section, group_key
+from typing import Callable
 from typedconfig.source import EnvironmentConfigSource, IniFileConfigSource
 from pathlib import Path
 
@@ -10,6 +11,16 @@ def to_bool(value: str):
         return True
     else:
         raise ValueError()
+
+
+def allow_none(function: Callable) -> Callable:
+    def F(x: str):
+        if x == "None":
+            return None
+        else:
+            return function(x)
+
+    return F
 
 
 class DictConfig(Config):
@@ -74,6 +85,9 @@ class LearningConfig(DictConfig):
 @section("validation")
 class ValidationConfig(DictConfig):
     complete_segment: bool = key(cast=to_bool, required=False, default=False)
+    max_segment_length: float = key(
+        cast=allow_none(float), required=False, default=None
+    )
     part_overlap: float = key(cast=float, required=False, default=0)
     # poolin_methods: mean | meanexp | max
     pooling_method: str = key(cast=str, required=False, default="mean")

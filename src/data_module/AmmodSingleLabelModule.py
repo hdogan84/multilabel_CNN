@@ -143,6 +143,7 @@ class AmmodSingleLabelModule(LightningDataModule):
                 transform_audio=self.val_transform_audio,
                 randomize_audio_segment=False,
                 extract_complete_segment=self.config.validation.complete_segment,
+                max_segment_length=self.config.validation.max_segment_length,
             )
             print("Train set size: {}".format(len(self.train_set)))
             print("Validation set size: {}".format(len(self.val_set)))

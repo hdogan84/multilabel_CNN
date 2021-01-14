@@ -12,7 +12,7 @@ class Padding:
 
 
 class Mixing:
-    TAKE_FIRST = "take_first"
+    Take_ONE = "take_one"
     RANDOM_MIX = "random_mix"
 
 
@@ -22,9 +22,10 @@ def read_audio_segment(
     stop: int,
     desired_length: int,
     sample_rate: int,
-    mixing_strategy=Mixing.TAKE_FIRST,
+    mixing_strategy=Mixing.Take_ONE,
     padding_strategy=Padding.SILENCE,
     randomize_audio_segment: bool = False,
+    channel: int = 0,
 ):
     duration = stop - start
     audio_data = []
@@ -49,8 +50,8 @@ def read_audio_segment(
 
     # IF more then one channel do mixing
     if audio_data.shape[1] > 1:
-        if mixing_strategy == Mixing.TAKE_FIRST:
-            audio_data = audio_data[:, 0]
+        if mixing_strategy == Mixing.take_one:
+            audio_data = audio_data[:, channel]
         else:
             raise NotImplementedError()
     else:

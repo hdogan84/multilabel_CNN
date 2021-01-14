@@ -15,7 +15,7 @@ from pytorch_lightning.metrics.classification import (
     ConfusionMatrix,
     F1,
 )
-from tools.tensor_helpers import pool_by_segments
+from tools.tensor_helpers import pool_by_segments, inflate_to_multiclass_tensor
 import numpy as np
 from sklearn import metrics
 
@@ -80,7 +80,7 @@ class CnnBirdDetector(pl.LightningModule):
                 "First Batch Training Data", images, 0, dataformats="NCHW"
             )
             # show model
-            writer.add_graph(self.model, x, verbose=False)
+            # writer.add_graph(self.model, x, verbose=False)
 
         # forward pass on a batch
         pred = self(x)
@@ -134,26 +134,26 @@ class CnnBirdDetector(pl.LightningModule):
             accuracy(preds_on_segment, classes_on_segment),
             prog_bar=True,
         )
-        self.log(
-            "f1_score", f1_score(preds_on_segment, classes_on_segment), prog_bar=True,
-        )
-        classes_on_segment = classes_on_segment.cpu()
-        class_matrix = torch.zeros(classes_on_segment.shape[0], self.num_classes)
-        class_matrix[range(classes_on_segment.shape[0]), classes_on_segment] = 1
-        class_matrix = class_matrix.data.numpy()
-        preds_on_segment = preds_on_segment.cpu().data.numpy()
-        lrap = metrics.label_ranking_average_precision_score(
-            class_matrix, preds_on_segment
-        )
-        cMap = metrics.average_precision_score(
-            class_matrix, preds_on_segment, average="macro"
-        )  # 'micro' 'macro' 'samples'
-        self.log(
-            "lrap", lrap, prog_bar=True,
-        )
-        self.log(
-            "cMap", cMap, prog_bar=True,
-        )
+        # self.log(
+        #     "f1_score", f1_score(preds_on_segment, classes_on_segment), prog_bar=True,
+        # )
+        if classes.dim() == 1:
+            multiclasses = inflate_to_multiclass_tensor(classes, self.num_classes)
+        else:
+            multiclasses = classes
+            # inflate class tensor
+
+        #     class_matrix, preds_on_segment
+        # )
+        # cMap = metrics.average_precision_score(
+        #     class_matrix, preds_on_segment, average="macro"
+        # )  # 'micro' 'macro' 'samples'
+        # self.log(
+        #     "lrap", lrap, prog_bar=True,
+        # )
+        # self.log(
+        #     "cMap", cMap, prog_bar=True,
+        # )
         return
 
     def test_step(self, batch, batch_idx):

@@ -74,8 +74,8 @@ def start_train(config: ScriptConfig):
     )
     fit_transform_image = A.Compose(
         [
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.5),
+            A.HorizontalFlip(p=0.2),
+            # A.VerticalFlip(p=0.5),
             A.RandomBrightnessContrast(
                 brightness_limit=0.2,
                 contrast_limit=0.2,
@@ -123,6 +123,8 @@ def start_train(config: ScriptConfig):
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=True,
+        # profiler="simple",
+        # precision=16
         # fast_dev_run=True,
         # callbacks=[checkpoint_callback],
     )
