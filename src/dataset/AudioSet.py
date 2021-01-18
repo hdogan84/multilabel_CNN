@@ -39,6 +39,7 @@ class AudioSet(Dataset):
         extract_complete_segment: bool = False,
         sub_segment_overlap: float = 1.0,
         multi_channel_handling: str = "take_first",
+        sub_segment_rest_handling: str = "drop",
         max_segment_length: float = None,
         transform_image: Callable = None,
         transform_audio: Callable = None,
@@ -123,7 +124,6 @@ class AudioSet(Dataset):
                     channels = 1
                 for channel in range(channels):
                     if hops_needed == 1:
-
                         self.data_rows.append(
                             (index, filepath, label, start, end, channel)
                         )
@@ -141,22 +141,40 @@ class AudioSet(Dataset):
                                 )
                             )
                         # add last sub_segment only if length is half duration, prevent to short sub_segment of segment
-                        sub_segment_data = (
-                            index,
-                            filepath,
-                            label,
-                            (hops_needed - 1) * hop_length,
-                            end,
-                            channel,
-                        )
-                        if (
-                            sub_segment_data[4] - sub_segment_data[3]
-                            == a.segment_length
-                        ):
-                            self.data_rows.append(sub_segment_data)
+
+                        if end - (hops_needed - 1) * hop_length == a.segment_length:
+                            self.data_rows.append(
+                                (
+                                    index,
+                                    filepath,
+                                    label,
+                                    (hops_needed - 1) * hop_length,
+                                    end,
+                                    channel,
+                                )
+                            )
                         else:
-                            # TODO: last sample should start earlier and ends at end
-                            pass
+                            if sub_segment_rest_handling == "drop":
+                                pass
+                            # move start point so sub_segment has audio segment read length
+                            elif sub_segment_rest_handling == "move_start":
+                                self.data_rows.append(
+                                    (
+                                        index,
+                                        filepath,
+                                        label,
+                                        end - a.segment_length,
+                                        end,
+                                        channel,
+                                    )
+                                )
+                            else:
+                                raise Exception(
+                                    "sub_segment_rest_handling {} not implemented".format(
+                                        sub_segment_rest_handling
+                                    )
+                                )
+                                # TODO: last sample should start earlier and ends at end
                 pass
 
         else:

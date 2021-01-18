@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint
 import argparse
 from pathlib import Path
 from config.configuration import parse_config, ScriptConfig
@@ -14,6 +15,8 @@ from audiomentations import (
     TimeMask,
     FrequencyMask,
 )
+from tools.lighning_callbacks import SaveConfigToLogs
+from pprint import pprint
 from augmentation.AddBackgroundNoiseFromCsv import AddBackgroundNoiseFromCsv
 
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -27,7 +30,7 @@ import albumentations as A
 
 # TPUs
 # trainer = Trainer(tpu_cores=8)
-def start_train(config: ScriptConfig):
+def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
     fit_transform_audio = None
     fit_transform_image = None
     fit_transform_audio = Compose(
@@ -91,43 +94,47 @@ def start_train(config: ScriptConfig):
         fit_transform_audio=fit_transform_audio,
         fit_transform_image=fit_transform_image,
     )
-    model = CnnBirdDetector(
-        data_module.class_count,
-        learning_rate=config.learning.learning_rate,
-        optimizer_type=config.learning.optimizer_type,
-        sgd_momentum=config.learning.sgd_momentum,
-        sgd_weight_decay=config.learning.sgd_weight_decay,
-        scheduler_type=config.learning.scheduler_type,
-        cosine_annealing_lr_t_max=config.learning.cosine_annealing_lr_t_max,
-    )
-    # LOAD CHECKPOINT
-
-    # model = CnnBirdDetector.load_from_checkpoint(
-    #     "./logs/audio_classificator/version_1/checkpoints/epoch=4.ckpt",
-    #     data_module.class_count,
-    # )
+    if checkpoint_filepath is None:
+        model = CnnBirdDetector(
+            data_module.class_count,
+            learning_rate=config.learning.learning_rate,
+            optimizer_type=config.learning.optimizer_type,
+            sgd_momentum=config.learning.sgd_momentum,
+            sgd_weight_decay=config.learning.sgd_weight_decay,
+            scheduler_type=config.learning.scheduler_type,
+            cosine_annealing_lr_t_max=config.learning.cosine_annealing_lr_t_max,
+        )
+    else:
+        # LOAD CHECKPOINT
+        model = CnnBirdDetector.load_from_checkpoint(checkpoint.as_posix())
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.learning.experiment_name
     )
     # dic = {"brand": "Ford", "model": "Mustang", "year": 1964}
 
-    # save Model with best val_loss
-    # checkpoint_callback = ModelCheckpoint(monitor="val_loss",)
+    # Setup Checkpoints
+    checkpoint_callback = ModelCheckpoint(
+        monitor="val_accuracy",
+        save_top_k=3,
+        mode="max",
+        filename="{val_accuracy:.2f}-{epoch:002d}",
+    )
+    save_config_callback = SaveConfigToLogs(config)
 
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
-        gpus=1,
+        gpus=config.system.gpus,
         max_epochs=config.learning.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
-        deterministic=True,
+        deterministic=config.system.deterministic,
+        callbacks=[checkpoint_callback, save_config_callback],
         # profiler="simple",
         # precision=16
         # fast_dev_run=True,
         # auto_scale_batch_size="binsearch"
-        # callbacks=[checkpoint_callback],
     )
     # trainer.tune(model, data_module)
     trainer.fit(model, data_module)
@@ -147,9 +154,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--env", metavar="path", type=str, nargs="?", help="Environment Var Prefix",
     )
+    parser.add_argument(
+        "--load", metavar="load", type=Path, nargs="?", help="Load model load",
+    )
 
     args = parser.parse_args()
     config_filepath = args.config
     print(args.env)
     config = parse_config(config_filepath, enviroment_prefix=args.env)
-    start_train(config)
+    if args.load is not None:
+        assert args.load.exists()
+    start_train(
+        config, checkpoint_filepath=args.load,
+    )

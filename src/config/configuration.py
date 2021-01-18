@@ -3,6 +3,8 @@ from typing import Callable
 from typedconfig.source import EnvironmentConfigSource, IniFileConfigSource
 from pathlib import Path
 
+import json
+
 
 def to_bool(value: str):
     if value == "False":
@@ -24,7 +26,7 @@ def allow_none(function: Callable) -> Callable:
 
 
 class DictConfig(Config):
-    def as_dict(self):
+    def as_dict(self) -> dict:
         raw_dic = vars(self)
         if self._section_name is None:
             filterdItems = [
@@ -35,13 +37,27 @@ class DictConfig(Config):
             result_list = []
             for item in filterdItems:
                 if isinstance(item[1], DictConfig):
-                    result_list.append((item[0], item[1].as_dict()))
+                    result_list.append((item[0][1:], item[1].as_dict()))
             dic = dict(result_list)
             return dic
         else:
-            dic = raw_dic["_cache"][self._section_name]
-            print(self._section_name)
+            result_list = []
+            for item in raw_dic["_cache"][self._section_name].items():
+                result_list.append((item[0].casefold(), item[1]))
+            dic = dict(result_list)
             return dic
+
+    def as_ini_string(self) -> str:
+        lines = []
+        for section in self.as_dict().items():
+            lines.append("[{}]".format(section[0]))
+            for values in section[1].items():
+                lines.append("{} = {}".format(values[0],values[1]))
+        return "\n".join(lines)
+
+    def save_to(self, filepath: Path) -> None:
+        with open(filepath, "w+") as text_file:
+            print(self.as_ini_string(), file=text_file)
 
 
 @section("data")
@@ -68,6 +84,7 @@ class SystemConfig(DictConfig):
     gpus: int = key(cast=int)
     num_workers: int = key(cast=int)
     random_seed: int = key(cast=int)
+    deterministic: bool = key(cast=to_bool)
 
 
 @section("learning")
@@ -88,6 +105,10 @@ class ValidationConfig(DictConfig):
     complete_segment: bool = key(cast=to_bool, required=False, default=False)
     max_segment_length: float = key(
         cast=allow_none(float), required=False, default=None
+    )
+    # handle to short las subsegment: drop | move_start
+    sub_segment_rest_handling: str = key(
+        cast=allow_none(str), required=False, default="move_start"
     )
     multi_channel_handling: str = key(
         cast=allow_none(str), required=False, default="take_first"
