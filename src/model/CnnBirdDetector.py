@@ -71,16 +71,6 @@ class CnnBirdDetector(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         # self.logger.experiment.image("Training data", batch, 0)
         x, classes, _ = batch
-        # first step print out n images
-        if batch_idx == 0 and self.current_epoch == 0:
-            ##images_tensor = torch.cat(x, 0)
-            images = x.cpu().detach().numpy()
-            writer = self.logger.experiment
-            writer.add_images(
-                "First Batch Training Data", images, 0, dataformats="NCHW"
-            )
-            # show model
-            # writer.add_graph(self.model, x, verbose=False)
 
         # forward pass on a batch
         pred = self(x)
@@ -92,7 +82,7 @@ class CnnBirdDetector(pl.LightningModule):
             "train_step_accuracy", accuracy(pred, classes),
         )
         batch_dictionary = {
-            # REQUIRED: It ie required for us to return "loss"
+            # REQUIRED: It is required for us to return "loss"
             "loss": train_loss,
         }
         # cacluate and log all metrics

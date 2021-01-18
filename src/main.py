@@ -15,7 +15,7 @@ from audiomentations import (
     TimeMask,
     FrequencyMask,
 )
-from tools.lighning_callbacks import SaveConfigToLogs
+from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
 from pprint import pprint
 from augmentation.AddBackgroundNoiseFromCsv import AddBackgroundNoiseFromCsv
 
@@ -120,7 +120,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         filename="{val_accuracy:.2f}-{epoch:002d}",
     )
     save_config_callback = SaveConfigToLogs(config)
-
+    log_first_batch_as_image = LogFirstBatchAsImage()
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
@@ -130,7 +130,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
-        callbacks=[checkpoint_callback, save_config_callback],
+        callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
         # profiler="simple",
         # precision=16
         # fast_dev_run=True,
