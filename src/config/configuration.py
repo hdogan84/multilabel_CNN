@@ -52,8 +52,16 @@ class DictConfig(Config):
         for section in self.as_dict().items():
             lines.append("[{}]".format(section[0]))
             for values in section[1].items():
-                lines.append("{} = {}".format(values[0],values[1]))
+                lines.append("{} = {}".format(values[0], values[1]))
         return "\n".join(lines)
+
+    def as_html(self) -> str:
+        lines = []
+        for section in self.as_dict().items():
+            lines.append("<br>[{}]".format(section[0]))
+            for values in section[1].items():
+                lines.append("{} = {}".format(values[0], values[1]))
+        return "<br>".join(lines)
 
     def save_to(self, filepath: Path) -> None:
         with open(filepath, "w+") as text_file:
