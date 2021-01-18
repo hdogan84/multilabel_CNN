@@ -126,9 +126,10 @@ def start_train(config: ScriptConfig):
         # profiler="simple",
         # precision=16
         # fast_dev_run=True,
+        # auto_scale_batch_size="binsearch"
         # callbacks=[checkpoint_callback],
     )
-
+    # trainer.tune(model, data_module)
     trainer.fit(model, data_module)
 
 
@@ -139,8 +140,8 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        default="./src/config/europe254.cfg",
-        # default="./src/config/default.cfg",
+        # default="./src/config/europe254.cfg",
+        default="./src/config/default.cfg",
         help="config file for all settings",
     )
     parser.add_argument(

@@ -134,9 +134,7 @@ class CnnBirdDetector(pl.LightningModule):
             accuracy(preds_on_segment, classes_on_segment),
             prog_bar=True,
         )
-        # self.log(
-        #     "f1_score", f1_score(preds_on_segment, classes_on_segment), prog_bar=True,
-        # )
+
         if classes.dim() == 1:
             multiclasses = inflate_to_multiclass_tensor(classes, self.num_classes)
         else:

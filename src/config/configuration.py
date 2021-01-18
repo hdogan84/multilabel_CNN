@@ -15,7 +15,7 @@ def to_bool(value: str):
 
 def allow_none(function: Callable) -> Callable:
     def F(x: str):
-        if x == "None":
+        if x == "None" or x is None:
             return None
         else:
             return function(x)
@@ -56,6 +56,7 @@ class DataConfig(DictConfig):
     index_start_time: int = key(cast=int)
     index_end_time: int = key(cast=int)
     index_label: int = key(cast=int)
+    index_channels: int = key(cast=allow_none(int), required=False, default=None)
     test_split: float = key(cast=float, required=False, default=None)
     val_split: float = key(cast=float, required=False, default=None)
 
@@ -87,6 +88,9 @@ class ValidationConfig(DictConfig):
     complete_segment: bool = key(cast=to_bool, required=False, default=False)
     max_segment_length: float = key(
         cast=allow_none(float), required=False, default=None
+    )
+    multi_channel_handling: str = key(
+        cast=allow_none(str), required=False, default="take_first"
     )
     part_overlap: float = key(cast=float, required=False, default=0)
     # poolin_methods: mean | meanexp | max

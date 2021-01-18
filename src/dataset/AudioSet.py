@@ -37,6 +37,8 @@ class AudioSet(Dataset):
         raw_data_rows: list,
         class_dict: dict,
         extract_complete_segment: bool = False,
+        part_overlap: float = 1.0,
+        multi_channel_handling: str = "take_first",
         max_segment_length: float = None,
         transform_image: Callable = None,
         transform_audio: Callable = None,
@@ -51,7 +53,6 @@ class AudioSet(Dataset):
         """
         d: DataConfig = config.data
         a: AudioLoadingConfig = config.audio_loading
-        v: ValidationConfig = config.validation
 
         self.class_dict = class_dict
         self.data_path = d.data_path
@@ -59,6 +60,11 @@ class AudioSet(Dataset):
         self.index_end_time = d.index_end_time
         self.index_filepath = d.index_filepath
         self.index_label = d.index_label
+        self.index_channels = d.index_channels
+        self.multi_channel_handling = multi_channel_handling
+        if multi_channel_handling != "take_first":
+            if self.index_channels is None:
+                raise Exception("Please add index of channels in dataset")
 
         self.transform_audio = transform_audio
         self.transform_image = transform_image
@@ -75,21 +81,36 @@ class AudioSet(Dataset):
         self.mel_start_freq = a.mel_start_freq
         self.mel_end_freq = a.mel_end_freq
 
-        tmp_data_rows = list(
-            zip(
-                list(range(len(raw_data_rows))),
-                raw_data_rows.iloc[:, self.index_filepath],
-                raw_data_rows.iloc[:, self.index_label],
-                raw_data_rows.iloc[:, self.index_start_time,],
-                raw_data_rows.iloc[:, self.index_end_time,],
+        # if now index for channels is given play it save and estimate 1 channel
+        if self.index_channels is None:
+            tmp_data_rows = list(
+                zip(
+                    list(range(len(raw_data_rows))),
+                    raw_data_rows.iloc[:, self.index_filepath],
+                    raw_data_rows.iloc[:, self.index_label],
+                    raw_data_rows.iloc[:, self.index_start_time,],
+                    raw_data_rows.iloc[:, self.index_end_time,],
+                    np.ones(1, len(raw_data_rows)),
+                )
             )
-        )
+        else:
+            tmp_data_rows = list(
+                zip(
+                    list(range(len(raw_data_rows))),
+                    raw_data_rows.iloc[:, self.index_filepath],
+                    raw_data_rows.iloc[:, self.index_label],
+                    raw_data_rows.iloc[:, self.index_start_time,],
+                    raw_data_rows.iloc[:, self.index_end_time,],
+                    raw_data_rows.iloc[:, self.index_channels,],
+                )
+            )
+        self.data_rows = []
         if extract_complete_segment:
-            self.data_rows = []
-            overlap_time = v.part_overlap * a.segment_length
+            overlap_time = part_overlap * a.segment_length
             hop_length = a.segment_length - overlap_time
             for data in tmp_data_rows:
-                id, filepath, label, start, end = data
+
+                id, filepath, label, start, end, channels = data
                 duration = end - start
                 if max_segment_length is not None:
                     if duration > max_segment_length:
@@ -98,38 +119,50 @@ class AudioSet(Dataset):
 
                 # add hops read complete file
                 hops_needed = ceil(duration / hop_length)
-                if hops_needed == 1:
-                    self.data_rows.append(data)
-                else:
+                if multi_channel_handling == "take_first":
+                    channels = 1
+                for channel in range(channels):
+                    if hops_needed == 1:
 
-                    for part in range(hops_needed - 1):
-                        part_start = part * hop_length
                         self.data_rows.append(
-                            (
-                                id,
-                                filepath,
-                                label,
-                                part_start,
-                                part_start + a.segment_length,
-                            )
+                            (id, filepath, label, start, end, channel)
                         )
-                    # add last part only if length is half duration, prevent to short part of segment
-                    part_data = (
-                        id,
-                        filepath,
-                        label,
-                        (hops_needed - 1) * hop_length,
-                        end,
-                    )
-                    if part_data[4] - part_data[3] == a.segment_length:
-                        self.data_rows.append(part_data)
                     else:
-                        # TODO: last sample should start earlier and ends at end
-                        pass
+                        for part in range(hops_needed - 1):
+                            part_start = part * hop_length
+                            self.data_rows.append(
+                                (
+                                    id,
+                                    filepath,
+                                    label,
+                                    part_start,
+                                    part_start + a.segment_length,
+                                    channel,
+                                )
+                            )
+                        # add last part only if length is half duration, prevent to short part of segment
+                        part_data = (
+                            id,
+                            filepath,
+                            label,
+                            (hops_needed - 1) * hop_length,
+                            end,
+                            channel,
+                        )
+                        if part_data[4] - part_data[3] == a.segment_length:
+                            self.data_rows.append(part_data)
+                        else:
+                            # TODO: last sample should start earlier and ends at end
+                            pass
                 pass
 
         else:
-            self.data_rows = tmp_data_rows
+            for data in tmp_data_rows:
+                id, filepath, label, start, end, channels = data
+                if multi_channel_handling == "take_first":
+                    channels = 1
+                for channel in range(channels):
+                    self.data_rows.append((id, filepath, label, start, end, channel))
 
     def __len__(self):
         return len(self.data_rows)
@@ -148,6 +181,7 @@ class AudioSet(Dataset):
         start = self.data_rows[idx][3]
         stop = self.data_rows[idx][4]
         # print(filepath.as_posix())
+        # print("get item channel: {}".format(self.data_rows[idx][5]))
         audio_data = read_audio_segment(
             filepath,
             start,
@@ -157,6 +191,7 @@ class AudioSet(Dataset):
             mixing_strategy=self.mixing_strategy,
             padding_strategy=self.padding_strategy,
             randomize_audio_segment=self.randomize_audio_segment,
+            channel=self.data_rows[idx][5],
         )
         # print(len(audio_data))
 
