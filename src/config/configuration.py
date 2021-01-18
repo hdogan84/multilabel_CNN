@@ -92,7 +92,7 @@ class ValidationConfig(DictConfig):
     multi_channel_handling: str = key(
         cast=allow_none(str), required=False, default="take_first"
     )
-    part_overlap: float = key(cast=float, required=False, default=0)
+    sub_segment_overlap: float = key(cast=float, required=False, default=0)
     # poolin_methods: mean | meanexp | max
     pooling_method: str = key(cast=str, required=False, default="mean")
 
