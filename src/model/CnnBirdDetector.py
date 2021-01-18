@@ -52,18 +52,6 @@ class CnnBirdDetector(pl.LightningModule):
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
 
-        # initialise metrics
-        self.metrics_train = torch.nn.ModuleDict({"accuracy": Accuracy()},)
-        self.metrics_val = torch.nn.ModuleDict(
-            {
-                "accuracy": Accuracy(),
-                # "average_precision": AveragePrecision(num_classes=self.num_classes),
-                # # "c_map": AveragePrecision(num_classes=self.num_classes, average="macro"),
-                # "confusion_matrix": ConfusionMatrix(num_classes=self.num_classes),
-                # "f1": F1(num_classes=self.num_classes, average="micro"),
-            }
-        )
-
     def forward(self, x):
         x = self.model(x)
         return F.log_softmax(x, dim=1)  # return logits
@@ -74,7 +62,10 @@ class CnnBirdDetector(pl.LightningModule):
 
         # forward pass on a batch
         pred = self(x)
+
         train_loss = F.nll_loss(pred, classes)
+
+        # logging
         self.log(
             "train_step_loss", train_loss,
         )
@@ -85,14 +76,7 @@ class CnnBirdDetector(pl.LightningModule):
             # REQUIRED: It is required for us to return "loss"
             "loss": train_loss,
         }
-        # cacluate and log all metrics
-        for name, metric in self.metrics_train.items():
-            self.log(
-                "Train {}".format(name.title()),
-                metric(pred, classes),
-                on_step=True,
-                on_epoch=False,
-            )
+
         return batch_dictionary
 
     def validation_step(self, batch, batch_idx):
@@ -151,6 +135,11 @@ class CnnBirdDetector(pl.LightningModule):
     def configure_optimizers(self):
 
         if self.optimizer_type == "SGD":
+            print(
+                "Optimizer SGD learning rate: {} momentum: {} weight_decay: {}".format(
+                    self.learning_rate, self.momentum, self.weight_decay
+                )
+            )
             optimizer = torch.optim.SGD(
                 self.parameters(),
                 self.learning_rate,

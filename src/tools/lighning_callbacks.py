@@ -23,12 +23,9 @@ class LogFirstBatchAsImage(Callback):
     ):
         # first step print out n images
         if batch_idx == 0 and trainer.current_epoch == 0:
-            ##images_tensor = torch.cat(x, 0)
             x, classes, _ = batch
             images = x.cpu().detach().numpy()
             writer = trainer.logger.experiment
             writer.add_images(
                 "First Batch Training Data", images, 0, dataformats="NCHW"
             )
-            # show model
-            # writer.add_graph(self.model, x, verbose=False)
