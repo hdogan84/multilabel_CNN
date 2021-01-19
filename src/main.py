@@ -6,18 +6,19 @@ from config.configuration import parse_config, ScriptConfig
 from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
 from pytorch_lightning import loggers as pl_loggers
-from audiomentations import (
-    Compose,
+from augmentation.signal import (
     AddGaussianNoise,
     TimeStretch,
     PitchShift,
     Shift,
     TimeMask,
     FrequencyMask,
+    AddBackgroundNoiseFromCsv,
+    ExtendedCompose as Compose,
 )
+
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
 from pprint import pprint
-from augmentation.AddBackgroundNoiseFromCsv import AddBackgroundNoiseFromCsv
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 import albumentations as A
@@ -106,7 +107,15 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         )
     else:
         # LOAD CHECKPOINT
-        model = CnnBirdDetector.load_from_checkpoint(checkpoint.as_posix())
+        model = CnnBirdDetector.load_from_checkpoint(
+            checkpoint_filepath.as_posix(),
+            learning_rate=config.learning.learning_rate,
+            optimizer_type=config.learning.optimizer_type,
+            sgd_momentum=config.learning.sgd_momentum,
+            sgd_weight_decay=config.learning.sgd_weight_decay,
+            scheduler_type=config.learning.scheduler_type,
+            cosine_annealing_lr_t_max=config.learning.cosine_annealing_lr_t_max,
+        )
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.learning.experiment_name
     )
@@ -131,9 +140,9 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
-        # profiler="simple",
+        profiler="simple",
         # precision=16
-        # fast_dev_run=True,
+        fast_dev_run=True,
         # auto_scale_batch_size="binsearch"
     )
     # trainer.tune(model, data_module)
