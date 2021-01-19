@@ -83,6 +83,7 @@ class DataConfig(DictConfig):
     index_channels: int = key(cast=allow_none(int), required=False, default=None)
     test_split: float = key(cast=float, required=False, default=None)
     val_split: float = key(cast=float, required=False, default=None)
+    shuffle_signal_augmentation: bool = key(cast=to_bool, required=False, default=False)
 
 
 @section("system")
@@ -195,6 +196,20 @@ class Shift(DictConfig):
     p: float = key(cast=float, required=False, default=0.0)
 
 
+@section("AddPinkNoiseSnr")
+class AddPinkNoiseSnr(DictConfig):
+    min_snr: float = key(cast=float)
+    max_snr: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
+
+
+@section("VolumeControl")
+class VolumeControl(DictConfig):
+    db_limit: float = key(cast=float)
+    mode: str = key(cast=str)
+    p: float = key(cast=float, required=False, default=0.0)
+
+
 class ScriptConfig(DictConfig):
     data: DataConfig = group_key(DataConfig)
     system: SystemConfig = group_key(SystemConfig)
@@ -209,6 +224,8 @@ class ScriptConfig(DictConfig):
     time_strech: TimeStretch = group_key(TimeStretch)
     pitch_shift: PitchShift = group_key(PitchShift)
     shift: Shift = group_key(Shift)
+    add_pink_noise_snr: AddPinkNoiseSnr = group_key(AddPinkNoiseSnr)
+    volume_control: VolumeControl = group_key(VolumeControl)
 
 
 def parse_config(config_filepath: Path, enviroment_prefix: str = None) -> ScriptConfig:

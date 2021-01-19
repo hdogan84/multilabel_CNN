@@ -8,9 +8,9 @@ class VolumeControl(BaseWaveformTransform):
         assert mode in [
             "uniform",
             "fade",
-            "fade",
             "cosine",
             "sine",
+            "random",
         ], "`mode` must be one of 'uniform', 'fade', 'cosine', 'sine'"
 
         self.db_limit = db_limit

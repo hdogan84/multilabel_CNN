@@ -1,5 +1,5 @@
 from augmentation.signal.AddBackgroundNoiseFromCsv import *
-from augmentation.signal.AddPinkNoise import *
+from augmentation.signal.AddPinkNoiseSnr import *
 from augmentation.signal.VolumeControl import *
 from augmentation.signal.ExtendedCompose import *
 

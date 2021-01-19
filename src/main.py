@@ -15,6 +15,8 @@ from augmentation.signal import (
     FrequencyMask,
     AddBackgroundNoiseFromCsv,
     ExtendedCompose as Compose,
+    AddPinkNoiseSnr,
+    VolumeControl,
 )
 
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
@@ -74,7 +76,18 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
                 rollover=config.shift.rollover,
                 p=config.shift.p,
             ),
-        ]
+            AddPinkNoiseSnr(
+                p=config.add_pink_noise_snr.p,
+                min_snr=config.add_pink_noise_snr.min_snr,
+                max_snr=config.add_pink_noise_snr.max_snr,
+            ),
+            VolumeControl(
+                p=config.volume_control.p,
+                db_limit=config.volume_control.db_limit,
+                mode=config.volume_control.mode,
+            ),
+        ],
+        shuffle=config.data.shuffle_signal_augmentation,
     )
     fit_transform_image = A.Compose(
         [
@@ -140,9 +153,9 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
-        profiler="simple",
+        # profiler="simple",
         # precision=16
-        fast_dev_run=True,
+        # fast_dev_run=True,
         # auto_scale_batch_size="binsearch"
     )
     # trainer.tune(model, data_module)

@@ -3,12 +3,10 @@ import numpy as np
 from audiomentations.augmentations.transforms import BaseWaveformTransform
 
 
-class PinkNoiseSNR(BaseWaveformTransform):
+class AddPinkNoiseSnr(BaseWaveformTransform):
     """Add pink noise to the samples with random Signal to Noise Ratio (SNR)"""
 
-    def __init__(
-        self, p=0.5, min_snr=5.0, max_snr=20.0,
-    ):
+    def __init__(self, p=0.5, min_snr=5.0, max_snr=20.0):
         """
         :param min_snr: Minimum signal-to-noise ratio
         :param max_snr: Maximum signal-to-noise ratio
