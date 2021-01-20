@@ -73,7 +73,7 @@ class AudioSet(Dataset):
         self.randomize_audio_segment = randomize_audio_segment
         self.segment_length = a.segment_length
         self.sample_rate = a.sample_rate
-        self.mixing_strategy = a.mixing_strategy
+        self.channel_mixing_strategy = a.channel_mixing_strategy
         self.padding_strategy = a.padding_strategy
 
         self.fft_size_in_samples = a.fft_size_in_samples
@@ -82,6 +82,12 @@ class AudioSet(Dataset):
         self.mel_start_freq = a.mel_start_freq
         self.mel_end_freq = a.mel_end_freq
 
+        # combin data_path with filepath with  of all entryies
+
+        if d.data_path is not None:
+            raw_data_rows.iloc[:, self.index_filepath] = raw_data_rows.iloc[
+                :, self.index_filepath
+            ].apply(d.data_path.joinpath)
         # if now index for channels is given play it save and estimate 1 channel
         if self.index_channels is None:
             tmp_data_rows = list(
@@ -194,10 +200,7 @@ class AudioSet(Dataset):
         segment_index = self.data_rows[index][0]
         filepath = Path(self.data_rows[index][1])
         label = self.data_rows[index][2]
-        if self.data_path is not None:
-            filepath = self.data_path.joinpath(
-                *filepath.parts[len(filepath.parts) - 6 :]
-            )
+        label_index = self.class_dict[label]
 
         start = self.data_rows[index][3]
         stop = self.data_rows[index][4]
@@ -209,7 +212,7 @@ class AudioSet(Dataset):
             stop,
             self.segment_length,
             self.sample_rate,
-            mixing_strategy=self.mixing_strategy,
+            channel_mixing_strategy=self.channel_mixing_strategy,
             padding_strategy=self.padding_strategy,
             randomize_audio_segment=self.randomize_audio_segment,
             channel=self.data_rows[index][5],
@@ -217,7 +220,9 @@ class AudioSet(Dataset):
         # print(len(audio_data))
 
         augmented_signal = audio_data = (
-            self.transform_audio(samples=audio_data, sample_rate=self.sample_rate)
+            self.transform_audio(
+                samples=audio_data, sample_rate=self.sample_rate, y=label_index
+            )
             if self.transform_audio is not None
             else audio_data
         )
@@ -246,5 +251,4 @@ class AudioSet(Dataset):
         tensor = transforms.ToTensor()(augmented_image_data).float()
         # plt.imshow(augmented_image_data, interpolation="nearest")
         # plt.show()
-        label_index = self.class_dict[label]
         return tensor, label_index, segment_index

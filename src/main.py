@@ -47,6 +47,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
             FrequencyMask(min_frequency_band=0.01, max_frequency_band=0.05, p=0.1),
             AddBackgroundNoiseFromCsv(
                 config.add_background_noise_from_csv.filepath,
+                data_path=config.add_background_noise_from_csv.data_path,
                 min_snr_in_db=config.add_background_noise_from_csv.min_snr_in_db,
                 max_snr_in_db=config.add_background_noise_from_csv.max_snr_in_db,
                 index_filepath=config.add_background_noise_from_csv.index_filepath,
@@ -155,7 +156,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
         # profiler="simple",
         # precision=16
-        # fast_dev_run=True,
+        fast_dev_run=True,
         # auto_scale_batch_size="binsearch"
     )
     # trainer.tune(model, data_module)

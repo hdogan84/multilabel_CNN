@@ -131,7 +131,7 @@ class ValidationConfig(DictConfig):
 class AudioLoadingConfig(DictConfig):
     segment_length: int = key(cast=int)
     sample_rate: int = key(cast=int)
-    mixing_strategy: str = key(cast=str)
+    channel_mixing_strategy: str = key(cast=str)
     padding_strategy: str = key(cast=str)
     fft_size_in_samples: int = key(cast=int)
     fft_hop_size_in_samples: int = key(cast=int)
@@ -158,6 +158,7 @@ class TimeMask(DictConfig):
 @section("AddBackgroundNoiseFromCsv")
 class AddBackgroundNoiseFromCsv(DictConfig):
     filepath: Path = key(cast=Path)
+    data_path: Path = key(cast=Path)
     index_filepath: int = key(cast=int, required=False, default=0)
     min_snr_in_db: int = key(cast=int)
     max_snr_in_db: int = key(cast=int)

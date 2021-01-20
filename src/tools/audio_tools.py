@@ -8,7 +8,7 @@ from enum import Enum
 
 class Padding:
     SILENCE = "silence"
-    CYCLIC = "cyclic"
+    WRAP_AROUND = "wrap_around"
 
 
 class Mixing:
@@ -23,7 +23,7 @@ def read_audio_segment(
     stop: int,
     desired_length: int,
     sample_rate: int,
-    mixing_strategy=Mixing.TAKE_ONE,
+    channel_mixing_strategy=Mixing.TAKE_ONE,
     padding_strategy=Padding.SILENCE,
     randomize_audio_segment: bool = False,
     channel: int = 0,
@@ -51,7 +51,7 @@ def read_audio_segment(
 
     # IF more then one channel do mixing
     if audio_data.shape[1] > 1:
-        if mixing_strategy == Mixing.TAKE_ONE:
+        if channel_mixing_strategy == Mixing.TAKE_ONE:
             audio_data = audio_data[:, channel]
         else:
             raise NotImplementedError()
@@ -62,7 +62,7 @@ def read_audio_segment(
     desired_sample_length = desired_length * sample_rate
 
     if len(audio_data) < desired_sample_length:
-        if padding_strategy == Padding.CYCLIC:
+        if padding_strategy == Padding.WRAP_AROUND:
             # print("cylic")
             padded_audio_data = audio_data.copy()
             # change starting position

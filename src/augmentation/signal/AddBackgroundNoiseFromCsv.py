@@ -40,6 +40,7 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
         p=0.5,
         delimiter=";",
         quotechar="|",
+        data_path=None,
     ):
         """
         :param sounds_path: Path to a folder that contains sound files to randomly mix in. These
@@ -60,6 +61,10 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
             pass
 
         dataframe = pd.read_csv(csv_filepath, delimiter=delimiter, quotechar=quotechar)
+        if data_path is not None:
+            dataframe.iloc[:, index_filepath] = dataframe.iloc[:, index_filepath].apply(
+                data_path.joinpath
+            )
         self.sound_file_paths = dataframe.iloc[:, index_filepath]
         self.min_snr_in_db = min_snr_in_db
         self.max_snr_in_db = max_snr_in_db
