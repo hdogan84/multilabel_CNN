@@ -1,6 +1,8 @@
 import inspect
 import random
 from inspect import signature
+from warnings import catch_warnings
+import warnings
 
 
 class ExtendedCompose:
@@ -33,14 +35,23 @@ class ExtendedCompose:
 
     def __call__(self, samples, sample_rate, y=None):
         transforms = self.transforms.copy()
+
         if random.random() < self.p:
+
             if self.shuffle:
                 random.shuffle(transforms)
             for transform, args_len, _ in transforms:
-                if args_len == 2:
-                    samples = transform(samples, sample_rate)
-                else:
-                    samples = transform(samples, sample_rate, y)
+                try:
+                    if args_len == 2:
+                        samples = transform(samples, sample_rate)
+                    else:
+                        samples = transform(samples, sample_rate, y)
+                except Exception as e:
+                    if str(e) == "local variable 'data' referenced before assignment":
+                        # catch error in scipy wav read function reason is probaly broken wav file
+                        pass
+                    else:
+                        raise e
 
         return samples
 

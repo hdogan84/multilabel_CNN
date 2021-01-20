@@ -1,7 +1,8 @@
-from augmentation.signal.AddBackgroundNoiseFromCsv import *
-from augmentation.signal.AddPinkNoiseSnr import *
-from augmentation.signal.VolumeControl import *
-from augmentation.signal.ExtendedCompose import *
+from augmentation.signal.AddBackgroundNoiseFromCsv import AddBackgroundNoiseFromCsv
+from augmentation.signal.AddPinkNoiseSnr import AddPinkNoiseSnr
+from augmentation.signal.VolumeControl import VolumeControl
+from augmentation.signal.ExtendedCompose import ExtendedCompose
+from augmentation.signal.AddSameClassSignal import AddSameClassSignal
 
 # Import Audiomentations
 from audiomentations import (

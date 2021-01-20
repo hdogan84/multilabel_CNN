@@ -17,6 +17,7 @@ from augmentation.signal import (
     ExtendedCompose as Compose,
     AddPinkNoiseSnr,
     VolumeControl,
+    AddSameClassSignal,
 )
 
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
@@ -43,6 +44,23 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
                 max_band_part=config.time_mask.max_band_part,
                 fade=config.time_mask.fade,
                 p=config.time_mask.p,
+            ),
+            AddSameClassSignal(
+                data_path=config.add_same_class_signal.data_path,
+                class_list_filepath=config.add_same_class_signal.class_list_filepath,
+                data_list_filepath=config.add_same_class_signal.data_list_filepath,
+                index_filepath=config.add_same_class_signal.index_filepath,
+                index_start_time=config.add_same_class_signal.index_start_time,
+                index_end_time=config.add_same_class_signal.index_end_time,
+                index_label=config.add_same_class_signal.index_label,
+                index_channels=config.add_same_class_signal.index_channels,
+                delimiter=config.add_same_class_signal.delimiter,
+                quotechar=config.add_same_class_signal.quotechar,
+                min_ssr=config.add_same_class_signal.min_ssr,
+                max_ssr=config.add_same_class_signal.max_ssr,
+                max_n=config.add_same_class_signal.max_n,
+                padding_strategy=config.add_same_class_signal.padding_strategy,
+                channel_mixing_strategy=config.add_same_class_signal.channel_mixing_strategy,
             ),
             FrequencyMask(min_frequency_band=0.01, max_frequency_band=0.05, p=0.1),
             AddBackgroundNoiseFromCsv(
@@ -156,7 +174,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
         # profiler="simple",
         # precision=16
-        fast_dev_run=True,
+        # fast_dev_run=True,
         # auto_scale_batch_size="binsearch"
     )
     # trainer.tune(model, data_module)

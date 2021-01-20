@@ -59,7 +59,7 @@ def read_audio_segment(
         audio_data = audio_data[:, 0]
 
     # If segment smaller than desired start padding it
-    desired_sample_length = desired_length * sample_rate
+    desired_sample_length = round(desired_length * sample_rate)
 
     if len(audio_data) < desired_sample_length:
         if padding_strategy == Padding.WRAP_AROUND:

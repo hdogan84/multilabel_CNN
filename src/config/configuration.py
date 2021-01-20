@@ -211,6 +211,26 @@ class VolumeControl(DictConfig):
     p: float = key(cast=float, required=False, default=0.0)
 
 
+@section("AddSameClassSignal")
+class AddSameClassSignal(DictConfig):
+    p: float = key(cast=float, required=False, default=0.0)
+    min_ssr: float = key(cast=float, required=False, default=-40.0)
+    max_ssr: float = key(cast=float, required=False, default=3.0)
+    max_n: int = key(cast=int, required=False, default=1)
+    channel_mixing_strategy: str = key(cast=str, required=False, default="take_one")
+    padding_strategy: str = key(cast=str)
+    data_list_filepath: Path = key(cast=Path)
+    class_list_filepath: Path = key(cast=allow_none(Path), required=False, default=None)
+    data_path: Path = key(cast=Path)
+    index_filepath: int = key(cast=int)
+    index_start_time: int = key(cast=int)
+    index_end_time: int = key(cast=int)
+    index_label: int = key(cast=int)
+    index_channels: int = key(cast=allow_none(int), required=False, default=None)
+    delimiter: str = key(cast=str, required=False, default=";")
+    quotechar: str = key(cast=str, required=False, default="|")
+
+
 class ScriptConfig(DictConfig):
     data: DataConfig = group_key(DataConfig)
     system: SystemConfig = group_key(SystemConfig)
@@ -227,6 +247,7 @@ class ScriptConfig(DictConfig):
     shift: Shift = group_key(Shift)
     add_pink_noise_snr: AddPinkNoiseSnr = group_key(AddPinkNoiseSnr)
     volume_control: VolumeControl = group_key(VolumeControl)
+    add_same_class_signal: AddSameClassSignal = group_key(AddSameClassSignal)
 
 
 def parse_config(config_filepath: Path, enviroment_prefix: str = None) -> ScriptConfig:
