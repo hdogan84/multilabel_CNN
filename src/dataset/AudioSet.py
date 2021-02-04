@@ -248,7 +248,13 @@ class AudioSet(Dataset):
             if self.transform_image is not None
             else image_data
         )
-        tensor = transforms.ToTensor()(augmented_image_data).float()
+
+        transform = transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize(mean=0.456, std=0.224),]
+        )
+
+        tensor = transform(augmented_image_data)
         # plt.imshow(augmented_image_data, interpolation="nearest")
         # plt.show()
+
         return tensor, label_index, segment_index

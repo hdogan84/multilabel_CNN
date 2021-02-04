@@ -9,6 +9,7 @@ import pytorch_lightning as pl
 import torchvision.models as models
 from pytorch_lightning import metrics
 from pytorch_lightning.metrics.functional import accuracy, average_precision, f1_score
+from pytorch_lightning.metrics.functional.f_beta import f1
 from pytorch_lightning.metrics.classification import (
     Accuracy,
     AveragePrecision,
@@ -17,6 +18,7 @@ from pytorch_lightning.metrics.classification import (
 )
 from tools.tensor_helpers import pool_by_segments, inflate_to_multiclass_tensor
 import numpy as np
+
 from sklearn import metrics
 
 
@@ -51,10 +53,11 @@ class CnnBirdDetector(pl.LightningModule):
             1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
+        self.bce = nn.BCELoss()
 
     def forward(self, x):
         x = self.model(x)
-        return F.log_softmax(x, dim=1)  # return logits
+        return F.softmax(x, dim=1)  # return logits
 
     def training_step(self, batch, batch_idx):
         # self.logger.experiment.image("Training data", batch, 0)
@@ -63,7 +66,7 @@ class CnnBirdDetector(pl.LightningModule):
         # forward pass on a batch
         pred = self(x)
 
-        train_loss = F.nll_loss(pred, classes)
+        train_loss = F.cross_entropy(pred, classes)
 
         # logging
         self.log(
@@ -82,7 +85,7 @@ class CnnBirdDetector(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         x, classes, segment_indices = batch
         preds = self(x)
-        loss = F.nll_loss(preds, classes)
+        loss = F.cross_entropy(preds, classes)
         batch_dictionary = {
             "loss": loss,
             "preds": preds,
@@ -108,18 +111,28 @@ class CnnBirdDetector(pl.LightningModule):
             accuracy(preds_on_segment, classes_on_segment),
             prog_bar=True,
         )
-
+        # print(preds_on_segment.shape)
+        # print(classes_on_segment.shape)
+        # print(classes_on_segment)
         if classes.dim() == 1:
-            multiclasses = inflate_to_multiclass_tensor(classes, self.num_classes)
-        else:
-            multiclasses = classes
-            # inflate class tensor
-
-        #     class_matrix, preds_on_segment
-        # )
+            classes_on_segment = inflate_to_multiclass_tensor(  # to_one_hot_encoding
+                classes_on_segment, self.num_classes
+            )
+        # print(classes_on_segment[0, :])
+        print(torch.sigmoid(preds_on_segment))
+        print(torch.min(preds_on_segment))
+        print(torch.max(preds_on_segment))
+        print(torch.mean(preds_on_segment))
+        # inflate class tensor
+        self.log(
+            "val_f1_score",
+            f1(preds_on_segment, classes_on_segment, self.num_classes,),
+            prog_bar=True,
+        )
         # cMap = metrics.average_precision_score(
-        #     class_matrix, preds_on_segment, average="macro"
-        # )  # 'micro' 'macro' 'samples'
+        #     multiclasses, preds_on_segment, average="macro"
+        # )
+        # 'micro' 'macro' 'samples'
         # self.log(
         #     "lrap", lrap, prog_bar=True,
         # )

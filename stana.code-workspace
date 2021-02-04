@@ -5,7 +5,6 @@
     }
   ],
   "settings": {
-    "python.pythonPath": "/home/stana/anaconda3/envs/rank/bin/python",
     "python.analysis.extraPaths": [
       "${workspaceFolder}/src"
     ],

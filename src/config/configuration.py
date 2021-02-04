@@ -11,6 +11,8 @@ def to_bool(value: str):
         return False
     elif value == "True":
         return True
+    elif type(value) == bool:
+        return value
     else:
         raise ValueError()
 
@@ -23,6 +25,12 @@ def allow_none(function: Callable) -> Callable:
             return function(x)
 
     return F
+
+
+def str_to_list(value: str) -> list:
+    if type(value) == list:
+        return value
+    return [i.strip() for i in value.split(",")]
 
 
 class DictConfig(Config):
@@ -83,7 +91,7 @@ class DataConfig(DictConfig):
     index_channels: int = key(cast=allow_none(int), required=False, default=None)
     test_split: float = key(cast=float, required=False, default=None)
     val_split: float = key(cast=float, required=False, default=None)
-    shuffle_signal_augmentation: bool = key(cast=to_bool, required=False, default=False)
+    batch_size: int = key(cast=int)
 
 
 @section("system")
@@ -94,13 +102,12 @@ class SystemConfig(DictConfig):
     num_workers: int = key(cast=int)
     random_seed: int = key(cast=int)
     deterministic: bool = key(cast=to_bool)
-
-
-@section("learning")
-class LearningConfig(DictConfig):
     experiment_name: str = key(cast=str)
-    batch_size: int = key(cast=int)
     max_epochs: int = key(cast=int)
+
+
+@section("optimizer")
+class LearningConfig(DictConfig):
     learning_rate: float = key(cast=float)
     optimizer_type: str = key(cast=str, required=False, default=None)
     sgd_momentum: float = key(cast=float, required=False, default=0)
@@ -140,6 +147,12 @@ class AudioLoadingConfig(DictConfig):
     mel_end_freq: int = key(cast=int)
 
 
+@section("Augmentation")
+class Augmentation(DictConfig):
+    shuffle_signal_augmentation: bool = key(cast=to_bool, required=False, default=False)
+    signal_pipline: list = key(cast=allow_none(str_to_list), required=False, default=[])
+
+
 @section("TimeMask")
 class TimeMask(DictConfig):
     min_band_part: float = key(cast=float)
@@ -148,11 +161,11 @@ class TimeMask(DictConfig):
     p: float = key(cast=float, required=False, default=0.0)
 
 
-# @section("FrequencyMask")
-# class TimeMask(DictConfig):
-#     min_frequency_band: float = key(cast=float)
-#     max_frequency_band: float = key(cast=float)
-#     p: float = key(cast=float, required=False, default=0.0)
+@section("FrequencyMask")
+class FrequencyMask(DictConfig):
+    min_frequency_band: float = key(cast=float)
+    max_frequency_band: float = key(cast=float)
+    p: float = key(cast=float, required=False, default=0.0)
 
 
 @section("AddBackgroundNoiseFromCsv")
@@ -237,7 +250,9 @@ class ScriptConfig(DictConfig):
     learning: LearningConfig = group_key(LearningConfig)
     validation: ValidationConfig = group_key(ValidationConfig)
     audio_loading: AudioLoadingConfig = group_key(AudioLoadingConfig)
+    augmentation: Augmentation = group_key(Augmentation)
     time_mask: TimeMask = group_key(TimeMask)
+    frequency_mask: FrequencyMask = group_key(FrequencyMask)
     add_background_noise_from_csv: AddBackgroundNoiseFromCsv = group_key(
         AddBackgroundNoiseFromCsv
     )

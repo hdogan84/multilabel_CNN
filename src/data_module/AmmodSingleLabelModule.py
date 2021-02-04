@@ -53,7 +53,7 @@ class AmmodSingleLabelModule(LightningDataModule):
             s.num_workers if s.num_workers >= 0 else multiprocessing.cpu_count()
         )
         self.random_seed = s.random_seed
-        self.batch_size = l.batch_size
+        self.batch_size = d.batch_size
         self.index_label = d.index_label
         self.fit_transform_audio = fit_transform_audio
         self.fit_transform_image = fit_transform_image

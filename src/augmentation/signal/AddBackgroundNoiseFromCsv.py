@@ -33,7 +33,7 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
 
     def __init__(
         self,
-        csv_filepath,
+        filepath,
         index_filepath=0,
         min_snr_in_db=3,
         max_snr_in_db=30,
@@ -60,7 +60,7 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
         except AssertionError:
             pass
 
-        dataframe = pd.read_csv(csv_filepath, delimiter=delimiter, quotechar=quotechar)
+        dataframe = pd.read_csv(filepath, delimiter=delimiter, quotechar=quotechar)
         if data_path is not None:
             dataframe.iloc[:, index_filepath] = dataframe.iloc[:, index_filepath].apply(
                 data_path.joinpath

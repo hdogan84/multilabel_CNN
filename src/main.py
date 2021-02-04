@@ -6,19 +6,7 @@ from config.configuration import parse_config, ScriptConfig
 from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
 from pytorch_lightning import loggers as pl_loggers
-from augmentation.signal import (
-    AddGaussianNoise,
-    TimeStretch,
-    PitchShift,
-    Shift,
-    TimeMask,
-    FrequencyMask,
-    AddBackgroundNoiseFromCsv,
-    ExtendedCompose as Compose,
-    AddPinkNoiseSnr,
-    VolumeControl,
-    AddSameClassSignal,
-)
+from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
 
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
 from pprint import pprint
@@ -35,82 +23,14 @@ import albumentations as A
 # TPUs
 # trainer = Trainer(tpu_cores=8)
 def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
-    fit_transform_audio = None
-    fit_transform_image = None
-    fit_transform_audio = Compose(
-        [
-            TimeMask(
-                min_band_part=config.time_mask.min_band_part,
-                max_band_part=config.time_mask.max_band_part,
-                fade=config.time_mask.fade,
-                p=config.time_mask.p,
-            ),
-            AddSameClassSignal(
-                data_path=config.add_same_class_signal.data_path,
-                class_list_filepath=config.add_same_class_signal.class_list_filepath,
-                data_list_filepath=config.add_same_class_signal.data_list_filepath,
-                index_filepath=config.add_same_class_signal.index_filepath,
-                index_start_time=config.add_same_class_signal.index_start_time,
-                index_end_time=config.add_same_class_signal.index_end_time,
-                index_label=config.add_same_class_signal.index_label,
-                index_channels=config.add_same_class_signal.index_channels,
-                delimiter=config.add_same_class_signal.delimiter,
-                quotechar=config.add_same_class_signal.quotechar,
-                min_ssr=config.add_same_class_signal.min_ssr,
-                max_ssr=config.add_same_class_signal.max_ssr,
-                max_n=config.add_same_class_signal.max_n,
-                padding_strategy=config.add_same_class_signal.padding_strategy,
-                channel_mixing_strategy=config.add_same_class_signal.channel_mixing_strategy,
-            ),
-            FrequencyMask(min_frequency_band=0.01, max_frequency_band=0.05, p=0.1),
-            AddBackgroundNoiseFromCsv(
-                config.add_background_noise_from_csv.filepath,
-                data_path=config.add_background_noise_from_csv.data_path,
-                min_snr_in_db=config.add_background_noise_from_csv.min_snr_in_db,
-                max_snr_in_db=config.add_background_noise_from_csv.max_snr_in_db,
-                index_filepath=config.add_background_noise_from_csv.index_filepath,
-                delimiter=config.add_background_noise_from_csv.delimiter,
-                quotechar=config.add_background_noise_from_csv.quotechar,
-                p=config.add_background_noise_from_csv.p,
-            ),
-            AddGaussianNoise(
-                min_amplitude=config.add_gaussian_noise.min_amplitude,
-                max_amplitude=config.add_gaussian_noise.max_amplitude,
-                p=config.add_gaussian_noise.p,
-            ),
-            TimeStretch(
-                min_rate=config.time_strech.min_rate,
-                max_rate=config.time_strech.max_rate,
-                leave_length_unchanged=config.time_strech.leave_length_unchanged,
-                p=config.time_strech.p,
-            ),
-            PitchShift(
-                min_semitones=config.pitch_shift.min_semitones,
-                max_semitones=config.pitch_shift.max_semitones,
-                p=config.pitch_shift.p,
-            ),
-            Shift(
-                min_fraction=config.shift.min_fraction,
-                max_fraction=config.shift.max_fraction,
-                rollover=config.shift.rollover,
-                p=config.shift.p,
-            ),
-            AddPinkNoiseSnr(
-                p=config.add_pink_noise_snr.p,
-                min_snr=config.add_pink_noise_snr.min_snr,
-                max_snr=config.add_pink_noise_snr.max_snr,
-            ),
-            VolumeControl(
-                p=config.volume_control.p,
-                db_limit=config.volume_control.db_limit,
-                mode=config.volume_control.mode,
-            ),
-        ],
-        shuffle=config.data.shuffle_signal_augmentation,
+
+    fit_transform_audio = SignalCompose(
+        create_signal_pipeline(config.augmentation.signal_pipline, config),
+        shuffle=config.augmentation.shuffle_signal_augmentation,
     )
     fit_transform_image = A.Compose(
         [
-            A.HorizontalFlip(p=0.2),
+            # A.HorizontalFlip(p=0.2),
             # A.VerticalFlip(p=0.5),
             A.RandomBrightnessContrast(
                 brightness_limit=0.2,
@@ -127,29 +47,21 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         fit_transform_audio=fit_transform_audio,
         fit_transform_image=fit_transform_image,
     )
+
+    # model = CnnBirdDetector.load_from_checkpoint(
+    #     "./logs/audio_classificator_logging/version_8/checkpoints/val_accuracy=0.78-epoch=33.ckpt",
+    #     **config.learning.as_dict()
+    # )
+
     if checkpoint_filepath is None:
-        model = CnnBirdDetector(
-            data_module.class_count,
-            learning_rate=config.learning.learning_rate,
-            optimizer_type=config.learning.optimizer_type,
-            sgd_momentum=config.learning.sgd_momentum,
-            sgd_weight_decay=config.learning.sgd_weight_decay,
-            scheduler_type=config.learning.scheduler_type,
-            cosine_annealing_lr_t_max=config.learning.cosine_annealing_lr_t_max,
-        )
+        model = CnnBirdDetector(data_module.class_count, **config.learning.as_dict())
     else:
         # LOAD CHECKPOINT
         model = CnnBirdDetector.load_from_checkpoint(
-            checkpoint_filepath.as_posix(),
-            learning_rate=config.learning.learning_rate,
-            optimizer_type=config.learning.optimizer_type,
-            sgd_momentum=config.learning.sgd_momentum,
-            sgd_weight_decay=config.learning.sgd_weight_decay,
-            scheduler_type=config.learning.scheduler_type,
-            cosine_annealing_lr_t_max=config.learning.cosine_annealing_lr_t_max,
+            checkpoint_filepath.as_posix(), **config.learning.as_dict()
         )
     tb_logger = pl_loggers.TensorBoardLogger(
-        config.system.log_dir, name=config.learning.experiment_name
+        config.system.log_dir, name=config.system.experiment_name
     )
     # dic = {"brand": "Ford", "model": "Mustang", "year": 1964}
 
@@ -166,9 +78,9 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
 
     trainer = pl.Trainer(
         gpus=config.system.gpus,
-        max_epochs=config.learning.max_epochs,
+        max_epochs=config.system.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
-        logger=tb_logger,
+        # logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
