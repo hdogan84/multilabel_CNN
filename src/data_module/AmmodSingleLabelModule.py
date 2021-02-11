@@ -1,5 +1,6 @@
 from typing import Callable
 import multiprocessing
+import torch
 from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 import pandas as pd
@@ -8,6 +9,7 @@ from sklearn.utils import shuffle
 from dataset.AudioSet import AudioSet
 from config.configuration import DataConfig, ScriptConfig, SystemConfig, LearningConfig
 from pathlib import Path
+from pytorch_lightning.metrics.utils import to_onehot
 
 
 class AmmodSingleLabelModule(LightningDataModule):
@@ -62,8 +64,21 @@ class AmmodSingleLabelModule(LightningDataModule):
         class_list = pd.read_csv(
             self.class_list_filepath, delimiter=";", quotechar="|",
         )
-        self.class_dict = {class_list.iloc[i, 0]: i for i in range(0, len(class_list))}
         self.class_count = len(class_list)
+        if d.one_hot_encoding:
+
+            class_tensor = to_onehot(
+                torch.range(0, len(class_list) - 1), len(class_list)
+            )
+            self.class_dict = {
+                class_list.iloc[i, 0]: class_tensor[i]
+                for i in range(0, len(class_list))
+            }
+        else:
+            self.class_dict = {
+                class_list.iloc[i, 0]: i for i in range(0, len(class_list))
+            }
+        # print(self.class_dict)
 
     def prepare_data(self):
         # called only on 1 GPU

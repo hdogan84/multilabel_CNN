@@ -57,7 +57,7 @@ def pool_by_segments(
     return result_values[index], label_count[index]
 
 
-def inflate_to_multiclass_tensor(class_indices: tensor, num_classes: int) -> tensor:
+def to_one_hot_encoding(class_indices: tensor, num_classes: int) -> tensor:
     class_matrix = torch.zeros(
         class_indices.shape[0], num_classes, device=class_indices.device
     )

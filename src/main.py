@@ -7,9 +7,9 @@ from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
 from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
-
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
 from pprint import pprint
+
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 import albumentations as A
@@ -67,10 +67,10 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
 
     # Setup Checkpoints
     checkpoint_callback = ModelCheckpoint(
-        monitor="val_accuracy",
+        monitor="val_f1_score",
         save_top_k=3,
         mode="max",
-        filename="{val_accuracy:.2f}-{epoch:002d}",
+        filename="{val_f1_score:.2f}-{epoch:002d}",
     )
     save_config_callback = SaveConfigToLogs(config)
     log_first_batch_as_image = LogFirstBatchAsImage()

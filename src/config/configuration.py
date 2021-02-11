@@ -1,3 +1,4 @@
+from torch.nn.functional import one_hot
 from typedconfig import Config, key, section, group_key
 from typing import Callable
 from typedconfig.source import EnvironmentConfigSource, IniFileConfigSource
@@ -92,6 +93,7 @@ class DataConfig(DictConfig):
     test_split: float = key(cast=float, required=False, default=None)
     val_split: float = key(cast=float, required=False, default=None)
     batch_size: int = key(cast=int)
+    one_hot_encoding: bool = key(cast=bool, required=False, default=False)
 
 
 @section("system")

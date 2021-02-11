@@ -7,6 +7,7 @@ import uuid
 import warnings
 import random
 import librosa
+import torch
 import pandas as pd
 import numpy as np
 from scipy.signal import butter, sosfilt, convolve
@@ -131,8 +132,16 @@ class AddSameClassSignal(BaseWaveformTransform):
 
     def apply(self, samples, sample_rate, y):
         result = samples
+        temp_y = y
         for n in range(self.parameters["n_times"]):
-            same_class_entry = random.choice(self.class_data_dict[y])
+            # if y is one hot encoded reduce index value
+            if torch.is_tensor(y) and y.shape[0] > 1:
+                for x in range(0, y.shape[0]):
+                    if y[x] > 0:
+                        temp_y = x
+                        break
+
+            same_class_entry = random.choice(self.class_data_dict[temp_y])
             audio_data = read_audio_segment(
                 same_class_entry[1],
                 same_class_entry[3],

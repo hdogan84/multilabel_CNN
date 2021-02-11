@@ -7,6 +7,7 @@ from torchvision.datasets import MNIST
 from torchvision import transforms
 import pytorch_lightning as pl
 import torchvision.models as models
+from pytorch_lightning.metrics.utils import to_onehot
 from pytorch_lightning import metrics
 from pytorch_lightning.metrics.functional import accuracy, average_precision, f1_score
 from pytorch_lightning.metrics.functional.f_beta import f1
@@ -16,7 +17,7 @@ from pytorch_lightning.metrics.classification import (
     ConfusionMatrix,
     F1,
 )
-from tools.tensor_helpers import pool_by_segments, inflate_to_multiclass_tensor
+from tools.tensor_helpers import pool_by_segments
 import numpy as np
 
 from sklearn import metrics
@@ -54,27 +55,30 @@ class CnnBirdDetector(pl.LightningModule):
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
         self.bce = nn.BCELoss()
+        # self.Criterion = F.cross_entropy
+        self.Criterion = F.binary_cross_entropy_with_logits
 
     def forward(self, x):
         x = self.model(x)
-        return F.softmax(x, dim=1)  # return logits
+        return x
+        # F.softmax(x, dim=1)  # return logits
 
     def training_step(self, batch, batch_idx):
         # self.logger.experiment.image("Training data", batch, 0)
         x, classes, _ = batch
 
         # forward pass on a batch
-        pred = self(x)
+        preds = self(x)
 
-        train_loss = F.cross_entropy(pred, classes)
+        train_loss = self.Criterion(preds, classes)
 
         # logging
         self.log(
             "train_step_loss", train_loss,
         )
-        self.log(
-            "train_step_accuracy", accuracy(pred, classes),
-        )
+        # self.log(
+        #     "train_step_accuracy", accuracy(preds, classes),
+        # )
         batch_dictionary = {
             # REQUIRED: It is required for us to return "loss"
             "loss": train_loss,
@@ -85,7 +89,7 @@ class CnnBirdDetector(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         x, classes, segment_indices = batch
         preds = self(x)
-        loss = F.cross_entropy(preds, classes)
+        loss = self.Criterion(preds, classes)
         batch_dictionary = {
             "loss": loss,
             "preds": preds,
@@ -106,23 +110,21 @@ class CnnBirdDetector(pl.LightningModule):
         classes_on_segment, _ = pool_by_segments(classes, segment_indices)
 
         self.log("val_loss", avg_loss, prog_bar=True)
-        self.log(
-            "val_accuracy",
-            accuracy(preds_on_segment, classes_on_segment),
-            prog_bar=True,
-        )
+        # self.log(
+        #     "val_accuracy",
+        #     accuracy(preds_on_segment, classes_on_segment),
+        #     prog_bar=True,
+        # )
         # print(preds_on_segment.shape)
         # print(classes_on_segment.shape)
         # print(classes_on_segment)
         if classes.dim() == 1:
-            classes_on_segment = inflate_to_multiclass_tensor(  # to_one_hot_encoding
-                classes_on_segment, self.num_classes
-            )
+            classes_on_segment = to_onehot(classes_on_segment, self.num_classes)
         # print(classes_on_segment[0, :])
-        print(torch.sigmoid(preds_on_segment))
-        print(torch.min(preds_on_segment))
-        print(torch.max(preds_on_segment))
-        print(torch.mean(preds_on_segment))
+        # print(torch.sigmoid(preds_on_segment))
+        # print(torch.min(preds_on_segment))
+        # print(torch.max(preds_on_segment))
+        # print(torch.mean(preds_on_segment))
         # inflate class tensor
         self.log(
             "val_f1_score",
