@@ -44,8 +44,11 @@ class ExtendedCompose:
                 try:
                     if args_len == 2:
                         samples = transform(samples, sample_rate)
+                        return samples, y
                     else:
-                        samples = transform(samples, sample_rate, y)
+                        samples, y = transform(samples, sample_rate, y)
+
+                        return samples, y  # samples, y_n
                 except Exception as e:
                     if str(e) == "local variable 'data' referenced before assignment":
                         # catch error in scipy wav read function reason is probaly broken wav file
@@ -53,7 +56,7 @@ class ExtendedCompose:
                     else:
                         raise e
 
-        return samples
+        return samples, y
 
     def randomize_parameters(self, samples, sample_rate, y=None):
         """

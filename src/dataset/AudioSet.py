@@ -1,6 +1,7 @@
 import argparse
 from typing import Callable
 from pandas import DataFrame
+import torch
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -24,6 +25,7 @@ from tools.audio_tools import (
     Padding,
 )
 from tools.plot_tools import print_mel_spec
+from functools import reduce
 
 
 class AudioSet(Dataset):
@@ -194,13 +196,28 @@ class AudioSet(Dataset):
     def __len__(self):
         return len(self.data_rows)
 
+    def __mapToClassIndex__(self, index):
+        return self.class_dict[index]
+
+    def __reduceToOneTensor__(self, tensor_list):
+        result = tensor_list[0]
+        if len(tensor_list) > 1:
+            for t in tensor_list[1:]:
+                result = result + t
+        # reduce values > 1 to one
+        result[result > 0] = 1
+        return result
+
     def __getitem__(self, index):
         # if torch.is_tensor(index):
         #     index = index.tolist()
         segment_index = self.data_rows[index][0]
         filepath = Path(self.data_rows[index][1])
-        label = self.data_rows[index][2]
-        label_index = self.class_dict[label]
+        labels = self.data_rows[index][2].split(",")
+        labels.append(labels[0])
+        label_tensor = self.__reduceToOneTensor__(
+            list(map(self.__mapToClassIndex__, labels))
+        )
 
         start = self.data_rows[index][3]
         stop = self.data_rows[index][4]
@@ -217,14 +234,13 @@ class AudioSet(Dataset):
             randomize_audio_segment=self.randomize_audio_segment,
             channel=self.data_rows[index][5],
         )
-        # print(len(audio_data))
 
-        augmented_signal = audio_data = (
+        augmented_signal, y = audio_data = (
             self.transform_audio(
-                samples=audio_data, sample_rate=self.sample_rate, y=label_index
+                samples=audio_data, sample_rate=self.sample_rate, y=label_tensor
             )
             if self.transform_audio is not None
-            else audio_data
+            else (audio_data, label_tensor)
         )
 
         mel_spec = get_mel_spec(
@@ -257,4 +273,4 @@ class AudioSet(Dataset):
         # plt.imshow(augmented_image_data, interpolation="nearest")
         # plt.show()
 
-        return tensor, label_index, segment_index
+        return tensor, y, segment_index

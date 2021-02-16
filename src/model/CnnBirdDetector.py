@@ -1,3 +1,4 @@
+from pytorch_lightning.metrics.functional.classification import get_num_classes
 import torch
 from torch import nn
 from torch import tensor
@@ -7,8 +8,8 @@ from torchvision.datasets import MNIST
 from torchvision import transforms
 import pytorch_lightning as pl
 import torchvision.models as models
+from sklearn.metrics import label_ranking_average_precision_score
 from pytorch_lightning.metrics.utils import to_onehot
-from pytorch_lightning import metrics
 from pytorch_lightning.metrics.functional import accuracy, average_precision, f1_score
 from pytorch_lightning.metrics.functional.f_beta import f1
 from pytorch_lightning.metrics.classification import (
@@ -71,7 +72,11 @@ class CnnBirdDetector(pl.LightningModule):
         preds = self(x)
 
         train_loss = self.Criterion(preds, classes)
-
+        self.log(
+            "train_average_precision",
+            average_precision(preds, classes, pos_label=1),
+            prog_bar=True,
+        )
         # logging
         self.log(
             "train_step_loss", train_loss,
@@ -109,28 +114,29 @@ class CnnBirdDetector(pl.LightningModule):
         preds_on_segment, _ = pool_by_segments(preds, segment_indices)
         classes_on_segment, _ = pool_by_segments(classes, segment_indices)
 
-        self.log("val_loss", avg_loss, prog_bar=True)
-        # self.log(
-        #     "val_accuracy",
-        #     accuracy(preds_on_segment, classes_on_segment),
-        #     prog_bar=True,
-        # )
-        # print(preds_on_segment.shape)
-        # print(classes_on_segment.shape)
-        # print(classes_on_segment)
         if classes.dim() == 1:
             classes_on_segment = to_onehot(classes_on_segment, self.num_classes)
-        # print(classes_on_segment[0, :])
-        # print(torch.sigmoid(preds_on_segment))
-        # print(torch.min(preds_on_segment))
-        # print(torch.max(preds_on_segment))
-        # print(torch.mean(preds_on_segment))
-        # inflate class tensor
+
+        self.log("val_loss", avg_loss, prog_bar=True)
         self.log(
-            "val_f1_score",
-            f1(preds_on_segment, classes_on_segment, self.num_classes,),
+            "average_precision",
+            average_precision(preds_on_segment, classes_on_segment, pos_label=1),
             prog_bar=True,
         )
+        self.log(
+            "val_f1_score",
+            f1(preds_on_segment, classes_on_segment, self.num_classes),
+            prog_bar=True,
+        )
+        self.log(
+            "lrap",
+            label_ranking_average_precision_score(
+                classes_on_segment.cpu().data.numpy(),
+                preds_on_segment.cpu().data.numpy(),
+            ),
+            prog_bar=True,
+        )
+
         # cMap = metrics.average_precision_score(
         #     multiclasses, preds_on_segment, average="macro"
         # )

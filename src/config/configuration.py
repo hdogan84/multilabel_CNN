@@ -226,9 +226,10 @@ class VolumeControl(DictConfig):
     p: float = key(cast=float, required=False, default=0.0)
 
 
-@section("AddSameClassSignal")
-class AddSameClassSignal(DictConfig):
+@section("AddClassSignal")
+class AddClassSignal(DictConfig):
     p: float = key(cast=float, required=False, default=0.0)
+    restriced_to_same_class: bool = key(cast=bool, required=False, default=False)
     min_ssr: float = key(cast=float, required=False, default=-40.0)
     max_ssr: float = key(cast=float, required=False, default=3.0)
     max_n: int = key(cast=int, required=False, default=1)
@@ -264,7 +265,7 @@ class ScriptConfig(DictConfig):
     shift: Shift = group_key(Shift)
     add_pink_noise_snr: AddPinkNoiseSnr = group_key(AddPinkNoiseSnr)
     volume_control: VolumeControl = group_key(VolumeControl)
-    add_same_class_signal: AddSameClassSignal = group_key(AddSameClassSignal)
+    add_class_signal: AddClassSignal = group_key(AddClassSignal)
 
 
 def parse_config(config_filepath: Path, enviroment_prefix: str = None) -> ScriptConfig:

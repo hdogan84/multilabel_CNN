@@ -63,3 +63,11 @@ def to_one_hot_encoding(class_indices: tensor, num_classes: int) -> tensor:
     )
     class_matrix[range(class_indices.shape[0]), class_indices] = 1
     return class_matrix
+
+
+def to_class_list_encoding(label_tensor):
+    class_list = []
+    for x in range(0, label_tensor.shape[0]):
+        if label_tensor[x] > 0:
+            class_list.append(x)
+    return class_list

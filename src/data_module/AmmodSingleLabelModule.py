@@ -67,9 +67,7 @@ class AmmodSingleLabelModule(LightningDataModule):
         self.class_count = len(class_list)
         if d.one_hot_encoding:
 
-            class_tensor = to_onehot(
-                torch.range(0, len(class_list) - 1), len(class_list)
-            )
+            class_tensor = to_onehot(torch.arange(0, len(class_list)), len(class_list))
             self.class_dict = {
                 class_list.iloc[i, 0]: class_tensor[i]
                 for i in range(0, len(class_list))

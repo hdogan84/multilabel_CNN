@@ -157,11 +157,11 @@ class AddSameClassSignal(BaseWaveformTransform):
             audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
             result = result + audio_data
 
-        return result
+        return result, y
 
     def __call__(self, samples, sample_rate, y):
         if not self.are_parameters_frozen:
             self.randomize_parameters(samples, sample_rate)
         if self.parameters["should_apply"] and len(samples) > 0:
             return self.apply(samples, sample_rate, y)
-        return samples
+        return samples, y
