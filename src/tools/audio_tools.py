@@ -1,3 +1,4 @@
+from os import error
 from pathlib import Path
 import soundfile as sf
 import numpy as np
@@ -31,7 +32,7 @@ def read_audio_segment(
     duration = stop - start
     audio_data = []
     if filepath.exists() == False:
-        print("File does not exsts")
+        raise Exception("File does not exsts")
     if (
         duration >= desired_length
     ):  # desired_length of audio chunk is greater then wanted part
@@ -48,7 +49,8 @@ def read_audio_segment(
         audio_data = sf.read(
             filepath, start=reading_start, stop=reading_stop, always_2d=True
         )[0]
-
+    if len(audio_data) == 0:
+        raise Exception("Error during reading file")
     # IF more then one channel do mixing
     if audio_data.shape[1] > 1:
         if channel_mixing_strategy == Mixing.TAKE_ONE:

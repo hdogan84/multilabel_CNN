@@ -1,5 +1,6 @@
 import argparse
 from typing import Callable
+from librosa.core import audio
 from pandas import DataFrame
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -221,19 +222,22 @@ class AudioSet(Dataset):
 
         start = self.data_rows[index][3]
         stop = self.data_rows[index][4]
-        # print(filepath.as_posix())
         # print("get item channel: {}".format(self.data_rows[index][5]))
-        audio_data = read_audio_segment(
-            filepath,
-            start,
-            stop,
-            self.segment_length,
-            self.sample_rate,
-            channel_mixing_strategy=self.channel_mixing_strategy,
-            padding_strategy=self.padding_strategy,
-            randomize_audio_segment=self.randomize_audio_segment,
-            channel=self.data_rows[index][5],
-        )
+        audio_data = None
+        try:
+            audio_data = read_audio_segment(
+                filepath,
+                start,
+                stop,
+                self.segment_length,
+                self.sample_rate,
+                channel_mixing_strategy=self.channel_mixing_strategy,
+                padding_strategy=self.padding_strategy,
+                randomize_audio_segment=self.randomize_audio_segment,
+                channel=self.data_rows[index][5],
+            )
+        except:
+            return None
 
         augmented_signal, y = audio_data = (
             self.transform_audio(

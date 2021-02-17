@@ -11,7 +11,9 @@ from config.configuration import DataConfig, ScriptConfig, SystemConfig, Learnin
 from pathlib import Path
 from pytorch_lightning.metrics.utils import to_onehot
 
-
+def filter_none_values(batch):
+    batch = list(filter(lambda x: x is not None, batch))
+    return torch.utils.data.dataloader.default_collate(batch)
 class AmmodSingleLabelModule(LightningDataModule):
     def __init__(
         self,
@@ -173,6 +175,8 @@ class AmmodSingleLabelModule(LightningDataModule):
                 randomize_audio_segment=False,
             )
 
+
+
     def train_dataloader(self):
         return DataLoader(
             self.train_set,
@@ -181,6 +185,7 @@ class AmmodSingleLabelModule(LightningDataModule):
             num_workers=self.num_workers,
             drop_last=True,
             pin_memory=True,
+            collate_fn=filter_none_values,
         )
 
     def val_dataloader(self):
@@ -191,6 +196,7 @@ class AmmodSingleLabelModule(LightningDataModule):
             num_workers=self.num_workers,
             drop_last=True,
             pin_memory=True,
+            collate_fn=filter_none_values,
         )
 
     def test_dataloader(self):
@@ -201,4 +207,6 @@ class AmmodSingleLabelModule(LightningDataModule):
             num_workers=self.num_workers,
             drop_last=True,
             pin_memory=True,
+            collate_fn=filter_none_values,
         )
+
