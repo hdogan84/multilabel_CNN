@@ -69,7 +69,7 @@ class AmmodSingleLabelModule(LightningDataModule):
 
             class_tensor = to_onehot(torch.arange(0, len(class_list)), len(class_list))
             self.class_dict = {
-                class_list.iloc[i, 0]: class_tensor[i]
+                class_list.iloc[i, 0]: class_tensor[i].float()
                 for i in range(0, len(class_list))
             }
         else:
