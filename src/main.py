@@ -48,11 +48,6 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         fit_transform_image=fit_transform_image,
     )
 
-    # model = CnnBirdDetector.load_from_checkpoint(
-    #     "./logs/audio_classificator_logging/version_8/checkpoints/val_accuracy=0.78-epoch=33.ckpt",
-    #     **config.learning.as_dict()
-    # )
-
     if checkpoint_filepath is None:
         model = CnnBirdDetector(data_module.class_count, **config.learning.as_dict())
     else:
@@ -84,7 +79,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
-        check_val_every_n_epoch=5
+        check_val_every_n_epoch=1
         # profiler="simple",
         # precision=16
         # fast_dev_run=True,

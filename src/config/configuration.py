@@ -229,7 +229,7 @@ class VolumeControl(DictConfig):
 @section("AddClassSignal")
 class AddClassSignal(DictConfig):
     p: float = key(cast=float, required=False, default=0.0)
-    restriced_to_same_class: bool = key(cast=bool, required=False, default=False)
+    restriced_to_same_class: bool = key(cast=to_bool, required=False, default=False)
     min_ssr: float = key(cast=float, required=False, default=-40.0)
     max_ssr: float = key(cast=float, required=False, default=3.0)
     max_n: int = key(cast=int, required=False, default=1)

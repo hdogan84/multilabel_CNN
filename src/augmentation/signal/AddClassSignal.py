@@ -137,6 +137,7 @@ class AddClassSignal(BaseWaveformTransform):
     def apply(self, samples, sample_rate, y):
         result = samples
         class_files: list
+        result_y = y
         for n in range(self.parameters["n_times"]):
             # if y is one hot encoded reduce index value
             if self.restriced_to_same_class:
@@ -148,8 +149,11 @@ class AddClassSignal(BaseWaveformTransform):
                     
                     class_files = self.class_data_dict[y]
             else:
-                random_class_id = random.choice(self.class_data_dict.keys())
+                # get Random class files 
+                keys = self.class_data_dict.keys()
+                random_class_id = random.choice(list(keys))
                 class_files = self.class_data_dict[random_class_id]
+                result_y[random_class_id] = 1    
 
             same_class_entry = random.choice(class_files)
             audio_data = read_audio_segment(
@@ -167,7 +171,7 @@ class AddClassSignal(BaseWaveformTransform):
             audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
             result = result + audio_data
 
-        return result, y
+        return result, result_y
 
     def __call__(self, samples, sample_rate, y):
         if not self.are_parameters_frozen:
