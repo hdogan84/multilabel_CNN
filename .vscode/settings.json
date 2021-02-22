@@ -1,3 +1,6 @@
 {
-    "python.pythonPath": "/home/stana/anaconda3/envs/rank/bin/python"
+    "python.pythonPath": "/opt/conda/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": false,
+    "python.linting.enabled": true
 }
