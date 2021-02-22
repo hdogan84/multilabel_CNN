@@ -68,7 +68,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         filename="{val_f1_score:.2f}-{epoch:002d}",
     )
     save_config_callback = SaveConfigToLogs(config)
-    log_first_batch_as_image = LogFirstBatchAsImage()
+    log_first_batch_as_image = LogFirstBatchAsImage(mean=0.456, std=0.224)
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(

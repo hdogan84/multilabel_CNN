@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 import torchvision.models as models
 from sklearn.metrics import label_ranking_average_precision_score
 from pytorch_lightning.metrics.utils import to_onehot
-from pytorch_lightning.metrics.functional import accuracy, average_precision, f1_score
+from pytorch_lightning.metrics.functional import accuracy, average_precision
 from pytorch_lightning.metrics.functional.f_beta import f1
 from pytorch_lightning.metrics.classification import (
     Accuracy,
