@@ -9,7 +9,7 @@ from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
 from pprint import pprint
-
+from logging import debug, warn
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 import albumentations as A

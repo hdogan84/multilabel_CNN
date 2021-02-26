@@ -11,9 +11,12 @@ from config.configuration import DataConfig, ScriptConfig, SystemConfig, Learnin
 from pathlib import Path
 from pytorch_lightning.metrics.utils import to_onehot
 
+
 def filter_none_values(batch):
     batch = list(filter(lambda x: x is not None, batch))
     return torch.utils.data.dataloader.default_collate(batch)
+
+
 class AmmodSingleLabelModule(LightningDataModule):
     def __init__(
         self,
@@ -159,7 +162,7 @@ class AmmodSingleLabelModule(LightningDataModule):
                 randomize_audio_segment=False,
                 extract_complete_segment=self.config.validation.complete_segment,
                 sub_segment_overlap=self.config.validation.sub_segment_overlap,
-                multi_channel_handling=self.config.validation.complete_segment,
+                multi_channel_handling=self.config.validation.multi_channel_handling,
                 max_segment_length=self.config.validation.max_segment_length,
             )
             print("Train set size: {}".format(len(self.train_set)))
@@ -174,8 +177,6 @@ class AmmodSingleLabelModule(LightningDataModule):
                 transform_audio=self.val_transform_audio,
                 randomize_audio_segment=False,
             )
-
-
 
     def train_dataloader(self):
         return DataLoader(
@@ -194,7 +195,7 @@ class AmmodSingleLabelModule(LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
-            drop_last=True,
+            drop_last=False,
             pin_memory=True,
             collate_fn=filter_none_values,
         )
