@@ -10,14 +10,16 @@ from dataset import AudioSet
 import torch
 import numpy as np
 import logging
+from config.configuration import ServiceConfig
 
 logger = logging.getLogger("audio_service")
 
 
 class AudioService(BaseService):
+    DEFAULT_STEP_WIDTH: int = 1
+    DEFAULT_SAMPLE_LENGTH: int = 5
+
     SAMPLE_FREQUENCY: int = 32000
-    STEP_WIDTH: int = 1
-    SAMPLE_LENGTH: int = 5
     NUM_WORKERS: int = 2
     BATCH_SIZE: int = 16
 
@@ -29,6 +31,7 @@ class AudioService(BaseService):
         model_hparams_filepath: str = None,
         class_list_filepath: str = None,
         working_directory: str = None,
+        service_config: ServiceConfig = None,
     ):
         super().__init__(
             model_class_name=model_class_name,
@@ -37,6 +40,7 @@ class AudioService(BaseService):
             model_hparams_filepath=model_hparams_filepath,
             class_list_filepath=class_list_filepath,
             working_directory=working_directory,
+            service_config=service_config,
         )
         self.class_count = len(self.class_list)
         class_tensor = to_onehot(
@@ -50,6 +54,16 @@ class AudioService(BaseService):
     def pre_proccess_data(self, params):
         logger.debug("query parameter file: {}".format(params.get("file")))
         filepath = params.get("file")
+        step_width = (
+            params.get("step-width")
+            if params.get("step-width") is not None
+            else self.DEFAULT_STEP_WIDTH
+        )
+        sample_length = (
+            params.get("sample-width")
+            if params.get("sample-width") is not None
+            else self.DEFAULT_SAMPLE_LENGTH
+        )
 
         if filepath is None:
             raise ValueError("missing file")
@@ -59,13 +73,13 @@ class AudioService(BaseService):
         target_path = self.working_directory.joinpath(uuid4().hex + source_path.suffix)
 
         length, channels = resample_audio_file(
-            source_path, target_path, sample_rate=self.SAMPLE_FREQUENCY
+            source_path, target_path, sample_rate=self.service_config.sample_rate,
         )
 
         data_list = []
-        for i in range(ceil(length / self.STEP_WIDTH)):
-            start_time = i * self.STEP_WIDTH
-            end_time = start_time + self.SAMPLE_LENGTH
+        for i in range(ceil(length / step_width)):
+            start_time = i * step_width
+            end_time = start_time + sample_length
             if end_time > length:
                 end_time = length
             duration = end_time - start_time
@@ -106,7 +120,7 @@ class AudioService(BaseService):
             extract_complete_segment=False,  # the prepared dataframe has the correct segment lenght
             sub_segment_overlap=None,
             multi_channel_handling="take_one",
-            max_segment_length=self.SAMPLE_LENGTH,
+            max_segment_length=sample_length,
         )
         data_loader = DataLoader(
             dataSet,
@@ -132,7 +146,6 @@ class AudioService(BaseService):
         channel_results = [[]] * pre_processed_data.record_info.get("channels")
 
         for index, row in pre_processed_data.data_frame.iterrows():
-            print(row)
             channel = row["channels"]
             channel_results[channel].append(
                 {

@@ -9,7 +9,7 @@ from logging import debug, info
 from torch.utils.data import DataLoader
 from torch import tensor
 import numpy
-
+from config.configuration import ServiceConfig
 logger = logging.getLogger("audio_service")
 
 
@@ -42,7 +42,7 @@ class BaseService:
     class_list: pd.DataFrame
     working_directory: Path
     device: str
-
+    service_config: ServiceConfig
     def __init__(
         self,
         model_class_name: str = None,
@@ -51,6 +51,7 @@ class BaseService:
         model_hparams_filepath: str = None,
         class_list_filepath: str = None,
         working_directory: str = None,
+        service_config: ServiceConfig = None,
     ):
         debug("init Service")
         self.class_list = pd.read_csv(
@@ -65,6 +66,7 @@ class BaseService:
         )
 
         debug("parse config")
+        self.service_config =service_config
         self.config = parse_config(Path(model_config_filepath))
 
         # prepare model
