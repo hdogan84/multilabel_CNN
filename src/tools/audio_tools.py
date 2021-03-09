@@ -1,5 +1,6 @@
 from os import error
 from pathlib import Path
+from typing import Tuple
 import soundfile as sf
 import numpy as np
 import random
@@ -7,7 +8,9 @@ import librosa
 import soundfile as sf
 from scipy.signal import butter, sosfilt
 from enum import Enum
-from logging import debug, warn
+import logging
+
+logger = logging.getLogger("audio_service")
 
 
 class Padding:
@@ -68,7 +71,7 @@ def read_audio_segment(
 
     if len(audio_data) < desired_sample_length:
         if padding_strategy == Padding.WRAP_AROUND:
-            # debug("cylic")
+            # logger.debug("cylic")
             padded_audio_data = audio_data.copy()
             # change starting position
             if randomize_audio_segment:
@@ -138,9 +141,9 @@ def resample_audio_file(
     target_file_path: Path,
     sample_rate=None,
     resampleType="kaiser_fast",
-) -> None:
+) -> Tuple[float, int]:
     # resample on load to higher prevent instability of the filter
-    # debug("Read: {} \n write to: ".format(source_file_path))
+    # logger.debug("Read: {} \n write to: ".format(source_file_path))
     y = []
 
     y, sr = librosa.load(source_file_path, sr=None, mono=False, res_type=resampleType,)
@@ -157,10 +160,10 @@ def resample_audio_file(
     y = librosa.resample(y, sr, sample_rate, res_type=resampleType,)
     if len(y.shape) > 1:
         y = np.transpose(y)  # [nFrames x nChannels] --> [nChannels x nFrames]
-        # debug("write to target_file_path: {}".format(target_file_path))
+        # logger.debug("write to target_file_path: {}".format(target_file_path))
     sf.write(target_file_path, y, sample_rate, "PCM_16")
-    debug(y.shape)
-    return len(y)
+    samples, channels = y.shape
+    return samples / sample_rate, channels
 
 
 def apply_high_pass_filter(input, sample_rate: int, filePath: Path):
@@ -174,9 +177,9 @@ def apply_high_pass_filter(input, sample_rate: int, filePath: Path):
 
     # If anything went wrong (nan in array or max > 1.0 or min < -1.0) --> return original input
     if np.isnan(output).any() or np.max(output) > 1.0 or np.min(output) < -1.0:
-        warn("Warning filter: {}".format(filePath.as_posix()))
+        logger.warn("Warning filter: {}".format(filePath.as_posix()))
         output = input
 
-    # debug(type, order, np.min(input), np.max(input), np.min(output), np.max(output))
+    # logger.debug(type, order, np.min(input), np.max(input), np.min(output), np.max(output))
 
     return output

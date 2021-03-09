@@ -1,47 +1,114 @@
-from web_service.BaseService import BaseService
+from web_service.BaseService import BaseService, PreProcessedData, Predictions
 from tools.audio_tools import resample_audio_file
 from uuid import uuid4
 from pathlib import Path
-from logging import error, debug, warn
+import pandas as pd
 from torch.utils.data import DataLoader
+from math import ceil
+from pytorch_lightning.metrics.utils import to_onehot
 from dataset import AudioSet
+import torch
+import numpy as np
+import logging
+
+logger = logging.getLogger("audio_service")
 
 
 class AudioService(BaseService):
     SAMPLE_FREQUENCY: int = 32000
     STEP_WIDTH: int = 1
     SAMPLE_LENGTH: int = 5
-    NUM_WORKERS: int = -1
-    BATCH_SIZE: int = 64
+    NUM_WORKERS: int = 2
+    BATCH_SIZE: int = 16
+
+    def __init__(
+        self,
+        model_class_name: str = None,
+        model_config_filepath: str = None,
+        model_checkpoint_filepath: str = None,
+        model_hparams_filepath: str = None,
+        class_list_filepath: str = None,
+        working_directory: str = None,
+    ):
+        super().__init__(
+            model_class_name=model_class_name,
+            model_config_filepath=model_config_filepath,
+            model_checkpoint_filepath=model_checkpoint_filepath,
+            model_hparams_filepath=model_hparams_filepath,
+            class_list_filepath=class_list_filepath,
+            working_directory=working_directory,
+        )
+        self.class_count = len(self.class_list)
+        class_tensor = to_onehot(
+            torch.arange(0, len(self.class_list)), len(self.class_list)
+        )
+        self.class_dict = {
+            self.class_list.iloc[i, 0]: class_tensor[i].float()
+            for i in range(0, len(self.class_list))
+        }
 
     def pre_proccess_data(self, params):
-        debug("query parameter file: {}".format(params.get("file")))
+        logger.debug("query parameter file: {}".format(params.get("file")))
         filepath = params.get("file")
 
         if filepath is None:
             raise ValueError("missing file")
 
         source_path = self.working_directory.joinpath(filepath)
-        debug("source exists {}".format(source_path.exists()))
+        logger.debug("source exists {}".format(source_path.exists()))
         target_path = self.working_directory.joinpath(uuid4().hex + source_path.suffix)
 
-        sampleCount = resample_audio_file(
+        length, channels = resample_audio_file(
             source_path, target_path, sample_rate=self.SAMPLE_FREQUENCY
         )
 
+        data_list = []
+        for i in range(ceil(length / self.STEP_WIDTH)):
+            start_time = i * self.STEP_WIDTH
+            end_time = start_time + self.SAMPLE_LENGTH
+            if end_time > length:
+                end_time = length
+            duration = end_time - start_time
+            for channel in range(channels):
+                data_list.append(
+                    (
+                        duration,
+                        start_time,
+                        end_time,
+                        "unkown",
+                        self.class_list.shape[0],
+                        target_path.as_posix(),
+                        channel,
+                    )
+                )
+
+        data_frame = pd.DataFrame(
+            data_list,
+            columns=[
+                "duration",
+                "start_time",
+                "end_time",
+                "labels",
+                "species_count",
+                "filepath",
+                "channels",
+            ],
+        )
         dataSet = AudioSet(
             self.config,
-            self.val_dataframe,
-            self.class_dict,
+            data_frame,
+            {
+                "unkown": torch.tensor([0])
+            },  # fake class dict is sufficient beceause we are infrencing not training
             transform_image=None,
-            transform_audio=self.val_transform_audio,
+            transform_audio=None,
             randomize_audio_segment=False,
-            extract_complete_segment=True,
-            sub_segment_overlap=self.config.validation.sub_segment_overlap,
-            multi_channel_handling="take_all",
+            extract_complete_segment=False,  # the prepared dataframe has the correct segment lenght
+            sub_segment_overlap=None,
+            multi_channel_handling="take_one",
             max_segment_length=self.SAMPLE_LENGTH,
         )
-        self.dataloader = DataLoader(
+        data_loader = DataLoader(
             dataSet,
             batch_size=self.BATCH_SIZE,
             shuffle=False,
@@ -49,10 +116,36 @@ class AudioService(BaseService):
             drop_last=False,
             pin_memory=True,
         )
-        debug("sampleCount", sampleCount)
-        debug("AudioSerice pre_proccess_data")
-        return
 
-    def post_process(self, data):
-        debug("AudioSerice post_process")
-        return "<h1>Distant Reading Archive</h1><p>This site is a prototype API for distant reading of science fiction novels.</p>"
+        logger.debug("AudioSerice pre_proccess_data")
+        return PreProcessedData(
+            data_loader=data_loader,
+            data_frame=data_frame,
+            record_info={"length": length, "channels": channels},
+        )
+
+    def post_process(
+        self, predictions: Predictions, pre_processed_data: PreProcessedData, params
+    ):
+        logger.debug("AudioSerice post_process")
+        # reduce result to channels
+        channel_results = [[]] * pre_processed_data.record_info.get("channels")
+
+        for index, row in pre_processed_data.data_frame.iterrows():
+            print(row)
+            channel = row["channels"]
+            channel_results[channel].append(
+                {
+                    "startTime": row["start_time"],
+                    "endTime": row["end_time"],
+                    "predictions": {"logits": predictions.values[index].tolist()},
+                }
+            )
+
+        response = {
+            "apiVersion": 1,
+            "fileId": params.get("file"),
+            "classIds": self.class_list["latin_name"].tolist(),
+            "channels": channel_results,
+        }
+        return response

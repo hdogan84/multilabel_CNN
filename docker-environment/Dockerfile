@@ -43,6 +43,7 @@ RUN wget \
     && rm -f Miniconda3-latest-Linux-x86_64.sh 
 RUN conda --version
 
+RUN conda install pytorch torchvision torchaudio cudatoolkit=11.0 -c pytorch -y
 RUN conda install scikit-image
 RUN conda install pytorch-lightning -c conda-forge
 RUN conda install pandas

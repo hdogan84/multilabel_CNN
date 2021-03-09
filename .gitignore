@@ -141,3 +141,10 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+#node
+node_modules
+
+#web service working director
+working_directory
+checkpoints
