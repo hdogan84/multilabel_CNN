@@ -13,7 +13,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+
 develop-eggs/
 dist/
 downloads/
@@ -147,4 +147,4 @@ node_modules
 
 #web service working director
 working_directory
-checkpoints
+data_directory/

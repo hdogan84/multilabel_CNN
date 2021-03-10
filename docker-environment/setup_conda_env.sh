@@ -1,5 +1,6 @@
 #/bin/bash
-conda install pytorch torchvision torchaudio cudatoolkit=11.0 -c pytorch
+conda install pytorch torchvision torchaudio cudatoolkit=11.0 -c pytorch -y
+conda install -c anaconda flask -y
 conda install scikit-image -y
 conda install pytorch-lightning -c conda-forge -y
 conda install pandas -y

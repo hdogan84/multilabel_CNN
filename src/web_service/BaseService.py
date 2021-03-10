@@ -9,6 +9,7 @@ from logging import debug, info
 from torch.utils.data import DataLoader
 from torch import tensor
 import numpy
+from os import environ
 from config.configuration import ServiceConfig
 logger = logging.getLogger("audio_service")
 
@@ -70,8 +71,9 @@ class BaseService:
         self.config = parse_config(Path(model_config_filepath))
 
         # prepare model
-        self.device = "cuda"
-        self.model.cuda()
+        if (environ.get('NVIDIA_VISIBLE_DEVICES','none') is not 'none'):
+            self.device = "cuda"
+            self.model.cuda()
         self.model.eval()
 
     def ___importModel___(self, name) -> LightningModule:
@@ -91,7 +93,7 @@ class BaseService:
 
         logger.debug("Start inferencing")
         for samples, _, sample_ids in data_loader:
-            samples = samples.to(device=self.device)
+            samples = samples.to(device=self.model.device)
             output = self.model(samples)
             outputs.append(output.cpu().detach().numpy())
 

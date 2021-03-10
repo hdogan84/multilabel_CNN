@@ -283,8 +283,9 @@ def parse_config(config_filepath: Path, enviroment_prefix: str = None, config_ty
 
 @section('service')
 class ServiceConfig(DictConfig):
-    num_workers: int = key(cast=int, required=False )
-    batch_size: int = key(cast=int, required=False)
+    num_workers: int = key(cast=int, required=False, default=0 )
+    batch_size: int = key(cast=int, required=False, default=12)
     service_class_name:str = key(cast=str, required=False)
     model_class_name:str = key(cast=str, required=False)
     sample_rate:int = key(cast=int, required=False)
+    debug:bool = key(cast=to_bool, required=False, default=False)
