@@ -13,7 +13,6 @@ from config.configuration import (
     ValidationConfig,
     DataConfig,
 )
-
 # import simpleaudio as sa
 from math import ceil
 import numpy as np
@@ -37,7 +36,7 @@ class AudioSet(Dataset):
     def __init__(
         self,
         config: ScriptConfig,
-        raw_data_rows: list,
+        raw_data_rows: DataFrame,
         class_dict: dict,
         extract_complete_segment: bool = False,
         sub_segment_overlap: float = 1.0,
@@ -195,12 +194,13 @@ class AudioSet(Dataset):
                     self.data_rows.append((index, filepath, label, start, end, channel))
 
     def __len__(self):
+        tmp = len(self.data_rows)
         return len(self.data_rows)
 
     def __mapToClassIndex__(self, index):
         return self.class_dict[index]
 
-    def __reduceToOneTensor__(self, tensor_list):
+    def __reduceToSingleMultiClassTensor__(self, tensor_list):
         result = tensor_list[0]
         if len(tensor_list) > 1:
             for t in tensor_list[1:]:
@@ -215,8 +215,7 @@ class AudioSet(Dataset):
         segment_index = self.data_rows[index][0]
         filepath = Path(self.data_rows[index][1])
         labels = self.data_rows[index][2].split(",")
-        labels.append(labels[0])
-        label_tensor = self.__reduceToOneTensor__(
+        label_tensor = self.__reduceToSingleMultiClassTensor__(
             list(map(self.__mapToClassIndex__, labels))
         )
 

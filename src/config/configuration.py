@@ -268,10 +268,10 @@ class ScriptConfig(DictConfig):
     add_class_signal: AddClassSignal = group_key(AddClassSignal)
 
 
-def parse_config(config_filepath: Path, enviroment_prefix: str = None) -> ScriptConfig:
+def parse_config(config_filepath: Path, enviroment_prefix: str = None, config_type=ScriptConfig) -> DictConfig:
     if config_filepath.exists() is False:
         raise FileNotFoundError(config_filepath)
-    config = ScriptConfig()
+    config = config_type()
 
     if enviroment_prefix is not None:
         print(enviroment_prefix)
@@ -280,3 +280,12 @@ def parse_config(config_filepath: Path, enviroment_prefix: str = None) -> Script
     config.read()
 
     return config
+
+@section('service')
+class ServiceConfig(DictConfig):
+    num_workers: int = key(cast=int, required=False, default=0 )
+    batch_size: int = key(cast=int, required=False, default=12)
+    service_class_name:str = key(cast=str, required=False)
+    model_class_name:str = key(cast=str, required=False)
+    sample_rate:int = key(cast=int, required=False)
+    debug:bool = key(cast=to_bool, required=False, default=False)

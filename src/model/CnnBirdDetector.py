@@ -4,7 +4,7 @@ from torch import nn
 from torch import tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, random_split
-from torchvision.datasets import MNIST
+
 from torchvision import transforms
 import pytorch_lightning as pl
 import torchvision.models as models
