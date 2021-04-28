@@ -28,7 +28,7 @@ Trim
 SpecChannelShuffle
 SpecFrequencyMask
 
-# DataSet multilabel
+# DataSet multi label
 1. file_dict (key: file_id)
   * file_id
   * filepath
