@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from config.configuration import parse_config, ScriptConfig
 from model.CnnBirdDetector import CnnBirdDetector
-from data_module.AmmodSingleLabelModule import AmmodMultiLabelModule
+from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
@@ -42,7 +42,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
             A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0, always_apply=False, p=0.1),
         ]
     )
-    data_module = AmmodSingleLabelModule(
+    data_module = AmmodMultiLabelModule(
         config,
         fit_transform_audio=fit_transform_audio,
         fit_transform_image=fit_transform_image,
@@ -79,7 +79,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
-        check_val_every_n_epoch=1
+        check_val_every_n_epoch=1,
         # profiler="simple",
         # precision=16
         # fast_dev_run=True,
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         type=Path,
         nargs="?",
         # default="./src/config/europe254.cfg",
-        default="./src/config/default.cfg",
+        default="./src/config/ammod-multi-label.cfg",
         help="config file for all settings",
     )
     parser.add_argument(

@@ -80,20 +80,13 @@ class DictConfig(Config):
 @section("data")
 class DataConfig(DictConfig):
     class_list_filepath: Path = key(cast=Path)
-    data_list_filepath: str = key(cast=str, required=False, default=None)
     train_list_filepath: str = key(cast=str, required=False, default=None)
     val_list_filepath: str = key(cast=str, required=False, default=None)
-    test_list_filepath: str = key(cast=str, required=False, default=None)
-    data_path: Path = key(cast=Path)
-    index_filepath: int = key(cast=int)
-    index_start_time: int = key(cast=int)
-    index_end_time: int = key(cast=int)
-    index_label: int = key(cast=int)
-    index_channels: int = key(cast=allow_none(int), required=False, default=None)
-    test_split: float = key(cast=float, required=False, default=None)
-    val_split: float = key(cast=float, required=False, default=None)
+    data_root_path: Path = key(cast=Path, required=False, default="/")
     batch_size: int = key(cast=int)
-    one_hot_encoding: bool = key(cast=bool, required=False, default=False)
+    segment_duration: float = key(cast=float)
+    min_event_overlap_time: float = key(cast=float)
+    wrap_around_probability: float = key(cast=float)
 
 
 @section("system")
@@ -134,6 +127,7 @@ class ValidationConfig(DictConfig):
     sub_segment_overlap: float = key(cast=float, required=False, default=0)
     # poolin_methods: mean | meanexp | max
     pooling_method: str = key(cast=str, required=False, default="mean")
+    batch_size_multiplier: int = key(cast=float, required=False, default=1.0)
 
 
 @section("audio_loading")
@@ -268,7 +262,9 @@ class ScriptConfig(DictConfig):
     add_class_signal: AddClassSignal = group_key(AddClassSignal)
 
 
-def parse_config(config_filepath: Path, enviroment_prefix: str = None, config_type=ScriptConfig) -> DictConfig:
+def parse_config(
+    config_filepath: Path, enviroment_prefix: str = None, config_type=ScriptConfig
+) -> DictConfig:
     if config_filepath.exists() is False:
         raise FileNotFoundError(config_filepath)
     config = config_type()
@@ -281,11 +277,13 @@ def parse_config(config_filepath: Path, enviroment_prefix: str = None, config_ty
 
     return config
 
-@section('service')
+
+@section("service")
 class ServiceConfig(DictConfig):
-    num_workers: int = key(cast=int, required=False, default=0 )
+    num_workers: int = key(cast=int, required=False, default=0)
     batch_size: int = key(cast=int, required=False, default=12)
-    service_class_name:str = key(cast=str, required=False)
-    model_class_name:str = key(cast=str, required=False)
-    sample_rate:int = key(cast=int, required=False)
-    debug:bool = key(cast=to_bool, required=False, default=False)
+    service_class_name: str = key(cast=str, required=False)
+    model_class_name: str = key(cast=str, required=False)
+    sample_rate: int = key(cast=int, required=False)
+    debug: bool = key(cast=to_bool, required=False, default=False)
+

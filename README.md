@@ -30,12 +30,11 @@ SpecFrequencyMask
 
 # DataSet multi label
 1. file_dict (key: file_id)
-  * file_id
+  
+2. annotation_interval_dict(key: annotation_interval_id)
   * filepath
   * channel_count
-2. annotation_interval_dict(key: annotation_interval_id)
   * annotation_interval_id
-  * file_id
   * start
   * end
   * events

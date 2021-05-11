@@ -97,6 +97,49 @@ def read_audio_segment(
     return audio_data
 
 
+def read_audio_parts(
+    filepath: Path,
+    parts: list,
+    desired_length: int,
+    sample_rate: int,
+    channel_mixing_strategy=Mixing.TAKE_ONE,
+    channel: int = 0,
+):
+
+    result = None
+
+    for (start_time, end_time) in parts:
+        reading_start = int(start_time * sample_rate)
+        reading_stop = int(end_time * sample_rate)
+        audio_data = sf.read(
+            filepath, start=reading_start, stop=reading_stop, always_2d=True
+        )[0]
+        if result is None:
+            result = audio_data
+        else:
+            result = np.concatenate((result, audio_data))
+
+    if len(result) == 0:
+        raise Exception("Error during reading file")
+    # IF more then one channel do mixing
+    if result.shape[1] > 1:
+        if channel_mixing_strategy == Mixing.TAKE_ONE:
+            result = result[:, channel]
+        else:
+            raise NotImplementedError()
+    else:
+        result = result[:, 0]
+
+    # If segment smaller than desired start padding it
+    desired_sample_length = round(desired_length * sample_rate)
+
+    if len(result) < desired_sample_length:
+        result = np.append(
+            result, np.full(desired_sample_length - len(result), 0.0000001)
+        )
+    return result
+
+
 def get_mel_spec(
     audio_data,
     fft_size_in_samples,

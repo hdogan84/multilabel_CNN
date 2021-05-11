@@ -128,14 +128,14 @@ class CnnBirdDetector(pl.LightningModule):
             f1(preds_on_segment, classes_on_segment, self.num_classes),
             prog_bar=True,
         )
-        self.log(
-            "lrap",
-            label_ranking_average_precision_score(
-                classes_on_segment.cpu().data.numpy(),
-                preds_on_segment.cpu().data.numpy(),
-            ),
-            prog_bar=True,
-        )
+        # self.log(
+        #     "lrap",
+        #     label_ranking_average_precision_score(
+        #         classes_on_segment.cpu().data.numpy(),
+        #         preds_on_segment.cpu().data.numpy(),
+        #     ),
+        #     prog_bar=True,
+        # )
 
         # cMap = metrics.average_precision_score(
         #     multiclasses, preds_on_segment, average="macro"
