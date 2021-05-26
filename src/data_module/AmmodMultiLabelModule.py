@@ -36,23 +36,27 @@ class AmmodMultiLabelModule(LightningDataModule):
             batch_size: size of batch
         """
         super().__init__(*args, **kwargs)
-        d: DataConfig = config.data
-        s: SystemConfig = config.system
-        l: LearningConfig = config.learning
+
         self.config = config
 
         self.train_list_filepath = (
-            Path(d.train_list_filepath) if d.train_list_filepath != "None" else None
+            Path(config.data.train_list_filepath)
+            if config.data.train_list_filepath != "None"
+            else None
         )
         self.val_list_filepath = (
-            Path(d.val_list_filepath) if d.val_list_filepath != "None" else None
+            Path(config.data.val_list_filepath)
+            if config.data.val_list_filepath != "None"
+            else None
         )
 
         self.num_workers = (
-            s.num_workers if s.num_workers >= 0 else multiprocessing.cpu_count()
+            config.system.num_workers
+            if config.system.num_workers >= 0
+            else multiprocessing.cpu_count()
         )
-        self.random_seed = s.random_seed
-        self.batch_size = d.batch_size
+        self.random_seed = config.system.random_seed
+        self.batch_size = config.data.batch_size
 
         # create augmentation pipelines
         self.fit_transform_audio = fit_transform_audio
@@ -61,7 +65,9 @@ class AmmodMultiLabelModule(LightningDataModule):
         self.val_transform_image = val_transform_image
 
         # create class id dictionary
-        class_list = pd.read_csv(d.class_list_filepath, delimiter=";", quotechar="|",)
+        class_list = pd.read_csv(
+            config.data.class_list_filepath, delimiter=";", quotechar="|",
+        )
         self.class_count = len(class_list)
         class_tensor = to_onehot(torch.arange(0, len(class_list)), len(class_list))
         self.class_dict = {

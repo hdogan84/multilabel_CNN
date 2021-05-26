@@ -56,7 +56,7 @@ def read_audio_segment(
             filepath, start=reading_start, stop=reading_stop, always_2d=True
         )[0]
     if len(audio_data) == 0:
-        raise Exception("Error during reading file")
+        raise Exception("Error during reading file {}".format(filepath.as_posix()))
     # IF more then one channel do mixing
     if audio_data.shape[1] > 1:
         if channel_mixing_strategy == Mixing.TAKE_ONE:
@@ -120,7 +120,7 @@ def read_audio_parts(
             result = np.concatenate((result, audio_data))
 
     if len(result) == 0:
-        raise Exception("Error during reading file")
+        raise Exception("Error during reading file:".format(filepath.as_posix()))
     # IF more then one channel do mixing
     if result.shape[1] > 1:
         if channel_mixing_strategy == Mixing.TAKE_ONE:
@@ -192,7 +192,9 @@ def resample_audio_file(
     y, sr = librosa.load(source_file_path, sr=None, mono=False, res_type=resampleType,)
 
     if np.isfinite(y).all() is False:
-        raise Exception("Error opening audio file for {}".format(source_file_path))
+        raise Exception(
+            "Error opening audio file for {}".format(source_file_path.as_posix())
+        )
         return
 
     # Normalize to -3 dB

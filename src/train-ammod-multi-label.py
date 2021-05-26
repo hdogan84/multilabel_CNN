@@ -3,6 +3,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import argparse
 from pathlib import Path
 from config.configuration import parse_config, ScriptConfig
+from config.AmmodMultiLabel import Config
 from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
@@ -22,10 +23,10 @@ import albumentations as A
 
 # TPUs
 # trainer = Trainer(tpu_cores=8)
-def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
+def start_train(config: Config, checkpoint_filepath: Path = None):
 
     fit_transform_audio = SignalCompose(
-        create_signal_pipeline(config.augmentation.signal_pipline, config),
+        create_signal_pipeline(config.augmentation.signal_pipeline, config),
         shuffle=config.augmentation.shuffle_signal_augmentation,
     )
     fit_transform_image = A.Compose(
@@ -49,11 +50,11 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
     )
 
     if checkpoint_filepath is None:
-        model = CnnBirdDetector(data_module.class_count, **config.learning.as_dict())
+        model = CnnBirdDetector(data_module.class_count, **config.optimizer.as_dict())
     else:
         # LOAD CHECKPOINT
         model = CnnBirdDetector.load_from_checkpoint(
-            checkpoint_filepath.as_posix(), **config.learning.as_dict()
+            checkpoint_filepath.as_posix(), **config.optimizer.as_dict()
         )
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.system.experiment_name
@@ -62,7 +63,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
 
     # Setup Checkpoints
     checkpoint_callback = ModelCheckpoint(
-        monitor="val_f1_score",
+        monitor="average_precision",
         save_top_k=3,
         mode="max",
         filename="{val_f1_score:.2f}-{epoch:002d}",
@@ -72,7 +73,7 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
-        gpus=config.system.gpus,
+        gpus=[0],  # [2],
         max_epochs=config.system.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_filepath = args.config
     print(args.env)
-    config = parse_config(config_filepath, enviroment_prefix=args.env)
+    config = Config()
     if args.load is not None:
         assert args.load.exists()
     start_train(

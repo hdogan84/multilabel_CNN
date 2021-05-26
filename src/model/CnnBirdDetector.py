@@ -9,15 +9,9 @@ from torchvision import transforms
 import pytorch_lightning as pl
 import torchvision.models as models
 from sklearn.metrics import label_ranking_average_precision_score
-from pytorch_lightning.metrics.utils import to_onehot
-from pytorch_lightning.metrics.functional import accuracy, average_precision
-from pytorch_lightning.metrics.functional.f_beta import f1
-from pytorch_lightning.metrics.classification import (
-    Accuracy,
-    AveragePrecision,
-    ConfusionMatrix,
-    F1,
-)
+from torchmetrics.functional import accuracy, average_precision, f1, fbeta
+
+
 from tools.tensor_helpers import pool_by_segments
 import numpy as np
 
@@ -55,8 +49,8 @@ class CnnBirdDetector(pl.LightningModule):
             1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
-        self.bce = nn.BCELoss()
-        # self.Criterion = F.cross_entropy
+        # self.bce = nn.BCELoss()
+        # self.Criterion = F.binary_cross_entropy
         self.Criterion = F.binary_cross_entropy_with_logits
 
     def forward(self, x):
@@ -111,11 +105,13 @@ class CnnBirdDetector(pl.LightningModule):
         classes = torch.cat([x["classes"] for x in outputs])
         segment_indices = torch.cat([x["segment_indices"] for x in outputs])
 
-        preds_on_segment, _ = pool_by_segments(preds, segment_indices)
-        classes_on_segment, _ = pool_by_segments(classes, segment_indices)
+        preds_on_segment, _ = pool_by_segments(
+            preds, segment_indices, pooling_method="mean"
+        )
 
-        if classes.dim() == 1:
-            classes_on_segment = to_onehot(classes_on_segment, self.num_classes)
+        classes_on_segment, _ = pool_by_segments(
+            classes, segment_indices, pooling_method="mean"
+        )
 
         self.log("val_loss", avg_loss, prog_bar=True)
         self.log(
@@ -123,19 +119,24 @@ class CnnBirdDetector(pl.LightningModule):
             average_precision(preds_on_segment, classes_on_segment, pos_label=1),
             prog_bar=True,
         )
+
+        # print(classes_on_segment.dtype)
+        # print(preds_on_segment)
+        tmp = torch.ceil(classes_on_segment).type(torch.int)
+        # print(tmp.dtype)
+        # print(tmp)
         self.log(
             "val_f1_score",
-            f1(preds_on_segment, classes_on_segment, self.num_classes),
+            f1(torch.sigmoid(preds_on_segment), tmp, num_classes=self.num_classes),
             prog_bar=True,
         )
-        # self.log(
-        #     "lrap",
-        #     label_ranking_average_precision_score(
-        #         classes_on_segment.cpu().data.numpy(),
-        #         preds_on_segment.cpu().data.numpy(),
-        #     ),
-        #     prog_bar=True,
-        # )
+        self.log(
+            "lrap",
+            label_ranking_average_precision_score(
+                tmp.cpu().data.numpy(), preds_on_segment.cpu().data.numpy(),
+            ),
+            prog_bar=True,
+        )
 
         # cMap = metrics.average_precision_score(
         #     multiclasses, preds_on_segment, average="macro"

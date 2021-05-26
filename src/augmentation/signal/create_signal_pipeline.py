@@ -1,5 +1,5 @@
 from inflection import underscore
-from config.configuration import ScriptConfig
+from config.ModelConfig import ModelConfig
 from augmentation.signal import (
     AddBackgroundNoiseFromCsv,
     AddPinkNoiseSnr,
@@ -7,7 +7,7 @@ from augmentation.signal import (
     AddSameClassSignal,
     AddClassSignal,
 )
-
+import re
 from audiomentations import (
     AddBackgroundNoise,
     AddGaussianNoise,
@@ -63,12 +63,18 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import albumentations as A
 
 
-def create_signal_pipeline(transform_list: list, config: ScriptConfig):
+def camel_to_snake_case(name):
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+
+
+def create_signal_pipeline(transform_list: list, config: ModelConfig):
     config_dict = config.as_dict()
     transforms = []
     for transform_name in transform_list:
         print("- {}".format(transform_name))
         transforms.append(
-            signal_transform_dict[transform_name](**config_dict[transform_name])
+            signal_transform_dict[transform_name](
+                **config_dict[camel_to_snake_case(transform_name)]
+            )
         )
     return transforms

@@ -40,6 +40,7 @@ class MultiLabelAudioSet(Dataset):
         transform_image: Callable = None,
         transform_audio: Callable = None,
         is_validation: bool = False,
+        validation_step: float = 1,
     ):
         """
         Args:
@@ -54,7 +55,7 @@ class MultiLabelAudioSet(Dataset):
         self.transform_image = transform_image
         self.data = data
         self.is_validation = is_validation
-
+        self.validation_step = validation_step
         self.annotation_interval_dict = {}
         annotation_interval_id = 0
         for _, row in data.iterrows():
@@ -85,19 +86,40 @@ class MultiLabelAudioSet(Dataset):
         self.segments = []
         for key in self.annotation_interval_dict:
             annotation_interval = self.annotation_interval_dict[key]
-            segment_count = ceil(
-                (annotation_interval["end_time"] - annotation_interval["start_time"])
-                / self.config.data.segment_duration
-            )
-            for i in range(segment_count):
-                self.segments.append(
-                    {
-                        "annotation_interval_id": key,
-                        "start_time": annotation_interval["start_time"]
-                        + i * self.config.data.segment_duration,
-                        "annotation_interval": annotation_interval,
-                    }
+            if self.is_validation:
+                segment_count = ceil(
+                    (
+                        annotation_interval["end_time"]
+                        - annotation_interval["start_time"]
+                    )
+                    / self.config.data.validation_step
                 )
+                for i in range(segment_count):
+                    self.segments.append(
+                        {
+                            "annotation_interval_id": key,
+                            "start_time": annotation_interval["start_time"]
+                            + i * self.config.data.validation_step,
+                            "annotation_interval": annotation_interval,
+                        }
+                    )
+            else:
+                segment_count = ceil(
+                    (
+                        annotation_interval["end_time"]
+                        - annotation_interval["start_time"]
+                    )
+                    / self.config.data.segment_duration
+                )
+                for i in range(segment_count):
+                    self.segments.append(
+                        {
+                            "annotation_interval_id": key,
+                            "start_time": annotation_interval["start_time"]
+                            + i * self.config.data.segment_duration,
+                            "annotation_interval": annotation_interval,
+                        }
+                    )
 
     def __get_zero_tensor(self):
         x = list(self.class_dict.values())[0]
