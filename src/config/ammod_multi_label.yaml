@@ -1,0 +1,150 @@
+data:
+    class_list_filepath: ./data/libro_animalis/exported/ammod-multi-class-list.csv
+    train_list_filepath: ./data/libro_animalis/exported/ammod-multi-train.csv
+    val_list_filepath: ./data/libro_animalis/exported/ammod-multi-val.csv
+    data_root_path: ./data/libro_animalis/
+    batch_size: 182
+    segment_duration: 5.0
+    min_event_overlap_time: 0.2
+    wrap_around_probability: 0.5
+system:
+    experiment_name: audio_classificator_logging
+    log_dir: ./logs
+    log_every_n_steps: 5
+    gpus: 1
+    num_workers: -1
+    random_seed: 236762
+    deterministic: True
+    max_epochs: 230
+optimizer:
+    # optimizers Adam SGD
+    optimizer_type: Adam
+    learning_rate: 0.0001
+    sgd_momentum: 0.9
+    sgd_weight_decay: 1e-4
+    # schedulers None CosineAnnealingLR
+    # scheduler_type = CosineAnnealingLR
+    cosine_annealing_lr_t_max: 15
+validation:
+    complete_segment: True
+    # multi channel handling take_first | take_all
+    multi_channel_handling: take_all
+    # maximum length of segment which get anlises
+    # in seconds or None for whole segment
+    max_segment_length: 9.0
+    # handle to short las subsegment: drop | move_start
+    sub_segment_rest_handling: move_start
+    sub_segment_overlap: 0.1
+    # poolin_methods: mean | meanexp | max
+    pooling_method: mean
+    batch_size_mulitplier: 3
+audio_loading:
+    segment_length: 5
+    sample_rate: 32000
+    # multi channel handling take_one | take_all | random_mix
+    channel_mixing_strategy: take_one
+    # clyclic | silence
+    padding_strategy: wrap_around
+    fft_size_in_samples: 1536
+    fft_hop_size_in_samples: 360
+    num_of_mel_bands: 128
+    mel_start_freq: 20
+    mel_end_freq: 16000
+augmentation:
+    # TimeMask, FrequencyMask, AddBackgroundNoiseFromCsv, AddGaussianNoise,
+    # TimeStretch, PitchShift, Shift, AddPinkNoiseSnr, VolumeControl, AddSameClassSignal
+    shuffle_signal_augmentation: False
+    signal_pipeline: 
+        - AddBackgroundNoiseFromCsv
+        # AddClassSignal,
+        - AddPinkNoiseSnr,
+        - VolumeControl,
+        - FrequencyMask,
+        - TimeMask,
+        # TimeStretch,
+        - AddGaussianNoise,
+    ]
+    # Augmentation Methods Signal
+time_mask:
+    min_band_part: 0.05
+    max_band_part: 0.5
+    fade: False
+    p: 0.2
+frequency_mask:
+    min_frequency_band: 0.05
+    max_frequency_band: 0.5
+    p: 0.1
+add_background_noise_from_csv:
+    filepath: ./data/libro_animalis/exported/noise_3000.csv
+    data_path: ./data/libro_animalis/
+    index_filepath: 0
+    min_snr_in_db: 4
+    max_snr_in_db: 20
+    delimiter: ;
+    quotechar: \|
+    p: 0.4
+add_gaussian_noise:
+    min_amplitude: 0.001
+    max_amplitude: 0.015
+    p: 0.15
+time_strech:
+    min_rate: 0.9
+    max_rate: 1.10
+    leave_length_unchanged: True
+    p: 0.20
+pitch_shift:
+    min_semitones: -2
+    max_semitones: 2
+    p: 0.20
+shift:
+    min_fraction: -0.5
+    max_fraction: 0.5
+    rollover: True
+    p: 0.5
+add_pink_noise_snr:
+    p: 0.2
+    min_snr: 5.0
+    max_snr: 20.0
+volume_control:
+    p: 0.2
+    db_limit: 10
+    # uniform fade cosine sine random
+    mode: cosine
+add_same_class_signal:
+    p: 0.3
+    min_ssr: -20
+    max_ssr: 3
+    max_n: 3
+    padding_strategy: wrap_around
+    channel_mixing_strategy: take_one
+    data_path: ./data/ammod-selection/database
+    data_list_filepath: ./data/libro_animalis/ammod-selection/train_balanced_labels.csv
+    # set class_list_filepath if you want to transform into class_index values
+    class_list_filepath: ./data/libro_animalis/ammod-selection/class-list.csv
+    index_filepath: 5
+    index_start_time: 1
+    index_end_time: 2
+    index_label: 3
+    index_channels: 6
+    delimiter: ;
+    quotechar: \|
+add_class_signal:
+    p: 0.8
+    restriced_to_same_class: False
+    min_ssr: -20
+    max_ssr: 3
+    max_n: 5
+    padding_strategy: wrap_around
+    channel_mixing_strategy: take_one
+    data_path: ./data/ammod-selection/database
+    data_list_filepath: ./data/ammod-selection/database/train_ammod_labels.csv
+    # set class_list_filepath if you want to transform into class_index values
+    class_list_filepath: ./data/
+    index_filepath: 5
+    index_start_time: 1
+    index_end_time: 2
+    index_label: 3
+    index_channels: 6
+    delimiter: ;
+    quotechar: \|
+
