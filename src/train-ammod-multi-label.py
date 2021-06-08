@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+from pytorch_lightning.accelerators import accelerator
 from pytorch_lightning.callbacks import ModelCheckpoint
 import argparse
 from pathlib import Path
@@ -63,17 +64,17 @@ def start_train(config: Config, checkpoint_filepath: Path = None):
 
     # Setup Checkpoints
     checkpoint_callback = ModelCheckpoint(
-        monitor="average_precision",
+        monitor="val_f1",
         save_top_k=3,
         mode="max",
-        filename="{val_f1_score:.2f}-{epoch:002d}",
+        filename="{val_f1:.2f}-{epoch:002d}",
     )
     save_config_callback = SaveConfigToLogs(config)
     log_first_batch_as_image = LogFirstBatchAsImage(mean=0.456, std=0.224)
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
-        gpus=[0],  # [2],
+        gpus=[1],  # [2],
         max_epochs=config.system.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
@@ -81,6 +82,7 @@ def start_train(config: Config, checkpoint_filepath: Path = None):
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
         check_val_every_n_epoch=1,
+        accelerator="dp"
         # profiler="simple",
         # precision=16
         # fast_dev_run=True,

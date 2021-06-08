@@ -6,7 +6,7 @@ class Data(ModelConfig):
     train_list_filepath: str = "./data/libro_animalis/exported/ammod-multi-train.csv"
     val_list_filepath: str = "./data/libro_animalis/exported/ammod-multi-val.csv"
     data_root_path: str = "./data/libro_animalis/"
-    batch_size: int = 182
+    batch_size: int = 164
     segment_duration: float = 5.0
     min_event_overlap_time: float = 0.2
     wrap_around_probability: float = 0.5
@@ -36,16 +36,7 @@ class Optimizer(ModelConfig):
 
 class Validation(ModelConfig):
     complete_segment: bool = True
-    # multi channel handling take_first | take_all
-    multi_channel_handling: str = "take_all"
-    # maximum length of segment which get anlises
-    # in seconds or None for whole segment
-    max_segment_length: float = 9.0
-    # handle to short las subsegment: drop | move_start
-    sub_segment_rest_handling: str = "move_start"
-    sub_segment_overlap: float = 0.1
-    # poolin_methods: mean | meanexp | max
-    pooling_method: str = "mean"
+    segment_step: float = 1
     batch_size_mulitplier: float = 3
 
 
@@ -69,7 +60,8 @@ class Augmentation(ModelConfig):
     shuffle_signal_augmentation: bool = False
     signal_pipeline: list = [
         "AddBackgroundNoiseFromCsv",
-        # "AddClassSignal",
+        "AddSameClassSignal",
+        "AddClassSignal",
         "AddPinkNoiseSnr",
         "VolumeControl",
         "FrequencyMask",
@@ -101,7 +93,7 @@ class AddBackgroundNoiseFromCsv(ModelConfig):
     max_snr_in_db: int = 20
     delimiter: str = ";"
     quotechar: str = "|"
-    p: float = 0.4
+    p: float = 0.2
 
 
 class AddGaussianNoise(ModelConfig):
@@ -144,42 +136,42 @@ class VolumeControl(ModelConfig):
 
 
 class AddSameClassSignal(ModelConfig):
-    p: float = 0.3
+    p: float = 0.2
     min_ssr = -20
     max_ssr = 3
     max_n = 3
     padding_strategy: str = "wrap_around"
     channel_mixing_strategy: str = "take_one"
-    data_path: str = "./data/ammod-selection/database"
-    data_list_filepath: str = "./data/libro_animalis/ammod-selection/train_balanced_labels.csv"
+    data_path: str = "./data/libro_animalis/"
+    data_list_filepath: str = "./data/libro_animalis/exported/ammod-multi-train.csv"
     # set class_list_filepath if you want to transform class into class_index values
-    class_list_filepath: str = "./data/libro_animalis/ammod-selection/class-list.csv"
-    index_filepath: int = 5
-    index_start_time: int = 1
-    index_end_time: int = 2
-    index_label: int = 3
-    index_channels: int = 6
+    class_list_filepath: str = "./data/libro_animalis/exported/ammod-multi-class-list.csv"
+    index_filepath: int = 1
+    index_start_time: int = 5
+    index_end_time: int = 6
+    index_label: int = 4
+    index_channels: int = 2
     delimiter: str = ";"
     quotechar: str = "|"
 
 
 class AddClassSignal(ModelConfig):
-    p: float = 0.8
+    p: float = 0.2
     restriced_to_same_class = False
     min_ssr = -20
     max_ssr = 3
     max_n = 5
     padding_strategy: str = "wrap_around"
     channel_mixing_strategy: str = "take_one"
-    data_path: str = "./data/ammod-selection/database"
-    data_list_filepath: str = "./data/ammod-selection/database/train_ammod_labels.csv"
+    data_path: str = "./data/libro_animalis/"
+    data_list_filepath: str = "./data/libro_animalis/exported/ammod-multi-train.csv"
     # set class_list_filepath if you want to transform class into class_index values
-    class_list_filepath: str = "./data/"
-    index_filepath: int = 5
-    index_start_time: int = 1
-    index_end_time: int = 2
-    index_label: int = 3
-    index_channels: int = 6
+    class_list_filepath: str = "./data/libro_animalis/exported/ammod-multi-class-list.csv"
+    index_filepath: int = 1
+    index_start_time: int = 5
+    index_end_time: int = 6
+    index_label: int = 4
+    index_channels: int = 2
     delimiter: str = ";"
     quotechar: str = "|"
 
@@ -201,3 +193,5 @@ class Config(ModelConfig):
     add_pink_noise_snr: AddPinkNoiseSnr = AddPinkNoiseSnr()
     volume_control: VolumeControl = VolumeControl()
     add_class_signal: AddClassSignal = AddClassSignal()
+    add_same_class_signal: AddSameClassSignal = AddSameClassSignal()
+

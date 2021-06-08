@@ -56,7 +56,8 @@ def read_audio_segment(
             filepath, start=reading_start, stop=reading_stop, always_2d=True
         )[0]
     if len(audio_data) == 0:
-        raise Exception("Error during reading file {}".format(filepath.as_posix()))
+
+        raise Exception("Error during reading file 1: {}".format(filepath.as_posix()))
     # IF more then one channel do mixing
     if audio_data.shape[1] > 1:
         if channel_mixing_strategy == Mixing.TAKE_ONE:
@@ -120,7 +121,8 @@ def read_audio_parts(
             result = np.concatenate((result, audio_data))
 
     if len(result) == 0:
-        raise Exception("Error during reading file:".format(filepath.as_posix()))
+        print(filepath)
+        raise Exception("Error during reading file 2:".format(filepath))
     # IF more then one channel do mixing
     if result.shape[1] > 1:
         if channel_mixing_strategy == Mixing.TAKE_ONE:

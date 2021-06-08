@@ -92,14 +92,14 @@ class MultiLabelAudioSet(Dataset):
                         annotation_interval["end_time"]
                         - annotation_interval["start_time"]
                     )
-                    / self.config.data.validation_step
+                    / self.config.validation.segment_step
                 )
                 for i in range(segment_count):
                     self.segments.append(
                         {
                             "annotation_interval_id": key,
                             "start_time": annotation_interval["start_time"]
-                            + i * self.config.data.validation_step,
+                            + i * self.config.validation.segment_step,
                             "annotation_interval": annotation_interval,
                         }
                     )
