@@ -56,6 +56,7 @@ class AmmodSingleLabelModule(LightningDataModule):
         self.class_list_filepath = d.class_list_filepath
         self.test_split = d.test_split
         self.val_split = d.val_split
+
         self.num_workers = (
             s.num_workers if s.num_workers >= 0 else multiprocessing.cpu_count()
         )

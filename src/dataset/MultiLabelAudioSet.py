@@ -1,40 +1,26 @@
-import argparse
 from typing import Callable
-from librosa.core import audio
 from pandas import DataFrame
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from pathlib import Path
-import matplotlib.pyplot as plt
 from torchvision import transforms
-from config.configuration import (
-    ScriptConfig,
-    AudioLoadingConfig,
-    ValidationConfig,
-    DataConfig,
-)
+
 from random import random
 
 # import simpleaudio as sa
 from math import ceil
 import numpy as np
-import librosa
-import librosa.display
+
 from tools.audio_tools import (
-    read_audio_segment,
     read_audio_parts,
     get_mel_spec,
-    Mixing,
-    Padding,
 )
-from tools.plot_tools import print_mel_spec
-from functools import reduce
 
 
 class MultiLabelAudioSet(Dataset):
     def __init__(
         self,
-        config: ScriptConfig,
+        config,
         data: DataFrame,
         class_dict: dict,
         transform_image: Callable = None,
@@ -250,7 +236,6 @@ class MultiLabelAudioSet(Dataset):
         except Exception as error:
             print(error)
             return None
-
         augmented_signal, y = audio_data = (
             self.transform_audio(
                 samples=audio_data,

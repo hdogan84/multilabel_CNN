@@ -144,8 +144,6 @@ class CnnBirdDetector(pl.LightningModule):
             sync_dist=True,
         )
         value = self.F1.compute()
-        print("assfdsa")
-        print(value)
         self.log("val_f1", value, prog_bar=True, sync_dist=True)
 
         # print(classes_on_segment.dtype)

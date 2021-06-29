@@ -1,18 +1,14 @@
-import functools
-import os
 import random
-import sys
-import tempfile
-import uuid
-import warnings
+
 import random
-import librosa
+
 import torch
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from scipy.signal import butter, sosfilt, convolve
+from logging import debug, warn
 from tools.audio_tools import read_audio_segment
+
 from audiomentations.core.utils import (
     calculate_rms,
     calculate_desired_noise_rms,
@@ -140,10 +136,15 @@ class AddSameClassSignal(BaseWaveformTransform):
         for n in range(self.parameters["n_times"]):
             # if y is one hot encoded reduce index value
             if torch.is_tensor(y) and y.shape[0] > 1:
+                temp_y
                 for x in range(0, y.shape[0]):
                     if y[x] > 0:
                         temp_y = x
                         break
+
+            if temp_y not in self.class_data_dict:
+                warn("AddSameClassSignal has no class {}".format(temp_y))
+                return samples, y
 
             same_class_entry = random.choice(self.class_data_dict[temp_y])
             audio_data = read_audio_segment(

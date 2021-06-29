@@ -1,6 +1,7 @@
 from pytorch_lightning.callbacks import Callback
 from pytorch_lightning import Trainer, LightningModule
 from pathlib import Path
+from tools.config import save_to_yaml, as_html
 
 
 class SaveConfigToLogs(Callback):
@@ -9,10 +10,10 @@ class SaveConfigToLogs(Callback):
         self.config = config
 
     def on_sanity_check_end(self, trainer: Trainer, pl_module: LightningModule):
-        self.config.save_to(Path(trainer.logger.log_dir).joinpath("config.cfg"))
+        save_to_yaml(self.config, Path(trainer.logger.log_dir).joinpath("config.cfg"))
         writer = trainer.logger.experiment
         writer.add_text(
-            "config" "First Batch Training Data", self.config.as_html(), 0,
+            "config" "First Batch Training Data", as_html(self.config), 0,
         )
         pass
 

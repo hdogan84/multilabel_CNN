@@ -1,10 +1,9 @@
 import pytorch_lightning as pl
+from tools.config import load_yaml_config
 from pytorch_lightning.accelerators import accelerator
 from pytorch_lightning.callbacks import ModelCheckpoint
 import argparse
 from pathlib import Path
-from config.configuration import parse_config, ScriptConfig
-from config.AmmodMultiLabel import Config
 from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
@@ -24,7 +23,7 @@ import albumentations as A
 
 # TPUs
 # trainer = Trainer(tpu_cores=8)
-def start_train(config: Config, checkpoint_filepath: Path = None):
+def start_train(config, checkpoint_filepath: Path = None):
 
     fit_transform_audio = SignalCompose(
         create_signal_pipeline(config.augmentation.signal_pipeline, config),
@@ -51,7 +50,7 @@ def start_train(config: Config, checkpoint_filepath: Path = None):
     )
 
     if checkpoint_filepath is None:
-        model = CnnBirdDetector(data_module.class_count, **config.optimizer.as_dict())
+        model = CnnBirdDetector(data_module.class_count, **config.optimizer)
     else:
         # LOAD CHECKPOINT
         model = CnnBirdDetector.load_from_checkpoint(
@@ -100,7 +99,7 @@ if __name__ == "__main__":
         type=Path,
         nargs="?",
         # default="./src/config/europe254.cfg",
-        default="./src/config/ammod-multi-label.cfg",
+        default="./src/config/ammod_multi_label.yaml",
         help="config file for all settings",
     )
     parser.add_argument(
@@ -113,9 +112,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_filepath = args.config
     print(args.env)
-    config = Config()
-    if args.load is not None:
-        assert args.load.exists()
+
+    config = load_yaml_config(config_filepath)
+
     start_train(
         config, checkpoint_filepath=args.load,
     )
