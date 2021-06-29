@@ -164,11 +164,24 @@ class MultiLabelAudioSet(Dataset):
 
         def is_in_filter(event):
             for (segment_start, segment_end) in segment_parts:
+                if segment_end < event["start_time"]:
+                    # event start after segment part ends
+                    continue
+                if event["end_time"] < segment_start:
+                    # event ends before segment part starts
+                    continue
                 if (
                     event["start_time"] <= segment_start
                     and event["end_time"] >= segment_end
                 ):
                     # event starts before the segment part and  ends after segment part
+                    return True
+
+                if (
+                    event["start_time"] >= segment_start
+                    and event["end_time"] <= segment_end
+                ):
+                    # event starts in the segment and ends in the segment
                     return True
 
                 if (
@@ -186,7 +199,7 @@ class MultiLabelAudioSet(Dataset):
                 ):
                     # event ends in segment and is it's occurrence is long enough
                     return True
-                return False
+            return False
 
         return is_in_filter
 

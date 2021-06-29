@@ -143,24 +143,29 @@ class AddSameClassSignal(BaseWaveformTransform):
                         break
 
             if temp_y not in self.class_data_dict:
-                warn("AddSameClassSignal has no class {}".format(temp_y))
+                # warn("AddSameClassSignal has no class {}".format(temp_y))
                 return samples, y
 
             same_class_entry = random.choice(self.class_data_dict[temp_y])
-            audio_data = read_audio_segment(
-                same_class_entry[1],
-                same_class_entry[3],
-                same_class_entry[4],
-                len(samples) / sample_rate,
-                sample_rate,
-                channel_mixing_strategy=self.parameters["channel_mixing_strategies"][n],
-                padding_strategy=self.parameters["padding_strategies"][n],
-                randomize_audio_segment=True,
-                channel=random.randint(0, same_class_entry[5] - 1),
-            )
-            # alter volume
-            audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
-            result = result + audio_data
+            try:
+                audio_data = read_audio_segment(
+                    same_class_entry[1],
+                    same_class_entry[3],
+                    same_class_entry[4],
+                    len(samples) / sample_rate,
+                    sample_rate,
+                    channel_mixing_strategy=self.parameters[
+                        "channel_mixing_strategies"
+                    ][n],
+                    padding_strategy=self.parameters["padding_strategies"][n],
+                    randomize_audio_segment=True,
+                    channel=random.randint(0, same_class_entry[5] - 1),
+                )
+                # alter volume
+                audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
+                result = result + audio_data
+            except Exception:
+                return samples, y
 
         return result, y
 
