@@ -78,19 +78,21 @@ class AmmodMultiLabelModule(LightningDataModule):
         # print(self.class_dict)
 
     def prepare_data(self):
+
         # called only on 1 GPU
-        # split data into train val and test
+        # Use this method to do things that might write to disk or that need to be done only from a single process in distributed settings.
+        pass
+
+    def setup(self, stage=None):
+        # called on every GPU
+        # Assign train/val datasets for use in dataloaders
+
         self.train_dataframe = pd.read_csv(
             self.train_list_filepath, delimiter=";", quotechar="|",
         )
         self.val_dataframe = pd.read_csv(
             self.val_list_filepath, delimiter=";", quotechar="|",
         )
-
-    def setup(self, stage=None):
-        # called on every GPU
-        # Assign train/val datasets for use in dataloaders
-
         if stage == "fit" or stage is None:
             self.train_set = MultiLabelAudioSet(
                 self.config,

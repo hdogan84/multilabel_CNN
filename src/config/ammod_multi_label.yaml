@@ -12,11 +12,13 @@ system:
   experiment_name: "audio_classificator_logging"
   log_dir: "./logs"
   log_every_n_steps: 5
-  gpus: 3
-  num_workers: -1
-  random_seed: 236762
+  gpus: [0, 1, 2]
+  num_workers: 8
+  random_seed: 236742
   deterministic: True
   max_epochs: 230
+  fast_dev_run: False
+  auto_select_gpus: False
 
 optimizer:
   # optimizers Adam SGD
@@ -32,6 +34,7 @@ validation:
   complete_segment: True
   segment_step: 1
   batch_size_mulitplier: 3
+  check_val_every_n_epoch: 1
 
 audio_loading:
   segment_length: 5
