@@ -6,7 +6,6 @@ from pytorch_lightning import LightningDataModule
 import pandas as pd
 
 from dataset.MultiLabelAudioSet import MultiLabelAudioSet
-from config.configuration import DataConfig, ScriptConfig, SystemConfig, LearningConfig
 from pathlib import Path
 from pytorch_lightning.metrics.utils import to_onehot
 
@@ -19,7 +18,7 @@ def filter_none_values(batch):
 class AmmodMultiLabelModule(LightningDataModule):
     def __init__(
         self,
-        config: ScriptConfig,
+        config,
         fit_transform_audio: Callable = None,
         fit_transform_image: Callable = None,
         val_transform_audio: Callable = None,
@@ -127,7 +126,7 @@ class AmmodMultiLabelModule(LightningDataModule):
     def val_dataloader(self):
         return DataLoader(
             self.val_set,
-            batch_size=self.batch_size,
+            batch_size=self.batch_size * self.config.validation.batch_size_mulitplier,
             shuffle=False,
             num_workers=self.num_workers,
             drop_last=False,

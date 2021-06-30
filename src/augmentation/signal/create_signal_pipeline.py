@@ -1,6 +1,4 @@
 from inflection import underscore
-from config.AmmodMultiLabel import Config
-from config.ModelConfig import ModelConfig
 from augmentation.signal import (
     AddBackgroundNoiseFromCsv,
     AddPinkNoiseSnr,

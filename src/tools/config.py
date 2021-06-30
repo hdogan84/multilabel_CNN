@@ -11,7 +11,7 @@ def load_yaml_config(config_filepath: Path):
 
 def save_to_yaml(config: dict, target_filepath: Path) -> None:
     with open(target_filepath, "w+") as text_file:
-        yaml.dump(config, text_file, allow_unicode=True)
+        yaml.safe_dump(config, text_file, allow_unicode=True)
 
 
 def as_html(config) -> str:

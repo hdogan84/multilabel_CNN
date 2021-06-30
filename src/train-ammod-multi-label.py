@@ -80,7 +80,7 @@ def start_train(config, checkpoint_filepath: Path = None):
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
-        check_val_every_n_epoch=config.system.check_val_every_n_epoch,
+        check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
         accelerator="ddp",
         auto_select_gpus=config.system.auto_select_gpus,
         fast_dev_run=config.system.fast_dev_run,
@@ -88,7 +88,7 @@ def start_train(config, checkpoint_filepath: Path = None):
         # profiler="simple",
         # precision=16,
         # auto_scale_batch_size="binsearch",
-        # limit_train_batches=0.25,
+        # limit_train_batches=0.01,
         # limit_val_batches=0.25,
         # overfit_batches=10,
     )
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         type=Path,
         nargs="?",
         # default="./src/config/europe254.cfg",
-        default="./src/config/ammod_multi_label.yaml",
+        default="./configs/ammod_multi_label.yaml",
         help="config file for all settings",
     )
     parser.add_argument(
