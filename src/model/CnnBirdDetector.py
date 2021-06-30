@@ -9,15 +9,9 @@ from torchvision import transforms
 import pytorch_lightning as pl
 import torchvision.models as models
 from sklearn.metrics import label_ranking_average_precision_score
-from pytorch_lightning.metrics.utils import to_onehot
-from pytorch_lightning.metrics.functional import accuracy, average_precision
-from pytorch_lightning.metrics.functional.f_beta import f1
-from pytorch_lightning.metrics.classification import (
-    Accuracy,
-    AveragePrecision,
-    ConfusionMatrix,
-    F1,
-)
+from torchmetrics.functional import accuracy, average_precision, f1, fbeta
+from torchmetrics import Accuracy, AveragePrecision, F1
+
 from tools.tensor_helpers import pool_by_segments
 import numpy as np
 
@@ -55,87 +49,120 @@ class CnnBirdDetector(pl.LightningModule):
             1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
-        self.bce = nn.BCELoss()
-        # self.Criterion = F.cross_entropy
-        self.Criterion = F.binary_cross_entropy_with_logits
+        self.sigm = nn.Sigmoid()
+        # self.bce = nn.BCELoss()
+        # self.Criterion = F.binary_cross_entropy
+        # self.Criterion = F.binary_cross_entropy_with_logits
+        self.Criterion = nn.BCELoss()
+
+        self.Accuracy = Accuracy(dist_sync_on_step=True)
+        self.F1 = F1(dist_sync_on_step=True)
+        self.AveragePrecision = AveragePrecision(dist_sync_on_step=True)
 
     def forward(self, x):
-        x = self.model(x)
+        x = self.sigm(self.model(x))
         return x
-        # F.softmax(x, dim=1)  # return logits
 
     def training_step(self, batch, batch_idx):
         # self.logger.experiment.image("Training data", batch, 0)
         x, classes, _ = batch
+        target = classes.type(torch.int)
 
         # forward pass on a batch
         preds = self(x)
 
-        train_loss = self.Criterion(preds, classes)
+        loss = self.Criterion(preds, classes)
+
         self.log(
-            "train_average_precision",
-            average_precision(preds, classes, pos_label=1),
+            "train_step_accuracy",
+            accuracy(preds, target, num_classes=self.num_classes),
             prog_bar=True,
         )
+        self.log(
+            "train_step_average_precision",
+            average_precision(preds, target),
+            prog_bar=True,
+        )
+
         # logging
         self.log(
-            "train_step_loss", train_loss,
+            "train_step_loss", loss,
         )
         # self.log(
         #     "train_step_accuracy", accuracy(preds, classes),
         # )
         batch_dictionary = {
             # REQUIRED: It is required for us to return "loss"
-            "loss": train_loss,
+            "loss": loss,
         }
 
         return batch_dictionary
 
     def validation_step(self, batch, batch_idx):
         x, classes, segment_indices = batch
+        target = classes.type(torch.int)
+
         preds = self(x)
+
         loss = self.Criterion(preds, classes)
+
+        self.log("val_step_loss", loss, prog_bar=True, sync_dist=True)
         batch_dictionary = {
             "loss": loss,
             "preds": preds,
             "classes": classes,
             "segment_indices": segment_indices,
         }
+        self.Accuracy(preds, target)
+        self.AveragePrecision(preds, target)
+        self.F1(preds, target)
         return batch_dictionary
 
     def validation_epoch_end(self, outputs):
 
-        avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
+        # avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
 
-        preds = torch.cat([x["preds"] for x in outputs])
-        classes = torch.cat([x["classes"] for x in outputs])
-        segment_indices = torch.cat([x["segment_indices"] for x in outputs])
+        # preds = torch.cat([x["preds"] for x in outputs])
+        # classes = torch.cat([x["classes"] for x in outputs])
+        # segment_indices = torch.cat([x["segment_indices"] for x in outputs])
 
-        preds_on_segment, _ = pool_by_segments(preds, segment_indices)
-        classes_on_segment, _ = pool_by_segments(classes, segment_indices)
+        # preds_on_segment, _ = pool_by_segments(
+        #     preds, segment_indices, pooling_method="mean"
+        # )
 
-        if classes.dim() == 1:
-            classes_on_segment = to_onehot(classes_on_segment, self.num_classes)
+        # classes_on_segment, _ = pool_by_segments(
+        #     classes, segment_indices, pooling_method="mean"
+        # )
 
-        self.log("val_loss", avg_loss, prog_bar=True)
+        # self.log("val_loss", avg_loss, prog_bar=True)
+
+        self.log("val_accuracy", self.Accuracy.compute(), prog_bar=True, sync_dist=True)
         self.log(
-            "average_precision",
-            average_precision(preds_on_segment, classes_on_segment, pos_label=1),
+            "val_average_precision",
+            self.AveragePrecision.compute(),
             prog_bar=True,
+            sync_dist=True,
         )
-        self.log(
-            "val_f1_score",
-            f1(preds_on_segment, classes_on_segment, self.num_classes),
-            prog_bar=True,
-        )
-        self.log(
-            "lrap",
-            label_ranking_average_precision_score(
-                classes_on_segment.cpu().data.numpy(),
-                preds_on_segment.cpu().data.numpy(),
-            ),
-            prog_bar=True,
-        )
+        value = self.F1.compute()
+        self.log("val_f1", value, prog_bar=True, sync_dist=True)
+
+        # print(classes_on_segment.dtype)
+        # print(preds_on_segment)
+        # tmp = torch.ceil(classes_on_segment).type(torch.int)
+        # print(tmp.dtype)
+        # print(tmp)
+        # self.log(
+        #     "val_f1_score",
+        #     f1(torch.sigmoid(preds_on_segment), tmp, num_classes=self.num_classes),
+        #     prog_bar=True,
+        # )
+        # self.log(
+        #     "lrap",
+        #     label_ranking_average_precision_score(
+        #         tmp.cpu().data.numpy(), preds_on_segment.cpu().data.numpy(),
+        #     ),
+        #     prog_bar=True,
+        # )
 
         # cMap = metrics.average_precision_score(
         #     multiclasses, preds_on_segment, average="macro"

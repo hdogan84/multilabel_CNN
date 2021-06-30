@@ -1,10 +1,11 @@
 import pytorch_lightning as pl
+from tools.config import load_yaml_config
+from pytorch_lightning.accelerators import accelerator
 from pytorch_lightning.callbacks import ModelCheckpoint
 import argparse
 from pathlib import Path
-from config.configuration import parse_config, ScriptConfig
 from model.CnnBirdDetector import CnnBirdDetector
-from data_module.AmmodSingleLabelModule import AmmodSingleLabelModule
+from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
 from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
@@ -22,10 +23,10 @@ import albumentations as A
 
 # TPUs
 # trainer = Trainer(tpu_cores=8)
-def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
+def start_train(config, checkpoint_filepath: Path = None):
 
     fit_transform_audio = SignalCompose(
-        create_signal_pipeline(config.augmentation.signal_pipline, config),
+        create_signal_pipeline(config.augmentation.signal_pipeline, config),
         shuffle=config.augmentation.shuffle_signal_augmentation,
     )
     fit_transform_image = A.Compose(
@@ -42,18 +43,18 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
             A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0, always_apply=False, p=0.1),
         ]
     )
-    data_module = AmmodSingleLabelModule(
+    data_module = AmmodMultiLabelModule(
         config,
         fit_transform_audio=fit_transform_audio,
         fit_transform_image=fit_transform_image,
     )
 
     if checkpoint_filepath is None:
-        model = CnnBirdDetector(data_module.class_count, **config.learning.as_dict())
+        model = CnnBirdDetector(data_module.class_count, **config.optimizer)
     else:
         # LOAD CHECKPOINT
         model = CnnBirdDetector.load_from_checkpoint(
-            checkpoint_filepath.as_posix(), **config.learning.as_dict()
+            checkpoint_filepath.as_posix(), **config.optimizer
         )
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.system.experiment_name
@@ -62,10 +63,10 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
 
     # Setup Checkpoints
     checkpoint_callback = ModelCheckpoint(
-        monitor="val_f1_score",
+        monitor="val_f1",
         save_top_k=3,
         mode="max",
-        filename="{val_f1_score:.2f}-{epoch:002d}",
+        filename="{val_f1:.2f}-{epoch:002d}",
     )
     save_config_callback = SaveConfigToLogs(config)
     log_first_batch_as_image = LogFirstBatchAsImage(mean=0.456, std=0.224)
@@ -79,11 +80,17 @@ def start_train(config: ScriptConfig, checkpoint_filepath: Path = None):
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
-        check_val_every_n_epoch=1
+        check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
+        accelerator="ddp",
+        auto_select_gpus=config.system.auto_select_gpus,
+        fast_dev_run=config.system.fast_dev_run,
+        # Debugging Settings
         # profiler="simple",
-        # precision=16
-        # fast_dev_run=True,
-        # auto_scale_batch_size="binsearch"
+        # precision=16,
+        # auto_scale_batch_size="binsearch",
+        # limit_train_batches=0.01,
+        # limit_val_batches=0.25,
+        # overfit_batches=10,
     )
     # trainer.tune(model, data_module)
     trainer.fit(model, data_module)
@@ -97,7 +104,7 @@ if __name__ == "__main__":
         type=Path,
         nargs="?",
         # default="./src/config/europe254.cfg",
-        default="./src/config/default.cfg",
+        default="./configs/ammod_multi_label.yaml",
         help="config file for all settings",
     )
     parser.add_argument(
@@ -110,9 +117,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_filepath = args.config
     print(args.env)
-    config = parse_config(config_filepath, enviroment_prefix=args.env)
-    if args.load is not None:
-        assert args.load.exists()
+
+    config = load_yaml_config(config_filepath)
+
     start_train(
         config, checkpoint_filepath=args.load,
     )

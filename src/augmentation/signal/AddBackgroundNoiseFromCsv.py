@@ -5,7 +5,7 @@ import sys
 import tempfile
 import uuid
 import warnings
-
+from pathlib import Path
 import librosa
 import pandas as pd
 import numpy as np
@@ -63,7 +63,7 @@ class AddBackgroundNoiseFromCsv(AddBackgroundNoise):
         dataframe = pd.read_csv(filepath, delimiter=delimiter, quotechar=quotechar)
         if data_path is not None:
             dataframe.iloc[:, index_filepath] = dataframe.iloc[:, index_filepath].apply(
-                data_path.joinpath
+                Path(data_path).joinpath
             )
         self.sound_file_paths = dataframe.iloc[:, index_filepath]
         self.min_snr_in_db = min_snr_in_db

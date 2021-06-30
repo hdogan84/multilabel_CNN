@@ -10,6 +10,7 @@ import librosa
 import torch
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from scipy.signal import butter, sosfilt, convolve
 from tools.audio_tools import read_audio_segment
 from audiomentations.core.utils import (
@@ -64,14 +65,20 @@ class AddClassSignal(BaseWaveformTransform):
         dataframe = pd.read_csv(
             data_list_filepath, delimiter=delimiter, quotechar=quotechar
         )
+        # filter annotation_interfal entries
+        dataframe = dataframe[
+            dataframe[dataframe.columns[index_label]] != "annotation_interval"
+        ]
+
         if data_path is not None:
             dataframe.iloc[:, index_filepath] = dataframe.iloc[:, index_filepath].apply(
-                data_path.joinpath
+                Path(data_path).joinpath
             )
         # if class_list_filepath is set transform class to class_index
         if class_list_filepath is not None:
             class_list = pd.read_csv(class_list_filepath, delimiter=";", quotechar="|",)
             class_dict = {class_list.iloc[i, 0]: i for i in range(0, len(class_list))}
+
             dataframe.iloc[:, index_label] = dataframe.iloc[:, index_label].apply(
                 class_dict.__getitem__
             )
@@ -146,14 +153,14 @@ class AddClassSignal(BaseWaveformTransform):
                         random.choice(to_class_list_encoding(y))
                     ]
                 else:
-                    
+
                     class_files = self.class_data_dict[y]
             else:
-                # get Random class files 
+                # get Random class files
                 keys = self.class_data_dict.keys()
                 random_class_id = random.choice(list(keys))
                 class_files = self.class_data_dict[random_class_id]
-                result_y[random_class_id] = 1    
+                result_y[random_class_id] = 1
 
             same_class_entry = random.choice(class_files)
             audio_data = read_audio_segment(

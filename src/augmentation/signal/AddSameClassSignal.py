@@ -1,17 +1,14 @@
-import functools
-import os
 import random
-import sys
-import tempfile
-import uuid
-import warnings
+
 import random
-import librosa
+
 import torch
 import pandas as pd
 import numpy as np
-from scipy.signal import butter, sosfilt, convolve
+from pathlib import Path
+from logging import debug, warn
 from tools.audio_tools import read_audio_segment
+
 from audiomentations.core.utils import (
     calculate_rms,
     calculate_desired_noise_rms,
@@ -61,9 +58,12 @@ class AddSameClassSignal(BaseWaveformTransform):
         dataframe = pd.read_csv(
             data_list_filepath, delimiter=delimiter, quotechar=quotechar
         )
+        dataframe = dataframe[
+            dataframe[dataframe.columns[index_label]] != "annotation_interval"
+        ]
         if data_path is not None:
             dataframe.iloc[:, index_filepath] = dataframe.iloc[:, index_filepath].apply(
-                data_path.joinpath
+                Path(data_path).joinpath
             )
         # if class_list_filepath is set transform class to class_index
         if class_list_filepath is not None:
@@ -136,26 +136,36 @@ class AddSameClassSignal(BaseWaveformTransform):
         for n in range(self.parameters["n_times"]):
             # if y is one hot encoded reduce index value
             if torch.is_tensor(y) and y.shape[0] > 1:
+                temp_y
                 for x in range(0, y.shape[0]):
                     if y[x] > 0:
                         temp_y = x
                         break
 
+            if temp_y not in self.class_data_dict:
+                # warn("AddSameClassSignal has no class {}".format(temp_y))
+                return samples, y
+
             same_class_entry = random.choice(self.class_data_dict[temp_y])
-            audio_data = read_audio_segment(
-                same_class_entry[1],
-                same_class_entry[3],
-                same_class_entry[4],
-                len(samples) / sample_rate,
-                sample_rate,
-                channel_mixing_strategy=self.parameters["channel_mixing_strategies"][n],
-                padding_strategy=self.parameters["padding_strategies"][n],
-                randomize_audio_segment=True,
-                channel=random.randint(0, same_class_entry[5] - 1),
-            )
-            # alter volume
-            audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
-            result = result + audio_data
+            try:
+                audio_data = read_audio_segment(
+                    same_class_entry[1],
+                    same_class_entry[3],
+                    same_class_entry[4],
+                    len(samples) / sample_rate,
+                    sample_rate,
+                    channel_mixing_strategy=self.parameters[
+                        "channel_mixing_strategies"
+                    ][n],
+                    padding_strategy=self.parameters["padding_strategies"][n],
+                    randomize_audio_segment=True,
+                    channel=random.randint(0, same_class_entry[5] - 1),
+                )
+                # alter volume
+                audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
+                result = result + audio_data
+            except Exception:
+                return samples, y
 
         return result, y
 
