@@ -54,7 +54,7 @@ def start_train(config, checkpoint_filepath: Path = None):
     else:
         # LOAD CHECKPOINT
         model = CnnBirdDetector.load_from_checkpoint(
-            checkpoint_filepath.as_posix(), **config.optimizer.as_dict()
+            checkpoint_filepath.as_posix(), **config.optimizer
         )
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.system.experiment_name
