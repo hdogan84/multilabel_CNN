@@ -1,0 +1,14 @@
+sample_rate : 32000
+convert_to_mono : false
+fft_size_in_samples : 1536
+fft_hop_size_in_samples : 360
+num_of_mel_bands : 128
+mel_start_freq : 20
+mel_end_freq : 16000
+
+normalize_mean : 0.456
+normalize_std : 0.224
+
+segment_duration : 5
+segment_step : 2
+batch_size : 320

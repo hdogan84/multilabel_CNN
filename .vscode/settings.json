@@ -3,5 +3,11 @@
     "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    "python.testing.pytestArgs": [
+        "src"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": true
 }

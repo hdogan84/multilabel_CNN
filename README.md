@@ -57,3 +57,13 @@ samplevec, class_ids_vec
 
 # TODO 
 -Script starting docker
+
+# Build classficator for production
+1. Run Build script ./src/build.py
+2. copy mar file in build folder to your torchserver an activate it
+
+# Run torchserve for testing
+```bash
+# got to torchserve folder an run
+docker-compose up
+```

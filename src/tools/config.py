@@ -6,6 +6,7 @@ from munch import munchify
 def load_yaml_config(config_filepath: Path):
     with open(config_filepath) as f:
         config = yaml.safe_load(f)
+        # munchify allows attribute style access
         return munchify(config)
 
 

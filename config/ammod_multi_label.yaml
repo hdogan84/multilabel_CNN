@@ -1,0 +1,159 @@
+data:
+  class_list_filepath: "./data/libro_animalis/exported/ammod-multi-class-list.csv"
+  train_list_filepath: "./data/libro_animalis/exported/ammod-multi-train.csv"
+  val_list_filepath: "./data/libro_animalis/exported/ammod-multi-val.csv"
+  data_root_path: "./data/libro_animalis/"
+  batch_size: 202
+  segment_duration: 5.0
+  min_event_overlap_time: 0.2
+  wrap_around_probability: 0.5
+
+system:
+  experiment_name: "audio_classificator_logging"
+  log_dir: "./logs"
+  log_every_n_steps: 5
+  gpus: [0, 1, 2]
+  num_workers: 20
+  random_seed: 236742
+  deterministic: True
+  max_epochs: 230
+  fast_dev_run: False
+  auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
+
+optimizer:
+  # optimizers Adam SGD
+  optimizer_type: "Adam"
+  learning_rate: 0.0001
+  sgd_momentum: 0.9
+  sgd_weight_decay: 1e-4
+  # schedulers None CosineAnnealingLR
+  # scheduler_type: CosineAnnealingLR
+  cosine_annealing_lr_t_max: 15
+
+validation:
+  complete_segment: True
+  segment_step: 1
+  batch_size_mulitplier: 3
+  check_val_every_n_epoch: 1
+
+audio_loading:
+  sample_rate: 32000
+  # multi channel handling take_one | take_all | random_mix
+  channel_mixing_strategy: "take_one"
+  # clyclic | silence
+  padding_strategy: "wrap_around"
+  fft_size_in_samples: 1536
+  fft_hop_size_in_samples: 360
+  num_of_mel_bands: 128
+  mel_start_freq: 20
+  mel_end_freq: 16000
+
+augmentation:
+  # time_mask, frequency_mask, add_background_noise_from_csv, add_gaussian_noise,
+  # time_stretch, pitch_shift, shift, add_pink_noise_snr, volume_control, add_same_class_signal
+  shuffle_signal_augmentation: False
+  signal_pipeline: [
+      "add_same_class_signal",
+      "add_background_noise_from_csv",
+      "add_class_signal",
+      "add_pink_noise_snr",
+      "volume_control",
+      "frequency_mask",
+      "time_mask",
+      # "time_stretch",
+      "add_gaussian_noise",
+    ]
+  # Augmentation Methods Signal
+
+time_mask:
+  min_band_part: 0.05
+  max_band_part: 0.5
+  fade: False
+  p: 0.2
+
+frequency_mask:
+  min_frequency_band: 0.05
+  max_frequency_band: 0.5
+  p: 0.1
+
+add_background_noise_from_csv:
+  filepath: "./data/libro_animalis/exported/noise_3000.csv"
+  data_path: "./data/libro_animalis/"
+  index_filepath: 0
+  min_snr_in_db: 4
+  max_snr_in_db: 20
+  delimiter: ";"
+  quotechar: "|"
+  p: 0.2
+
+add_gaussian_noise:
+  min_amplitude: 0.001
+  max_amplitude: 0.015
+  p: 0.15
+
+time_stretch:
+  min_rate: 0.9
+  max_rate: 1.10
+  leave_length_unchanged: True
+  p: 0.20
+
+pitch_shift:
+  min_semitones: -2
+  max_semitones: 2
+  p: 0.20
+
+shift:
+  min_fraction: -0.5
+  max_fraction: 0.5
+  rollover: True
+  p: 0.5
+
+add_pink_noise_snr:
+  p: 0.2
+  min_snr: 5.0
+  max_snr: 20.0
+
+volume_control:
+  p: 0.2
+  db_limit: 10
+  # uniform fade cosine sine random
+  mode: "cosine"
+
+add_same_class_signal:
+  p: 0.2
+  min_ssr: -20
+  max_ssr: 3
+  max_n: 3
+  padding_strategy: "wrap_around"
+  channel_mixing_strategy: "take_one"
+  data_path: "./data/libro_animalis/"
+  data_list_filepath: "./data/libro_animalis/exported/ammod-multi-train.csv"
+  # set class_list_filepath if you want to transform into class_index values
+  class_list_filepath: "./data/libro_animalis/exported/ammod-multi-class-list.csv"
+  index_filepath: 1
+  index_start_time: 5
+  index_end_time: 6
+  index_label: 4
+  index_channels: 2
+  delimiter: ";"
+  quotechar: "|"
+
+add_class_signal:
+  p: 0.2
+  restriced_to_same_class: False
+  min_ssr: -20
+  max_ssr: 3
+  max_n: 5
+  padding_strategy: "wrap_around"
+  channel_mixing_strategy: "take_one"
+  data_path: "./data/libro_animalis/"
+  data_list_filepath: "./data/libro_animalis/exported/ammod-multi-train.csv"
+  # set class_list_filepath if you want to transform into class_index values
+  class_list_filepath: "./data/libro_animalis/exported/ammod-multi-class-list.csv"
+  index_filepath: 1
+  index_start_time: 5
+  index_end_time: 6
+  index_label: 4
+  index_channels: 2
+  delimiter: ";"
+  quotechar: "|"

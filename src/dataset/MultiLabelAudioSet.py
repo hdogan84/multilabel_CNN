@@ -156,7 +156,10 @@ class MultiLabelAudioSet(Dataset):
             )
 
             return self.__get_segment_parts(
-                new_start_time, new_start_time + duration, annotation_interval, parts,
+                new_start_time,
+                new_start_time + duration,
+                annotation_interval,
+                parts,
             )
 
     def __filter_in_segment_factory_(self, segment_parts):
@@ -282,7 +285,10 @@ class MultiLabelAudioSet(Dataset):
         )
 
         transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean=0.456, std=0.224),]
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(mean=0.456, std=0.224),
+            ]
         )
 
         tensor = transform(augmented_image_data)
