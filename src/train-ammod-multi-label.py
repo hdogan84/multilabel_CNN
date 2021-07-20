@@ -8,7 +8,11 @@ from model.CnnBirdDetector import CnnBirdDetector
 from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
-from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
+from tools.lighning_callbacks import (
+    SaveConfigToLogs,
+    LogFirstBatchAsImage,
+    SaveFileToLogs,
+)
 from pprint import pprint
 from logging import debug, warn
 
@@ -23,8 +27,8 @@ import albumentations as A
 
 # TPUs
 # trainer = Trainer(tpu_cores=8)
-def start_train(config, checkpoint_filepath: Path = None):
-
+def start_train(config_filepath, checkpoint_filepath: Path = None):
+    config = load_yaml_config(config_filepath)
     fit_transform_audio = SignalCompose(
         create_signal_pipeline(config.augmentation.signal_pipeline, config),
         shuffle=config.augmentation.shuffle_signal_augmentation,
@@ -68,8 +72,6 @@ def start_train(config, checkpoint_filepath: Path = None):
         mode="max",
         filename="{val_f1:.2f}-{epoch:002d}",
     )
-    save_config_callback = SaveConfigToLogs(config)
-    log_first_batch_as_image = LogFirstBatchAsImage(mean=0.456, std=0.224)
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
@@ -79,7 +81,12 @@ def start_train(config, checkpoint_filepath: Path = None):
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
-        callbacks=[checkpoint_callback, save_config_callback, log_first_batch_as_image],
+        callbacks=[
+            checkpoint_callback,
+            SaveConfigToLogs(config, config_filepath),
+            SaveFileToLogs(config),
+            LogFirstBatchAsImage(mean=0.456, std=0.224),
+        ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
         accelerator="ddp",
         auto_select_gpus=config.system.auto_select_gpus,
@@ -103,7 +110,6 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        # default="./src/config/europe254.cfg",
         default="./configs/ammod_multi_label.yaml",
         help="config file for all settings",
     )
@@ -118,9 +124,7 @@ if __name__ == "__main__":
     config_filepath = args.config
     print(args.env)
 
-    config = load_yaml_config(config_filepath)
-
     start_train(
-        config, checkpoint_filepath=args.load,
+        config_filepath, checkpoint_filepath=args.load,
     )
 

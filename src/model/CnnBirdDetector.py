@@ -1,21 +1,9 @@
-from pytorch_lightning.metrics.functional.classification import get_num_classes
 import torch
 from torch import nn
-from torch import tensor
-from torch.nn import functional as F
-from torch.utils.data import DataLoader, random_split
-
-from torchvision import transforms
 import pytorch_lightning as pl
 import torchvision.models as models
-from sklearn.metrics import label_ranking_average_precision_score
-from torchmetrics.functional import accuracy, average_precision, f1, fbeta
+from torchmetrics.functional import accuracy, average_precision
 from torchmetrics import Accuracy, AveragePrecision, F1
-
-from tools.tensor_helpers import pool_by_segments
-import numpy as np
-
-from sklearn import metrics
 
 
 class CnnBirdDetector(pl.LightningModule):
@@ -86,7 +74,8 @@ class CnnBirdDetector(pl.LightningModule):
 
         # logging
         self.log(
-            "train_step_loss", loss,
+            "train_step_loss",
+            loss,
         )
         # self.log(
         #     "train_step_accuracy", accuracy(preds, classes),

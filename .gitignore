@@ -148,4 +148,6 @@ node_modules
 #web service working director
 working_directory
 data_directory/
-build/
+/build/
+ts_logs
+model-store

@@ -2,15 +2,25 @@ from pytorch_lightning.callbacks import Callback
 from pytorch_lightning import Trainer, LightningModule
 from pathlib import Path
 from tools.config import save_to_yaml, as_html
+from shutil import copyfile
 
 
 class SaveConfigToLogs(Callback):
-    def __init__(self, config):
+    def __init__(self, config, config_filepath=None):
         super().__init__()
         self.config = config
+        self.config_filepath = config_filepath
 
     def on_sanity_check_end(self, trainer: Trainer, pl_module: LightningModule):
-        save_to_yaml(self.config, Path(trainer.logger.log_dir).joinpath("config.yaml"))
+        if self.config_filepath is None:
+            save_to_yaml(
+                self.config, Path(trainer.logger.log_dir).joinpath("config.yaml")
+            )
+        else:
+            copyfile(
+                self.config.data.class_list_filepath,
+                Path(trainer.logger.log_dir).joinpath("config.yaml"),
+            )
         writer = trainer.logger.experiment
         writer.add_text(
             "config" "First Batch Training Data", as_html(self.config), 0,
@@ -40,3 +50,16 @@ class LogFirstBatchAsImage(Callback):
             writer.add_images(
                 "First Batch Training Data", images, 0, dataformats="NCHW"
             )
+
+
+class SaveFileToLogs(Callback):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+
+    def on_sanity_check_end(self, trainer: Trainer, pl_module: LightningModule):
+        copyfile(
+            self.config.data.class_list_filepath,
+            Path(trainer.logger.log_dir).joinpath("class_list.csv"),
+        )
+
