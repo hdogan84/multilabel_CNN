@@ -12,6 +12,7 @@ pip install -U albumentations
 pip install inflection
 pip install colorednoise
 pip install munch
+pip install inquirer
 mkdir -p /service/build
 mkdir -p /service/src
 mkdir -p /service/data_directory
