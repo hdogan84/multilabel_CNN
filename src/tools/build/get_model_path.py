@@ -49,8 +49,8 @@ def main(logs):
                 )
             ]
         )
-        if pathlib.Path(run_path["value"] + "/class-list.csv").exists():
-            class_list_path = {"value": run_path["value"] + "/class-list.csv"}
+        if pathlib.Path(run_path["value"] + "/class_list.csv").exists():
+            class_list_path = {"value": run_path["value"] + "/class_list.csv"}
         else:
             class_list_path = prompt(
                 [

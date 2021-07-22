@@ -64,5 +64,5 @@ def main(logs):
     return {
         "checkpoint": model_path["value"],
         "config": run_path["value"] + "/hparams.yaml",
-        "class_list": run_path["value"] + "/class-list.csv",
+        "class_list": run_path["value"] + "/class_list.csv",
     }

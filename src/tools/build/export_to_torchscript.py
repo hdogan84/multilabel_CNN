@@ -38,7 +38,7 @@ def main():
     config = load_yaml_config(model_path["config"])
     ModelClass = getattr(ModelModule, class_name)
     model = ModelClass.load_from_checkpoint(model_path["checkpoint"], **config)
-    model.cpu()
+
     script = model.to_torchscript()
     torch.jit.save(script, build_path + "/model.pt")
 
