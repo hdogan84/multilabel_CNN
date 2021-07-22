@@ -23,11 +23,11 @@ system:
 optimizer:
   # optimizers Adam SGD
   optimizer_type: "Adam"
-  learning_rate: 0.0001
+  learning_rate: 0.001
   sgd_momentum: 0.9
   sgd_weight_decay: 1e-4
   # schedulers None CosineAnnealingLR
-  # scheduler_type: CosineAnnealingLR
+  scheduler_type: CosineAnnealingLR
   cosine_annealing_lr_t_max: 15
 
 validation:
@@ -38,8 +38,8 @@ validation:
 
 audio_loading:
   sample_rate: 32000
-  # multi channel handling take_one | take_all | random_mix
-  channel_mixing_strategy: "take_one"
+  # multi channel handling take_one | take_all | random_mix | to_mono
+  channel_mixing_strategy: "to_mono"
   # clyclic | silence
   padding_strategy: "wrap_around"
   fft_size_in_samples: 1536

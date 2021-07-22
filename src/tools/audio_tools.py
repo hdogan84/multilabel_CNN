@@ -22,6 +22,7 @@ class Mixing:
     TAKE_ONE = "take_one"
     RANDOM_MIX = "random_mix"
     TAKE_ALL = "take_all"
+    TO_MONO = "to_mono"
 
 
 def read_audio_segment(
@@ -112,9 +113,10 @@ def read_audio_parts(
     for (start_time, end_time) in parts:
         reading_start = int(start_time * sample_rate)
         reading_stop = int(end_time * sample_rate)
-        audio_data = sf.read(
+        audio_data, sample_rate = sf.read(
             filepath, start=reading_start, stop=reading_stop, always_2d=True
-        )[0]
+        )
+        audio_data
         if result is None:
             result = audio_data
         else:
@@ -127,6 +129,8 @@ def read_audio_parts(
     if result.shape[1] > 1:
         if channel_mixing_strategy == Mixing.TAKE_ONE:
             result = result[:, channel]
+        elif channel_mixing_strategy == Mixing.TO_MONO:
+            result = np.sum(result, axis=1) / result.shape[1]
         else:
             raise NotImplementedError()
     else:
