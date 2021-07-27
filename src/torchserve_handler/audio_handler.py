@@ -97,9 +97,9 @@ class AudioHandler(BaseHandler):
             with open(config_filepath) as f:
                 self.__config__ = yaml.safe_load(f)
         if self.__config__ is not None:
-            for key in self.config.keys():
+            for key in self.__config__.keys():
                 if hasattr(self, key):
-                    self.__dict__[key] = self.config[key]
+                    self.__dict__[key] = self.__config__[key]
 
         # print(self.manifest)
         # print(self.mapping)
