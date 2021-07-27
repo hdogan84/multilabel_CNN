@@ -2,11 +2,12 @@ import os
 
 import pathlib
 import shutil
+
 from inquirer import Text, Path, List, prompt
 from tools.build.get_model_path import main as get_model_path
 from tools.build.merge_to_handler_config import main as merge_to_handler_config
 from tools.build.export_to_torchscript import main as export_to_torchscript
-from tools.config import save_to_yaml
+from tools.config import save_to_yaml, save_to_json
 from tools.build.tools import file_exists, is_int, get_list_of_files
 
 print("Please set Service run parameters:")
@@ -30,11 +31,9 @@ def main():
 
     model_desc = prompt(
         [
-            Text(
-                name="model_name",
-                message="Enter Model Name!",
-            ),
-            Text(name="version", message="Enter Model Version", validate=is_int),
+            Text(name="model_name", message="Enter model name!"),
+            Text(name="version", message="Enter model version", validate=is_int),
+            Text(name="model_desc", message="Enter a short model description"),
         ]
     )
     use_checkpoint = prompt(
@@ -127,9 +126,26 @@ def main():
         cmd_string += " --requirements-file ./build/requirements.txt"
 
     cmd_string += " --model-name {model_name} --version {version}".format(
-        model_name=model_desc["model_name"],
-        version=model_desc["version"],
+        model_name=model_desc["model_name"], version=model_desc["version"],
     )
 
     print(cmd_string)
     os.system(cmd_string)
+    # rename mar file into name-version.mar
+    os.rename(
+        "{}/{}.mar".format(build_path, model_desc["model_name"]),
+        "{}/{}-{}.mar".format(
+            build_path, model_desc["model_name"], model_desc["version"]
+        ),
+    )
+    model_server_config = {
+        "name": model_desc["model_name"],
+        "version": model_desc["version"],
+        "description": model_desc["model_desc"],
+        "torchserve": {"initial_workers": 1, "batch_size": 1,},
+    }
+    save_to_json(
+        model_server_config,
+        build_path
+        + "/{}-{}.json".format(model_desc["model_name"], model_desc["version"]),
+    )

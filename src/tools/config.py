@@ -1,6 +1,7 @@
 from pathlib import Path
 import yaml
 from munch import munchify
+import json
 
 
 def load_yaml_config(config_filepath: Path):
@@ -13,6 +14,11 @@ def load_yaml_config(config_filepath: Path):
 def save_to_yaml(config: dict, target_filepath: Path) -> None:
     with open(target_filepath, "w+") as text_file:
         yaml.safe_dump(config, text_file, allow_unicode=True)
+
+
+def save_to_json(config: dict, target_filepath: Path) -> None:
+    with open(target_filepath, "w+") as text_file:
+        json.dump(config, text_file)
 
 
 def as_html(config) -> str:
