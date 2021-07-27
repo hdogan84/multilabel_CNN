@@ -12,8 +12,8 @@ services:
       - 7071:7070
       - 7072:7071
     volumes:
-      - ./torchserve/model-store:/home/model-server/model-store
-      - ./torchserve/ts_logs:/home/model-server/logs
-      - ./torchserve/ts_config:/home/model-server/ts_config
+      - ./model-store:/home/model-server/model-store
+      - ./ts_logs:/home/model-server/logs
+      - ./ts_config:/home/model-server/ts_config
     environment:
       - TS_CONFIG_FILE=/home/model-server/ts_config/config.properties
