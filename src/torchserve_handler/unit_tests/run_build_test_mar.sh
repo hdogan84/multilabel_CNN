@@ -1,0 +1,2 @@
+#!/bin/bash
+torch-model-archiver --serialized-file ./assets/model.pt  --export-path ../../../torchserve/model-store --handler ../audio_handler.py --force --extra-files ./assets/index_to_name.json,./assets/config.yaml --model-name test-build --version 1

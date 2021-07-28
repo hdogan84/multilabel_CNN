@@ -67,3 +67,10 @@ samplevec, class_ids_vec
 # got to torchserve folder an run
 docker-compose up
 ```
+
+
+# export validation matrix
+matrix
+channel x segment x prediciton
+
+channel x segment x ground truth
