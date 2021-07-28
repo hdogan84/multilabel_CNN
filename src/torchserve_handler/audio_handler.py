@@ -39,7 +39,8 @@ class AudioHandler(BaseHandler):
     __config__ = None
 
     def __get_mel_spec__(
-        self, audio_data,
+        self,
+        audio_data,
     ):
         mel_spec = librosa.feature.melspectrogram(
             y=audio_data,
@@ -168,7 +169,7 @@ class AudioHandler(BaseHandler):
                 channel_tensors.append(data)
 
             return channel_tensors
-        return
+        raise Exception("No File upload found")
 
     def inference(self, data, *args, **kwargs):
         """
@@ -200,7 +201,7 @@ class AudioHandler(BaseHandler):
                     )
                 results.append(torch.stack(channel_results).tolist())
 
-        return results
+            return results
 
     def postprocess(self, data):
         # crete result dictionary
