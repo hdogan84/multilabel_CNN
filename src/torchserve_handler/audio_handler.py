@@ -39,8 +39,7 @@ class AudioHandler(BaseHandler):
     __config__ = None
 
     def __get_mel_spec__(
-        self,
-        audio_data,
+        self, audio_data,
     ):
         mel_spec = librosa.feature.melspectrogram(
             y=audio_data,
@@ -136,12 +135,12 @@ class AudioHandler(BaseHandler):
                 duration=None,
                 res_type="kaiser_best",
             )
-            data = []
             channels = raw_data.shape[0]
             duration = len(raw_data[0]) / self.sample_rate
             steps = self.__calc_steps__(duration)
             channel_tensors = []
             for channel in range(channels):
+                data = []
                 for n in range(steps):
                     mel_spec = self.__get_mel_spec__(
                         raw_data[
@@ -168,7 +167,8 @@ class AudioHandler(BaseHandler):
                     data.append(tensor)
                 channel_tensors.append(data)
 
-        return channel_tensors
+            return channel_tensors
+        return
 
     def inference(self, data, *args, **kwargs):
         """
