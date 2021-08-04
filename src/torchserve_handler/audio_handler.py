@@ -119,6 +119,40 @@ class AudioHandler(BaseHandler):
         # print(self.mapping)
         # raise Exception("Sorry, no numbers below zero")
 
+    def create_spectogram(self, audio_data):
+        """The spectorgram creation function of an audio data array r
+
+        Args:
+            audio_data (numpy array):
+
+        Returns:
+           numpy array[3,width,height]: image data
+        """
+        mel_spec = self.__get_mel_spec__(audio_data)
+        # format mel_spec to image with one channel
+        h, w = mel_spec.shape
+        image_data = np.empty((h, w, 1), dtype=np.uint8)
+        image_data[:, :, 0] = mel_spec
+        return image_data
+
+    def normalise_image(self, image_data):
+        """The normalise image function
+
+        Args:
+            numpy array[3,width,height]: image data
+        Returns:
+           torch tensor: image data
+        """
+        transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(mean=self.normalize_mean, std=self.normalize_std),
+            ]
+        )
+
+        tensor = transform(image_data)
+        return tensor
+
     def preprocess(self, data):
         """The preprocess function of an audiofile program converts the input data to a float list of float tensor
 
@@ -157,28 +191,15 @@ class AudioHandler(BaseHandler):
             for channel in range(channels):
                 data = []
                 for step in self.steps:
-                    mel_spec = self.__get_mel_spec__(
+                    image_data = self.create_spectogram(
                         raw_data[
                             channel,
                             int(step[0] * self.sample_rate) : int(
                                 step[1] * self.sample_rate
                             ),
-                        ],
-                    )
-                    # format mel_spec to image with one channel
-                    h, w = mel_spec.shape
-                    image_data = np.empty((h, w, 1), dtype=np.uint8)
-                    image_data[:, :, 0] = mel_spec
-                    transform = transforms.Compose(
-                        [
-                            transforms.ToTensor(),
-                            transforms.Normalize(
-                                mean=self.normalize_mean, std=self.normalize_std
-                            ),
                         ]
                     )
-
-                    tensor = transform(image_data)
+                    tensor = self.normalise_image(image_data)
                     data.append(tensor)
                 channel_tensors.append(data)
 
@@ -225,7 +246,7 @@ class AudioHandler(BaseHandler):
         for channel in range(len(result)):
             channel_results = []
             print(len(result[channel]))
-            
+
             for index, segment_data in enumerate(data[channel]):
 
                 channel_results.append(
