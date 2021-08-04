@@ -78,7 +78,7 @@ class AudioHandler(BaseHandler):
             result[int(i)] = self.mapping[i]
         return result
 
-    def __calc_steps__(self, duration):
+    def __calc_step_count__(self, duration):
         # calculate size of oversizing
         b = (
             math.floor(duration / self.segment_step) * self.segment_step
@@ -87,6 +87,20 @@ class AudioHandler(BaseHandler):
         over = (b - duration) / self.segment_step
         # minimal step count for reaching whole duration
         return math.ceil(math.floor(duration / self.segment_step) - over)
+
+    def __calc_steps__(self, duration):
+        step_count = self.__calc_step_count__(duration)
+        steps = []
+        for n in range(step_count - 1):
+            start = n * self.segment_step
+            end = n * self.segment_step + self.segment_duration
+            steps.append(
+                (start, end if end > self.segment_duration else self.segment_duration)
+            )
+        start = duration - self.segment_duration
+        end = duration
+        steps.append((start if start >= 0 else 0, duration))
+        return steps
 
     def initialize(self, context):
         super().initialize(context)
@@ -138,17 +152,17 @@ class AudioHandler(BaseHandler):
             )
             channels = raw_data.shape[0]
             duration = len(raw_data[0]) / self.sample_rate
-            steps = self.__calc_steps__(duration)
+            self.steps = self.__calc_steps__(duration)
             channel_tensors = []
             for channel in range(channels):
                 data = []
-                for n in range(steps):
+                for step in self.steps:
                     mel_spec = self.__get_mel_spec__(
                         raw_data[
                             channel,
-                            n
-                            * self.sample_rate : (n + self.segment_duration)
-                            * self.sample_rate,
+                            int(step[0] * self.sample_rate) : int(
+                                step[1] * self.sample_rate
+                            ),
                         ],
                     )
                     # format mel_spec to image with one channel
@@ -199,12 +213,30 @@ class AudioHandler(BaseHandler):
                     channel_results.append(
                         self.model(marshalled_data, *args, **kwargs).to("cpu")
                     )
-                results.append(torch.stack(channel_results).tolist())
+
+                results.append(torch.stack(channel_results).tolist()[0])
 
             return results
 
     def postprocess(self, data):
         # crete result dictionary
-        result_dict = {"classIds": self.__mapping_as_array__(), "channels": data}
+        result = data
+        channels = []
+        for channel in range(len(result)):
+            channel_results = []
+            print(len(result[channel]))
+            
+            for index, segment_data in enumerate(data[channel]):
+
+                channel_results.append(
+                    {
+                        "startTime": self.steps[index][0],
+                        "endTime": self.steps[index][1],
+                        "predictions": {"logits": segment_data},
+                    }
+                )
+            channels.append(channel_results)
+
+        result_dict = {"classIds": self.__mapping_as_array__(), "channels": channels}
         # torchserve expects array because auf merging requests into batches
         return [result_dict]

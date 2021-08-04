@@ -74,3 +74,21 @@ matrix
 channel x segment x prediciton
 
 channel x segment x ground truth
+
+
+## web-service <- classticator api
+```js
+{
+    "fileId": str // file name
+    "classIds": [ str,..n ] // Latin names of Classes
+    "channels": [
+        	[
+        {
+        	startTime: float // (in s)
+        	endTime: float // (in s)
+        	predictions: {
+        	    logits: [ float,...n]  // prediction for class n number of classes
+        	}
+        },...
+    ]
+}
