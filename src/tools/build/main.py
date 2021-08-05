@@ -120,7 +120,7 @@ def main():
             List(
                 name="value",
                 message="Do you want to add a requirements file?",
-                choices=["yes", "no"],
+                choices=["no", "yes"],
             )
         ]
     )

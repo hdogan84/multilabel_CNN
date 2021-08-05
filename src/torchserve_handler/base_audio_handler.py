@@ -267,7 +267,7 @@ class AudioHandler(BaseHandler):
                     }
                 )
             channels.append(channel_results)
-
-        result_dict = {"classIds": self.__mapping_as_array__(), "channels": channels}
+        classIds = None if self.mapping is None else self.__mapping_as_array__()
+        result_dict = {"classIds": classIds, "channels": channels}
         # torchserve expects array because auf merging requests into batches
         return [result_dict]
