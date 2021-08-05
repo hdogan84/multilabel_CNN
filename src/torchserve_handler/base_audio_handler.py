@@ -119,6 +119,9 @@ class AudioHandler(BaseHandler):
         # print(self.mapping)
         # raise Exception("Sorry, no numbers below zero")
 
+    def preprocess_audio_data(self, audio_data):
+        return audio_data
+
     def create_spectogram(self, audio_data):
         """The spectorgram creation function of an audio data array r
 
@@ -135,7 +138,7 @@ class AudioHandler(BaseHandler):
         image_data[:, :, 0] = mel_spec
         return image_data
 
-    def normalise_image(self, image_data):
+    def postprocess_spec(self, image_data):
         """The normalise image function
 
         Args:
@@ -184,22 +187,28 @@ class AudioHandler(BaseHandler):
                 duration=None,
                 res_type="kaiser_best",
             )
-            channels = raw_data.shape[0]
-            duration = len(raw_data[0]) / self.sample_rate
+            # ToDo: Check raw_data dim an transform in 2-dim array if mono
+            n_channels = raw_data.shape[0] if len(raw_data.shape) > 1 else 1
+            if n_channels == 1:
+                raw_data = np.expand_dims(raw_data, axis=0)
+
+            processed_data = self.preprocess_audio_data(raw_data)
+
+            duration = len(processed_data[0]) / self.sample_rate
             self.steps = self.__calc_steps__(duration)
             channel_tensors = []
-            for channel in range(channels):
+            for channel in range(n_channels):
                 data = []
                 for step in self.steps:
                     image_data = self.create_spectogram(
-                        raw_data[
+                        processed_data[
                             channel,
                             int(step[0] * self.sample_rate) : int(
                                 step[1] * self.sample_rate
                             ),
                         ]
                     )
-                    tensor = self.normalise_image(image_data)
+                    tensor = self.postprocess_spec(image_data)
                     data.append(tensor)
                 channel_tensors.append(data)
 
@@ -240,6 +249,7 @@ class AudioHandler(BaseHandler):
             return results
 
     def postprocess(self, data):
+        print(data)
         # crete result dictionary
         result = data
         channels = []

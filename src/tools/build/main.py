@@ -24,6 +24,7 @@ logs_path = "./logs"
 
 def main():
     cmd_string = "torch-model-archiver --serialized-file ./build/model.pt --export-path ./build --handler ./build/handler.py --force"
+    extra_files = []
     if pathlib.Path(build_path).exists():
         # clear build directory
         shutil.rmtree(build_path)
@@ -49,7 +50,7 @@ def main():
         export_to_torchscript()
         # if checkpoint is used there is also an index_to_name.json file
 
-        cmd_string += " --extra-files ./build/index_to_name.json,./build/config.yaml"
+        extra_files.append("./build/index_to_name.json")
     else:
         pytorch_script_filepath = prompt(
             [
@@ -62,34 +63,43 @@ def main():
             ]
         )["value"]
         shutil.copy(pytorch_script_filepath, build_path + "/model.pt")
-        cmd_string += " --extra-files ./build/config.yaml"
-    use_config = prompt(
+
+    do_use_config = prompt(
         [
             List(
                 name="value",
-                message="Do you want to use a pytorch lightning config?",
+                message="Do you want to use a config for your handler?",
                 choices=["yes", "no"],
             )
         ]
     )
-
-    if use_config["value"] == "yes":
-
-        service_config = merge_to_handler_config()
-        save_to_yaml(service_config, build_path + "/config.yaml")
-
-    else:
-        pytorch_script_filepath = prompt(
+    if do_use_config["value"] == "yes":
+        extra_files.append("./build/config.yaml")
+        use_config = prompt(
             [
-                Path(
+                List(
                     name="value",
-                    message="Enter path to torchserve handler config!",
-                    path_type=Path.FILE,
-                    validate=file_exists,
-                ),
+                    message="Do you want to use a pytorch lightning config?",
+                    choices=["yes", "no"],
+                )
             ]
-        )["value"]
-        shutil.copy(pytorch_script_filepath, build_path + "/config.yaml")
+        )
+        if use_config["value"] == "yes":
+
+            service_config = merge_to_handler_config()
+            save_to_yaml(service_config, build_path + "/config.yaml")
+        else:
+            pytorch_script_filepath = prompt(
+                [
+                    Path(
+                        name="value",
+                        message="Enter path to torchserve handler config!",
+                        path_type=Path.FILE,
+                        validate=file_exists,
+                    ),
+                ]
+            )["value"]
+            shutil.copy(pytorch_script_filepath, build_path + "/config.yaml")
 
     handler = prompt(
         [
@@ -100,7 +110,11 @@ def main():
             )
         ]
     )["value"]
+    extra_files.append("./build/base_audio_handler.py")
     shutil.copy(handler, build_path + "/handler.py")
+    shutil.copy(
+        handler_path + "/base_audio_handler.py", build_path + "/base_audio_handler.py"
+    )
     use_requirements = prompt(
         [
             List(
@@ -126,9 +140,11 @@ def main():
         cmd_string += " --requirements-file ./build/requirements.txt"
 
     cmd_string += " --model-name {model_name} --version {version}".format(
-        model_name=model_desc["model_name"], version=model_desc["version"],
+        model_name=model_desc["model_name"],
+        version=model_desc["version"],
     )
-
+    # add extra files
+    cmd_string += " --extra-files " + ",".join(extra_files)
     print(cmd_string)
     os.system(cmd_string)
     # rename mar file into name-version.mar
@@ -142,7 +158,10 @@ def main():
         "name": model_desc["model_name"],
         "version": model_desc["version"],
         "description": model_desc["model_desc"],
-        "torchserve": {"initial_workers": 1, "batch_size": 1,},
+        "torchserve": {
+            "initial_workers": 1,
+            "batch_size": 1,
+        },
     }
     save_to_json(
         model_server_config,
