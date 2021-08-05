@@ -63,7 +63,18 @@ def main():
             ]
         )["value"]
         shutil.copy(pytorch_script_filepath, build_path + "/model.pt")
-
+        index_to_name_filepath = prompt(
+            [
+                Path(
+                    name="value",
+                    message="Enter path to your index_to_name.json!",
+                    path_type=Path.FILE,
+                    validate=file_exists,
+                ),
+            ]
+        )["value"]
+        shutil.copy(index_to_name_filepath, build_path + "/index_to_name.json")
+        extra_files.append("./build/index_to_name.json")
     do_use_config = prompt(
         [
             List(
