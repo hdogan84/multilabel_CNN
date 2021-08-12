@@ -90,8 +90,8 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
         callbacks=[
             checkpoint_callback,
             checkpoint_callback2,
-            SaveConfigToLogs(config, config_filepath),
-            SaveFileToLogs(config),
+            SaveFileToLogs(config_filepath,'config.yaml'),
+            SaveFileToLogs(config.data.class_list_filepath,'class_list.csv'),
             LogFirstBatchAsImage(mean=0.456, std=0.224),
         ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        default="./config/ammod_multi_label.yaml",
+        default="./config/resnet_multi_label.yaml",
         help="config file for all settings",
     )
     parser.add_argument(

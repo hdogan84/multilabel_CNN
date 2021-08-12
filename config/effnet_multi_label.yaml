@@ -9,7 +9,7 @@ data:
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "audio_classificator_logging"
+  experiment_name: "210812_AMMOD_25classes_effnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 5
   gpus: [0]
@@ -28,7 +28,7 @@ optimizer:
   sgd_weight_decay: 1e-4
   # schedulers None CosineAnnealingLR
   scheduler_type: CosineAnnealingLR
-  cosine_annealing_lr_t_max: 15
+  cosine_annealing_lr_t_max: 20
 
 validation:
   complete_segment: True

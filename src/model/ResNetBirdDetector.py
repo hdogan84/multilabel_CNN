@@ -6,10 +6,10 @@ from torchmetrics.functional import accuracy, average_precision
 from torchmetrics import Accuracy, AveragePrecision, F1
 
 
-class CnnBirdDetector(pl.LightningModule):
+class ResNetBirdDetector(pl.LightningModule):
     def __init__(
         self,
-        num_target_classes: list,
+        num_target_classes: int,
         learning_rate: float = 2e-4,
         optimizer_type: str = "Adam",
         sgd_momentum: float = 0,
@@ -30,6 +30,7 @@ class CnnBirdDetector(pl.LightningModule):
         self.scheduler_type = scheduler_type
         self.cosine_annealing_lr_t_max = cosine_annealing_lr_t_max
         self.num_classes = num_target_classes
+      
         # define model
         # self.model = models.resnet50(pretrained=True)
         self.model = models.resnet50(pretrained=True)
@@ -46,7 +47,7 @@ class CnnBirdDetector(pl.LightningModule):
 
         self.Accuracy = Accuracy(dist_sync_on_step=True, num_classes=self.num_classes)
         self.F1 = F1(dist_sync_on_step=True,num_classes=self.num_classes)
-        self.AveragePrecision = AveragePrecision(dist_sync_on_step=True,num_classes=self.num_classes)
+        self.AveragePrecision = AveragePrecision(dist_sync_on_step=True)
 
     def forward(self, x):
         x = self.sigm(self.model(x))

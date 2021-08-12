@@ -117,7 +117,6 @@ class CnnBirdDetectorEffNet(pl.LightningModule):
         probs = sigmoid(preds)
         self.Accuracy(probs, target)
         self.AveragePrecision(preds, target)
-        #print(target)
         self.F1(probs, target)
         return batch_dictionary
 

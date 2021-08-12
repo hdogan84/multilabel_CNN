@@ -53,13 +53,14 @@ class LogFirstBatchAsImage(Callback):
 
 
 class SaveFileToLogs(Callback):
-    def __init__(self, config):
+    def __init__(self, filepath, file_name):
         super().__init__()
-        self.config = config
+        self.filepath = filepath
+        self.file_name = file_name
 
     def on_sanity_check_end(self, trainer: Trainer, pl_module: LightningModule):
         copyfile(
-            self.config.data.class_list_filepath,
-            Path(trainer.logger.log_dir).joinpath("class_list.csv"),
+            self.filepath,
+            Path(trainer.logger.log_dir).joinpath(self.file_name),
         )
 
