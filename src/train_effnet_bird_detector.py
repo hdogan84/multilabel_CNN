@@ -9,7 +9,6 @@ from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
 from tools.lighning_callbacks import (
-    SaveConfigToLogs,
     LogFirstBatchAsImage,
     SaveFileToLogs,
 )
