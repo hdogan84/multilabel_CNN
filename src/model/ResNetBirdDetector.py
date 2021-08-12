@@ -31,6 +31,7 @@ class CnnBirdDetector(pl.LightningModule):
         self.cosine_annealing_lr_t_max = cosine_annealing_lr_t_max
         self.num_classes = num_target_classes
         # define model
+        # self.model = models.resnet50(pretrained=True)
         self.model = models.resnet50(pretrained=True)
         # set input layer to output of mnist
         self.model.conv1 = torch.nn.Conv2d(
@@ -43,9 +44,9 @@ class CnnBirdDetector(pl.LightningModule):
         # self.Criterion = F.binary_cross_entropy_with_logits
         self.Criterion = nn.BCELoss()
 
-        self.Accuracy = Accuracy(dist_sync_on_step=True)
-        self.F1 = F1(dist_sync_on_step=True)
-        self.AveragePrecision = AveragePrecision(dist_sync_on_step=True)
+        self.Accuracy = Accuracy(dist_sync_on_step=True, num_classes=self.num_classes)
+        self.F1 = F1(dist_sync_on_step=True,num_classes=self.num_classes)
+        self.AveragePrecision = AveragePrecision(dist_sync_on_step=True,num_classes=self.num_classes)
 
     def forward(self, x):
         x = self.sigm(self.model(x))
@@ -74,8 +75,7 @@ class CnnBirdDetector(pl.LightningModule):
 
         # logging
         self.log(
-            "train_step_loss",
-            loss,
+            "train_step_loss", loss,
         )
         # self.log(
         #     "train_step_accuracy", accuracy(preds, classes),
@@ -89,6 +89,7 @@ class CnnBirdDetector(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, classes, segment_indices = batch
+       
         target = classes.type(torch.int)
 
         preds = self(x)
@@ -104,6 +105,7 @@ class CnnBirdDetector(pl.LightningModule):
         }
         self.Accuracy(preds, target)
         self.AveragePrecision(preds, target)
+        #print(target)
         self.F1(preds, target)
         return batch_dictionary
 

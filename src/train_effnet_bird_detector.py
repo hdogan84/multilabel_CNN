@@ -4,7 +4,7 @@ from pytorch_lightning.accelerators import accelerator
 from pytorch_lightning.callbacks import ModelCheckpoint
 import argparse
 from pathlib import Path
-from model.CnnBirdDetector import CnnBirdDetector
+from model.CnnBirdDetectorEffNet import CnnBirdDetectorEffNet
 from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
@@ -54,10 +54,10 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
     )
 
     if checkpoint_filepath is None:
-        model = CnnBirdDetector(data_module.class_count, **config.optimizer)
+        model = CnnBirdDetectorEffNet(data_module.class_count, **config.optimizer)
     else:
         # LOAD CHECKPOINT
-        model = CnnBirdDetector.load_from_checkpoint(
+        model = CnnBirdDetectorEffNet.load_from_checkpoint(
             checkpoint_filepath.as_posix(), **config.optimizer
         )
     tb_logger = pl_loggers.TensorBoardLogger(
@@ -72,17 +72,24 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
         mode="max",
         filename="{val_f1:.2f}-{epoch:002d}",
     )
+    checkpoint_callback2 = ModelCheckpoint(
+        monitor="val_accuracy",
+        save_top_k=3,
+        mode="max",
+        filename="{val_accuracy:.2f}-{epoch:002d}",
+    )
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
-        gpus=config.system.gpus,
+        gpus=[0], # config.system.gpus,
         max_epochs=config.system.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[
-            checkpoint_callback,
+            # checkpoint_callback,
+            # checkpoint_callback2,
             SaveConfigToLogs(config, config_filepath),
             SaveFileToLogs(config),
             LogFirstBatchAsImage(mean=0.456, std=0.224),
@@ -110,7 +117,7 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        default="./configs/ammod_multi_label.yaml",
+        default="./config/ammod_multi_label.yaml",
         help="config file for all settings",
     )
     parser.add_argument(
