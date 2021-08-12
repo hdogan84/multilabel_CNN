@@ -55,7 +55,7 @@ signal_transform_dict = {
     "Trim": Trim,
 }
 
-from tools.lighning_callbacks import SaveConfigToLogs, LogFirstBatchAsImage
+from tools.lighning_callbacks import  LogFirstBatchAsImage
 from pprint import pprint
 
 from pytorch_lightning.callbacks import ModelCheckpoint

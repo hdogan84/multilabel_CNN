@@ -4,30 +4,6 @@ from pathlib import Path
 from tools.config import save_to_yaml, as_html
 from shutil import copyfile
 
-
-class SaveConfigToLogs(Callback):
-    def __init__(self, config, config_filepath=None):
-        super().__init__()
-        self.config = config
-        self.config_filepath = config_filepath
-
-    def on_sanity_check_end(self, trainer: Trainer, pl_module: LightningModule):
-        if self.config_filepath is None:
-            save_to_yaml(
-                self.config, Path(trainer.logger.log_dir).joinpath("config.yaml")
-            )
-        else:
-            copyfile(
-                self.config.data.class_list_filepath,
-                Path(trainer.logger.log_dir).joinpath("config.yaml"),
-            )
-        writer = trainer.logger.experiment
-        writer.add_text(
-            "config" "First Batch Training Data", as_html(self.config), 0,
-        )
-        pass
-
-
 class LogFirstBatchAsImage(Callback):
     mean: float = None
     std: float = None
