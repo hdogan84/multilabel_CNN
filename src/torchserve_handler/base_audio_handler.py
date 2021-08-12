@@ -12,6 +12,8 @@ import torch
 import numpy as np
 import yaml
 import os
+import random
+import string
 from ts.torch_handler.base_handler import BaseHandler
 from ts.utils.util import map_class_to_label
 from torchvision import transforms
@@ -179,14 +181,56 @@ class AudioHandler(BaseHandler):
 
         # If the audio is sent as bytesarray
         if isinstance(audio, (bytearray, bytes)):
-            raw_data, sr = librosa.load(
-                io.BytesIO(audio),
-                sr=self.sample_rate,
-                mono=self.convert_to_mono,
-                offset=0.0,
-                duration=None,
-                res_type="kaiser_best",
-            )
+
+            if "TEMP_FOLDER" not in os.environ:
+                raise Exception("Missing ENV Variable TEMP_FOLDER")
+
+            raw_data = []
+            sr = -1
+            try:
+                # only wav files can be opened by soundfile via bytestream
+                raw_data, sr = librosa.load(
+                    io.BytesIO(audio),
+                    sr=self.sample_rate,
+                    mono=self.convert_to_mono,
+                    offset=0.0,
+                    duration=None,
+                    res_type="kaiser_best",
+                )
+            except RuntimeError as e:
+                # file seems to be not a wav format so save und try it again
+                if "Format not recognised" in str(e) or "File contains data in an unknown format" in str(e):
+                    print("catches")
+                    temp_filename = (
+                        "".join(
+                            random.SystemRandom ().choice(
+                                string.ascii_letters + string.digits
+                            )
+                            for _ in range(20)
+                        )
+                        + ".temp"
+                    )
+
+                    temp_filepath = os.environ["TEMP_FOLDER"] + "/" + temp_filename
+                    try:
+                        out_file = open(
+                            temp_filepath, "wb"
+                        )  # open for [w]riting as [b]inary
+                        out_file.write(audio)
+                        out_file.close()
+                        raw_data, sr = librosa.load(
+                            temp_filepath,
+                            sr=self.sample_rate,
+                            mono=self.convert_to_mono,
+                            offset=0.0,
+                            duration=None,
+                            res_type="kaiser_best",
+                        )
+                    finally:
+                        if os.path.exists(temp_filepath):
+                            os.remove(temp_filepath)
+                else:
+                    raise e
             # ToDo: Check raw_data dim an transform in 2-dim array if mono
             n_channels = raw_data.shape[0] if len(raw_data.shape) > 1 else 1
             if n_channels == 1:
@@ -240,22 +284,20 @@ class AudioHandler(BaseHandler):
                             + self.batch_size
                         ]
                     ).to(self.device)
-                    channel_results.append(
-                        self.model(marshalled_data, *args, **kwargs).to("cpu")
-                    )
-
-                results.append(torch.stack(channel_results).tolist()[0])
+                    predictions = self.model(marshalled_data, *args, **kwargs).tolist()[0]
+                    for i in predictions:
+                        channel_results.append(i)
+                results.append(channel_results)
 
             return results
 
     def postprocess(self, data):
-        print(data)
         # crete result dictionary
         result = data
         channels = []
         for channel in range(len(result)):
             channel_results = []
-            print(len(result[channel]))
+            # print(len(result[channel]))
 
             for index, segment_data in enumerate(data[channel]):
 

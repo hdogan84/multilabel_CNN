@@ -1,8 +1,8 @@
 version: "2.3"
 services:
   torchserve:
-    image: bewr42/torchserve:latest-gpu
-    #image: pytorch/torchserve:latest-gpu
+    #image: bewr42/torchserve:latest-gpu
+    image: bewr42/torchserve:latest-cpu
     restart: unless-stopped
     runtime: nvidia
     ports:
@@ -15,5 +15,7 @@ services:
       - ./model-store:/home/model-server/model-store
       - ./ts_logs:/home/model-server/logs
       - ./ts_config:/home/model-server/ts_config
+      - ./tmp:/home/model-server/tmp
     environment:
       - TS_CONFIG_FILE=/home/model-server/ts_config/config.properties
+      - TEMP_FOLDER=/home/model-server/tmp

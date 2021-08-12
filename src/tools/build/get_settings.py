@@ -3,7 +3,7 @@ from tools.build.tools import is_int
 
 
 def main():
-    return prompt(
+    result = prompt(
         [
             Text(
                 name="num_workers",
@@ -13,3 +13,6 @@ def main():
             Text(name="batch_size", message="Enter batch size!", validate=is_int),
         ]
     )
+    result["num_workers"] = int(result["num_workers"])
+    result["batch_size"] = int(result["batch_size"])
+    return result

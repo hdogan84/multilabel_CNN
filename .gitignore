@@ -151,3 +151,5 @@ data_directory/
 /build/
 ts_logs
 model-store
+
+torchserve/**
