@@ -94,6 +94,7 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
             LogFirstBatchAsImage(mean=0.456, std=0.224),
         ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
+        resume_from_checkpoint=checkpoint_filepath,  # NNN
         accelerator="ddp",
         auto_select_gpus=config.system.auto_select_gpus,
         fast_dev_run=config.system.fast_dev_run,

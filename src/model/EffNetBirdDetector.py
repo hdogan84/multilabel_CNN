@@ -25,7 +25,7 @@ from sklearn import metrics
 import timm
 #from transformers import get_cosine_schedule_with_warmup
 
-class CnnBirdDetectorEffNet(pl.LightningModule):
+class EffNetBirdDetector(pl.LightningModule):
     def __init__(
         self,
         num_target_classes: list,
