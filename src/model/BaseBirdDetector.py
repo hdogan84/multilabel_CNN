@@ -72,44 +72,51 @@ class BaseBirdDetector(pl.LightningModule):
         }
         return batch_dictionary
 
-    def validation_epoch_end(self, outputs):
-
-    
-        val_accuracy =  self.Accuracy.compute()
-        val_average_precision = self.AveragePrecision.compute()
-        val_f1 =  self.F1.compute()
-
+    def cal_metrics(self, outputs):
         preds_all = torch.cat([x["preds"] for x in outputs])
         classes_all = torch.cat([x["classes"] for x in outputs])
-        # segment_indices_all = torch.cat([x["segment_indices"] for x in outputs
-
-        val_lrap = label_ranking_average_precision_score(
+        return {
+        "accuracy" :  self.Accuracy.compute(),
+        "average_precision" : self.AveragePrecision.compute(),
+        "f1" :  self.F1.compute(),
+        "lrap" : label_ranking_average_precision_score(
                 classes_all.cpu().data.numpy(),
                 preds_all.cpu().data.numpy(),
             )
+        }
+
+
+    def validation_epoch_end(self, outputs):
+        metrics = self.cal_metrics(outputs)
+        accuracy = metrics["accuracy"] 
+        average_precision = metrics["average_precision"] 
+        f1 =  metrics["f1"] 
+        lrap =  metrics["lrap"] 
+
+
 
         #Log metrics to terminal
         self.log("val_accuracy", 
-           val_accuracy, 
+           accuracy, 
             prog_bar=True, 
             sync_dist=True)
         self.log(
             "val_average_precision",
-            val_average_precision,
+            average_precision,
             prog_bar=True,
             sync_dist=True,
         )
         self.log("val_f1", 
-           val_f1, 
+           f1, 
             prog_bar=True, 
             sync_dist=True)
 
         # Log metrics against epochs in tensorboard () 
         # self.logger.experiment.add_scalar("epoch_val_loss", avg_loss, self.current_epoch)
-        self.logger.experiment.add_scalar("epoch_val_accuracy", val_accuracy, self.current_epoch)
-        self.logger.experiment.add_scalar("epoch_val_average_precision", val_average_precision, self.current_epoch)
-        self.logger.experiment.add_scalar("epoch_val_f1", val_f1, self.current_epoch)
-        self.logger.experiment.add_scalar("epoch_val_lrap", val_lrap, self.current_epoch)
+        self.logger.experiment.add_scalar("epoch_val_accuracy", accuracy, self.current_epoch)
+        self.logger.experiment.add_scalar("epoch_val_average_precision", average_precision, self.current_epoch)
+        self.logger.experiment.add_scalar("epoch_val_f1", f1, self.current_epoch)
+        self.logger.experiment.add_scalar("epoch_val_lrap", lrap, self.current_epoch)
 
         self.logger.experiment.add_scalar("epoch_lr", self.optimizer.param_groups[0]['lr'], self.current_epoch)
         
@@ -119,8 +126,15 @@ class BaseBirdDetector(pl.LightningModule):
         # Here we just reuse the validation_step for testing
         return self.validation_step(batch, batch_idx)
 
-    def configure_optimizers(self):
+    def test_epoch_end(self, outputs):
+        metrics = self.cal_metrics(outputs)
+        self.log("accuracy",metrics["accuracy"])
+        self.log("average_precision",metrics["average_precision"])
+        self.log("f1",  metrics["f1"])
+        self.log("f1", metrics["f1"])
+        self.log("lrap",metrics["lrap"])
 
+    def configure_optimizers(self):
         if self.optimizer_type == "SGD":
             print(
                 "Optimizer SGD learning rate: {} momentum: {} weight_decay: {}".format(
