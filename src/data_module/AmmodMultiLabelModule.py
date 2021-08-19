@@ -110,6 +110,16 @@ class AmmodMultiLabelModule(LightningDataModule):
             )
             print("Train set raw size: {}".format(len(self.train_set)))
             print("Validation set raw size: {}".format(len(self.val_set)))
+        else:
+            self.test_set = MultiLabelAudioSet(
+                self.config,
+                self.val_dataframe,
+                self.class_dict,
+                transform_image=self.val_transform_image,
+                transform_audio=self.val_transform_audio,
+                is_validation=True,
+            )
+            print("Test set raw size: {}".format(len(self.test_set)))
         # Assign test dataset for use in dataloader(s)
 
     def train_dataloader(self):
@@ -133,4 +143,13 @@ class AmmodMultiLabelModule(LightningDataModule):
             pin_memory=True,
             collate_fn=filter_none_values,
         )
-
+    def test_dataloader(self):
+        return DataLoader(
+            self.test_set,
+            batch_size=self.batch_size * self.config.validation.batch_size_mulitplier,
+            shuffle=False,
+            num_workers=self.num_workers,
+            drop_last=False,
+            pin_memory=True,
+            collate_fn=filter_none_values,
+        )

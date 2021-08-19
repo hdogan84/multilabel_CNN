@@ -26,7 +26,7 @@ import albumentations as A
 
 # TPUs
 # trainer = Trainer(tpu_cores=8)
-def start_train(config_filepath, checkpoint_filepath: Path = None):
+def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=False):
     config = load_yaml_config(config_filepath)
     fit_transform_audio = SignalCompose(
         create_signal_pipeline(config.augmentation.signal_pipeline, config),
@@ -102,8 +102,19 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
         #limit_val_batches=0.1,
         # overfit_batches=10,
     )
-    # trainer.tune(model, data_module)
-    trainer.fit(model, data_module)
+    # trainer.tune(model, data_module)#
+    if(run_test):
+       if(checkpoint_filepath is not None):
+           trainer.test(model,ckpt_path=checkpoint_filepath,datamodule=data_module)
+       else:
+           trainer.test(model,datamodule=data_module)
+
+        
+        #trainer.test()
+    else:
+        # run train loop
+        trainer.fit(model, data_module)
+
 
 
 if __name__ == "__main__":
@@ -123,11 +134,16 @@ if __name__ == "__main__":
         "--load", metavar="load", type=Path, nargs="?", help="Load model load",
     )
 
+    parser.add_argument(
+        "--test", 
+        action="store_true",
+    )
+
     args = parser.parse_args()
     config_filepath = args.config
     print(args.env)
 
     start_train(
-        config_filepath, checkpoint_filepath=args.load,
+        config_filepath, checkpoint_filepath=args.load,run_test=args.test
     )
 
