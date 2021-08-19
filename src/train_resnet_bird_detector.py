@@ -76,7 +76,7 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
-        gpus=[0], #config.system.gpus,
+        gpus=config.system.gpus,
         max_epochs=config.system.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
@@ -89,17 +89,17 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
             LogFirstBatchAsImage(mean=0.456, std=0.224),
         ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
-        # accelerator="ddp",
+        accelerator="ddp",
         resume_from_checkpoint=checkpoint_filepath,  # NNN
         auto_select_gpus=config.system.auto_select_gpus,
-        fast_dev_run=config.system.fast_dev_run,
+        # fast_dev_run=config.system.fast_dev_run,
         # Debugging Settings
         # profiler="simple",
         # precision=16,
         # auto_scale_batch_size="binsearch",
     
-        limit_train_batches=0.01,
-        limit_val_batches=0.1,
+        #limit_train_batches=0.01,
+        #limit_val_batches=0.1,
         # overfit_batches=10,
     )
     # trainer.tune(model, data_module)

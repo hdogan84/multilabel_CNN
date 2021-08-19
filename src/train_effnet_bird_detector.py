@@ -62,7 +62,7 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.system.experiment_name
     )
-    # dic = {"brand": "Ford", "model": "Mustang", "year": 1964}
+    
 
     # Setup Checkpoints
     checkpoint_callback = ModelCheckpoint(
@@ -90,13 +90,13 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
         resume_from_checkpoint=checkpoint_filepath,  # NNN
         accelerator="ddp",
-        auto_select_gpus=config.system.auto_select_gpus,
-        fast_dev_run=config.system.fast_dev_run,
+        # auto_select_gpus=config.system.auto_select_gpus,
+        # fast_dev_run=config.system.fast_dev_run,
         # Debugging Settings
         # profiler="simple",
         # precision=16,
         # auto_scale_batch_size="binsearch",
-        limit_train_batches=0.01,
+        # limit_train_batches=0.01,
         # limit_val_batches=0.25,
         # overfit_batches=10,
     )
