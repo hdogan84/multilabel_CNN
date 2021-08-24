@@ -164,8 +164,8 @@ class AddSameClassSignal(BaseWaveformTransform):
                 # alter volume
                 audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
                 result = result + audio_data
-            except Exception:
-                return samples, y
+            except Exception as error:
+                print(error)
 
         return result, y
 

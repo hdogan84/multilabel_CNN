@@ -163,21 +163,26 @@ class AddClassSignal(BaseWaveformTransform):
                 result_y[random_class_id] = 1
 
             same_class_entry = random.choice(class_files)
-            audio_data = read_audio_segment(
-                same_class_entry[1],
-                same_class_entry[3],
-                same_class_entry[4],
-                len(samples) / sample_rate,
-                sample_rate,
-                channel_mixing_strategy=self.parameters["channel_mixing_strategies"][n],
-                padding_strategy=self.parameters["padding_strategies"][n],
-                randomize_audio_segment=True,
-                channel=random.randint(0, same_class_entry[5] - 1),
-            )
-            # alter volume
-            audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
-            result = result + audio_data
-
+            audio_data = 0
+            try:
+                audio_data = read_audio_segment(
+                    same_class_entry[1],
+                    same_class_entry[3],
+                    same_class_entry[4],
+                    len(samples) / sample_rate,
+                    sample_rate,
+                    channel_mixing_strategy=self.parameters["channel_mixing_strategies"][n],
+                    padding_strategy=self.parameters["padding_strategies"][n],
+                    randomize_audio_segment=True,
+                    channel=random.randint(0, same_class_entry[5] - 1),
+                )
+           
+                # alter volume
+                audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
+                result = result + audio_data
+            except Exception as error:
+                print(error)
+                
         return result, result_y
 
     def __call__(self, samples, sample_rate, y):
