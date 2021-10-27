@@ -1,0 +1,3 @@
+from model.ResNetBirdDetector import ResNetBirdDetector
+from model.EffNetBirdDetector import EffNetBirdDetector
+from model.SedBirdDetector import SedBirdDetector

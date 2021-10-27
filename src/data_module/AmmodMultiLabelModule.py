@@ -48,6 +48,12 @@ class AmmodMultiLabelModule(LightningDataModule):
             if config.data.val_list_filepath != "None"
             else None
         )
+        self.test_list_filepath = (
+            Path(config.data.test_list_filepath)
+            if config.data.test_list_filepath != "None"
+            else self.val_list_filepath
+        )
+        
 
         self.num_workers = (
             config.system.num_workers
@@ -87,11 +93,15 @@ class AmmodMultiLabelModule(LightningDataModule):
         # Assign train/val datasets for use in dataloaders
 
         self.train_dataframe = pd.read_csv(
-            self.train_list_filepath, delimiter=";", quotechar="|",
+            self.train_list_filepath, delimiter=";", quotechar="|"
         )
         self.val_dataframe = pd.read_csv(
-            self.val_list_filepath, delimiter=";", quotechar="|",
+            self.val_list_filepath, delimiter=";", quotechar="|"
         )
+        
+        self.test_dataframe = pd.read_csv(
+            self.test_list_filepath,  delimiter=";", quotechar="|")
+        
         if stage == "fit" or stage is None:
             self.train_set = MultiLabelAudioSet(
                 self.config,
@@ -113,7 +123,7 @@ class AmmodMultiLabelModule(LightningDataModule):
         else:
             self.test_set = MultiLabelAudioSet(
                 self.config,
-                self.val_dataframe,
+                self.test_dataframe,
                 self.class_dict,
                 transform_image=self.val_transform_image,
                 transform_audio=self.val_transform_audio,
