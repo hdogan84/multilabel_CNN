@@ -3,7 +3,7 @@
 # model_handler.py
 
 """
-ModelHandler defines a custom model handler.
+ModelHandler defines a Base audio model handler.
 """
 import io
 import librosa
@@ -14,6 +14,7 @@ import yaml
 import os
 import random
 import string
+import itertools
 from ts.torch_handler.base_handler import BaseHandler
 from ts.utils.util import map_class_to_label
 from torchvision import transforms
@@ -93,7 +94,7 @@ class AudioHandler(BaseHandler):
     def __calc_steps__(self, duration):
         step_count = self.__calc_step_count__(duration)
         steps = []
-        for n in range(step_count - 1):
+        for n in range(step_count):
             start = n * self.segment_step
             end = n * self.segment_step + self.segment_duration
             steps.append(
@@ -272,9 +273,12 @@ class AudioHandler(BaseHandler):
 
         with torch.no_grad():
             results = []
+            print('inference: batch size: {} '.format(self.batch_size))
+          
             for channel in range(len(data)):
 
                 batches = math.ceil(len(data[channel]) / self.batch_size)
+                print('inference: Batches: {} '.format(batches))
                 channel_results = []
                 for batch in range(batches):
 
@@ -284,23 +288,26 @@ class AudioHandler(BaseHandler):
                             + self.batch_size
                         ]
                     ).to(self.device)
-                    predictions = self.model(marshalled_data, *args, **kwargs).tolist()[0]
-                    for i in predictions:
-                        channel_results.append(i)
+                    print('inference: Batch_tensor size: {}'.format(marshalled_data.size()))
+                    predictions = self.model(marshalled_data, *args, **kwargs)
+                    print('inference: Prediction size: {}'.format(predictions.size()))
+                    # flatten batch results 
+                    for step_result in predictions.tolist():
+                        channel_results.append(step_result)
                 results.append(channel_results)
 
+            
             return results
 
     def postprocess(self, data):
-        # crete result dictionary
+        # create result dictionary
         result = data
         channels = []
         for channel in range(len(result)):
             channel_results = []
-            # print(len(result[channel]))
+            print('postprocess: Result in channel {} len {}'.format(channel,len(result[channel])))
 
             for index, segment_data in enumerate(data[channel]):
-
                 channel_results.append(
                     {
                         "startTime": self.steps[index][0],

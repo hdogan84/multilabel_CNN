@@ -12,7 +12,7 @@ services:
       - 7071:7070
       - 7072:7071
     volumes:
-      - ./model-store:/home/model-server/model-store
+      - ../build:/home/model-server/model-store
       - ./ts_logs:/home/model-server/logs
       - ./ts_config:/home/model-server/ts_config
       - ./tmp:/home/model-server/tmp
