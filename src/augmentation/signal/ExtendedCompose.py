@@ -16,12 +16,13 @@ class ExtendedCompose:
         transform_args_len_list = []
         randomize_args_len_list = []
         for transform in transforms:
-            argspec = inspect.getargspec(transform)
+            argspec = inspect.getfullargspec(transform)
+            print(argspec)
             if "self" in argspec.args:
                 argspec.args.remove("self")
             transform_args_len_list.append(len(argspec.args))
 
-            argspec = inspect.getargspec(transform)
+            argspec = inspect.getfullargspec(transform)
             if "self" in argspec.args:
                 argspec.args.remove("self")
             randomize_args_len_list.append(len(argspec.args))
