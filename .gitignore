@@ -153,3 +153,4 @@ ts_logs
 model-store
 
 torchserve/**
+shared-store
