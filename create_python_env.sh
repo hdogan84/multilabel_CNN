@@ -15,4 +15,5 @@ pip install munch &&
 pip install inquirer &&
 pip install timm &&
 pip install torchlibrosa &&
+pip install pydub &&
 pip install torch-model-archiver
