@@ -92,3 +92,16 @@ channel x segment x ground truth
         },...
     ]
 }
+```
+# How to test/debug torchserve handlers
+1. Build mar file with build script
+2. Start torchserver with docker-compose file
+3. register model
+```bash
+curl -X POST "http://localhost:8081/models?url=YOUR_PACKAGE_NAME.mar&initial_workers=1"
+```
+4. run inferencing
+```bash
+curl http://localhost:8080/predictions/YOUR_PACKAGE_NAME/1 -F "data=@./test-assets/test.wav"
+```
+5. or run the run_handler_test.sh
