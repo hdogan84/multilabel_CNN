@@ -20,9 +20,9 @@ def file_exists(_, value: str):
 
 # create a list of all Python files names of module folder
 def get_list_of_module(module, ignored_files=[]):
-    result = os.listdir(
+    result = sorted(os.listdir(
         os.path.abspath(os.path.dirname((inspect.getsourcefile(module))))
-    )
+    ))
     return [
         val[:-3]
         for val in result
@@ -35,7 +35,7 @@ def get_list_of_module(module, ignored_files=[]):
 def get_list_of_sub_directories(directory_path, ignored=[]):
     result = [
         os.path.join(directory_path, o)
-        for o in os.listdir(directory_path)
+        for o in sorted(os.listdir(directory_path))
         if os.path.isdir(os.path.join(directory_path, o)) and o not in ignored
     ]
     return result
@@ -44,7 +44,7 @@ def get_list_of_sub_directories(directory_path, ignored=[]):
 def get_list_of_files(directory_path, ignored=[]):
     result = [
         os.path.join(directory_path, o)
-        for o in os.listdir(directory_path)
+        for o in sorted(os.listdir(directory_path))
         if os.path.isfile(os.path.join(directory_path, o)) and o not in ignored
     ]
     return result

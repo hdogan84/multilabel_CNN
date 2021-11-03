@@ -10,7 +10,7 @@ from tools.build.export_to_torchscript import main as export_to_torchscript
 from tools.config import save_to_yaml, save_to_json
 from tools.build.tools import file_exists, is_int, get_list_of_files
 
-print("Please set Service run parameters:")
+
 # num_workers = 2
 # batch_size = 16
 # service_class_name = AudioService
