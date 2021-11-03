@@ -23,7 +23,7 @@ class Bird18_8_Handler(AudioHandler):
     """
     A custom model handler implementation.
     """
-
+    prediction_is_in_probabilities = False
     sample_rate = 22050
     fft_size_in_samples = 1536
     fft_hop_size_in_samples = 360
