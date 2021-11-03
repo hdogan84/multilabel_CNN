@@ -1,30 +1,38 @@
 {
-  "folders": [
-    {
-      "path": "."
-    }
-  ],
-  "settings": {
-    "python.pythonPath": "/home/bewr/anaconda3/envs/pytorch/bin/python",
-    "python.analysis.extraPaths": [
-      "${workspaceFolder}/src","${workspaceFolder}/src/torchserve_handler"
+    "folders": [
+        {
+            "path": "."
+        }
     ],
-    "terminal.integrated.env.linux": {
-      "PYTHONPATH": "${workspaceFolder}/src",
-    },
-    "python.linting.pylintArgs": [
-      "--init-hook",
-      "--disable=C0114", // (missing-module-docstring)
-      "--disable=C0115", // (missing-class-docstring)
-      "--disable=C0116", // (missing-function-docstring)
-    ],
-    "files.watcherExclude": {
-      "**/.git/objects/**": true,
-      "**/.git/subtree-cache/**": true,
-      "**/node_modules/*/**": true,
-      "**/logs/*/**": true,
-      "**/lightning_logs/*/**": true,
-      "**/data/*/**": true
+    "settings": {
+        "python.pythonPath": "/home/bewr/anaconda3/envs/pytorch/bin/python",
+        "python.analysis.extraPaths": [
+            "${workspaceFolder}/src",
+            "${workspaceFolder}/src/torchserve_handler"
+        ],
+        "terminal.integrated.env.linux": {
+            "PYTHONPATH": "${workspaceFolder}/src",
+        },
+        "python.linting.pylintArgs": [
+            "--init-hook",
+            "--disable=C0114", // (missing-module-docstring)
+            "--disable=C0115", // (missing-class-docstring)
+            "--disable=C0116", // (missing-function-docstring)
+        ],
+        "files.watcherExclude": {
+            "**/.git/objects/**": true,
+            "**/.git/subtree-cache/**": true,
+            "**/node_modules/*/**": true,
+            "**/logs/*/**": true,
+            "**/lightning_logs/*/**": true,
+            "**/build/*/**": true,
+            "**/.pytest_cache/*/**": true,
+            "**/data/*/**": true,
+            "**/torchserve/*/**": true,
+            "**/.hared-store/*/**":true,
+      
+
+
+        }
     }
-  }
 }

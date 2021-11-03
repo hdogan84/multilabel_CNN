@@ -23,7 +23,10 @@
             "**/node_modules/*/**": true,
             "**/logs/*/**": true,
             "**/lightning_logs/*/**": true,
-            "**/data/*/**": true
+            "**/build/*/**": true,
+            "**/.pytest_cache/*/**": true,
+            "**/data/*/**": true,
+            "**/torchserve/*/**": true
         },
         "python.pythonPath": "/home/tsa/anaconda3/envs/ammod202105/bin/python"
     },

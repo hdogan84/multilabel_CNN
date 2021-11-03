@@ -23,8 +23,11 @@
       "**/node_modules/*/**": true,
       "**/logs/*/**": true,
       "**/lightning_logs/*/**": true,
-      "**/data/*/**": true
-    }
+      "**/build/*/**": true,
+      "**/.pytest_cache/*/**": true,
+      "**/data/*/**": true,
+      "**/torchserve/*/**": true
+  }
   },
   "extensions": {
     "recommendations": [
