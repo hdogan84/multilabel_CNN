@@ -72,7 +72,7 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
         filename="{epoch:002d}-{val_f1:.3f}-{val_accuracy:.3f}",
         save_last=True,
     )
-  
+
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
@@ -84,37 +84,35 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
         deterministic=config.system.deterministic,
         callbacks=[
             checkpoint_callback,
-            SaveFileToLogs(config_filepath,'config.yaml'),
-            SaveFileToLogs(config.data.class_list_filepath,'class_list.csv'),
+            SaveFileToLogs(config_filepath, "config.yaml"),
+            SaveFileToLogs(config.data.class_list_filepath, "class_list.csv"),
             LogFirstBatchAsImage(mean=0.456, std=0.224),
         ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
         accelerator="ddp",
         resume_from_checkpoint=checkpoint_filepath,  # NNN
         auto_select_gpus=config.system.auto_select_gpus,
-        # fast_dev_run=config.system.fast_dev_run,
+        num_sanity_val_steps=0,
+        # fast_dev_run=True  # config.system.fast_dev_run,
         # Debugging Settings
         # profiler="simple",
         # precision=16,
         # auto_scale_batch_size="binsearch",
-    
-        #limit_train_batches=0.01,
-        #limit_val_batches=0.1,
+        # limit_train_batches=0.01,
+        # limit_val_batches=0.1,
         # overfit_batches=10,
     )
     # trainer.tune(model, data_module)#
-    if(run_test):
-       if(checkpoint_filepath is not None):
-           trainer.test(model,ckpt_path=checkpoint_filepath,datamodule=data_module)
-       else:
-           trainer.test(model,datamodule=data_module)
+    if run_test:
+        if checkpoint_filepath is not None:
+            trainer.test(model, ckpt_path=checkpoint_filepath, datamodule=data_module)
+        else:
+            trainer.test(model, datamodule=data_module)
 
-        
-        #trainer.test()
+        # trainer.test()
     else:
         # run train loop
         trainer.fit(model, data_module)
-
 
 
 if __name__ == "__main__":
@@ -135,15 +133,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--test", 
-        action="store_true",
+        "--test", action="store_true",
     )
 
     args = parser.parse_args()
     config_filepath = args.config
     print(args.env)
 
-    start_train(
-        config_filepath, checkpoint_filepath=args.load,run_test=args.test
-    )
+    start_train(config_filepath, checkpoint_filepath=args.load, run_test=args.test)
 

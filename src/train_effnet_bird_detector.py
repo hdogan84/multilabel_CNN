@@ -14,10 +14,12 @@ from tools.lighning_callbacks import (
 )
 from pprint import pprint
 from logging import debug, warn
+import logging
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 import albumentations as A
 
+logging.basicConfig(level=logging.DEBUG)
 # nd without changing a single line of code, you could run on GPUs/TPUs
 # 8 GPUs
 # trainer = Trainer(max_epochs=1, gpus=8)
@@ -26,7 +28,7 @@ import albumentations as A
 
 # TPUs
 # trainer = Trainer(tpu_cores=8)
-def start_train(config_filepath, checkpoint_filepath: Path = None):
+def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=False):
     config = load_yaml_config(config_filepath)
     fit_transform_audio = SignalCompose(
         create_signal_pipeline(config.augmentation.signal_pipeline, config),
@@ -62,7 +64,6 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.system.experiment_name
     )
-    
 
     # Setup Checkpoints
     checkpoint_callback = ModelCheckpoint(
@@ -83,13 +84,14 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
         deterministic=config.system.deterministic,
         callbacks=[
             checkpoint_callback,
-            SaveFileToLogs(config_filepath,'config.yaml'),
-            SaveFileToLogs(config.data.class_list_filepath,'class_list.csv'),
+            SaveFileToLogs(config_filepath, "config.yaml"),
+            SaveFileToLogs(config.data.class_list_filepath, "class_list.csv"),
             LogFirstBatchAsImage(mean=0.456, std=0.224),
         ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
         resume_from_checkpoint=checkpoint_filepath,  # NNN
-        accelerator="ddp",
+        num_sanity_val_steps=0,
+        accelerator="ddp"
         # auto_select_gpus=config.system.auto_select_gpus,
         # fast_dev_run=config.system.fast_dev_run,
         # Debugging Settings
@@ -101,7 +103,16 @@ def start_train(config_filepath, checkpoint_filepath: Path = None):
         # overfit_batches=10,
     )
     # trainer.tune(model, data_module)
-    trainer.fit(model, data_module)
+    if run_test:
+        if checkpoint_filepath is not None:
+            trainer.test(model, ckpt_path=checkpoint_filepath, datamodule=data_module)
+        else:
+            trainer.test(model, datamodule=data_module)
+
+        # trainer.test()
+    else:
+        # run train loop
+        trainer.fit(model, data_module)
 
 
 if __name__ == "__main__":
@@ -121,11 +132,13 @@ if __name__ == "__main__":
         "--load", metavar="load", type=Path, nargs="?", help="Load model load",
     )
 
+    parser.add_argument(
+        "--test", action="store_true",
+    )
+
     args = parser.parse_args()
     config_filepath = args.config
     print(args.env)
 
-    start_train(
-        config_filepath, checkpoint_filepath=args.load,
-    )
+    start_train(config_filepath, checkpoint_filepath=args.load, run_test=args.test)
 
