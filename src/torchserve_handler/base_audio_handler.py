@@ -38,6 +38,7 @@ class AudioHandler(BaseHandler):
     segment_step = 1
     batch_size = 64 * 5
     convert_to_mono = False
+    prediction_is_in_probabilities = True
 
     __config__ = None
 
@@ -312,7 +313,7 @@ class AudioHandler(BaseHandler):
                     {
                         "startTime": self.steps[index][0],
                         "endTime": self.steps[index][1],
-                        "predictions": {"logits": segment_data},
+                        "predictions":{"probabilities": segment_data} if self.prediction_is_in_probabilities else {"logits": segment_data},
                     }
                 )
             channels.append(channel_results)

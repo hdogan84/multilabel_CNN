@@ -19,7 +19,7 @@ from scipy.signal import butter, sosfilt
 from PIL import Image
 
 
-class Bird18_8_Handler(AudioHandler):
+class Birdid_254_Handler(AudioHandler):
     """
     A custom model handler implementation.
     """
@@ -27,13 +27,13 @@ class Bird18_8_Handler(AudioHandler):
     sample_rate = 22050
     fft_size_in_samples = 1536
     fft_hop_size_in_samples = 360
-    num_of_mel_bands = 310  # 128
-    mel_start_freq = 160  # 20
-    mel_end_freq = 10300  # 16000
+    num_of_mel_bands = 128
+    mel_start_freq = 20.0
+    mel_end_freq = 10300.0  # 16000
     # normalize_mean = 0.456
     # normalize_std = 0.224
-    normalize_mean = [0.5, 0.5, 0.5]
-    normalize_std = [0.5, 0.5, 0.5]
+    normalize_mean = [0.5, 0.4, 0.3]
+    normalize_std = [0.5, 0.3, 0.1]
 
     segment_duration = 5
 
@@ -42,9 +42,13 @@ class Bird18_8_Handler(AudioHandler):
     convert_to_mono = False
 
     # NNN
-    NumOfLowFreqsInPixelToCutMax = 6
-    NumOfHighFreqsInPixelToCutMax = 10
-    ImageSize = 299
+    NumOfLowFreqsInPixelToCutMax = 4
+    NumOfHighFreqsInPixelToCutMax = 6
+    #ImageSize = 224
+    imageHeight = 224
+    resizeFactor = (imageHeight/(num_of_mel_bands-NumOfLowFreqsInPixelToCutMax/2.0-NumOfHighFreqsInPixelToCutMax/2.0))
+    imageWidth = int(resizeFactor * segment_duration * sample_rate / fft_hop_size_in_samples)
+    ImageSize = (imageWidth, imageHeight)
 
     # NNN
     def __apply_high_pass_filter__(self, input, sample_rate):
@@ -135,9 +139,13 @@ class Bird18_8_Handler(AudioHandler):
 
         # Resize image
         mel_spec_PIL = Image.fromarray(mel_spec.astype(np.uint8))
-        mel_spec_PIL = mel_spec_PIL.resize(
-            (self.ImageSize, self.ImageSize), Image.LANCZOS
-        )
+        
+        # mel_spec_PIL = mel_spec_PIL.resize(
+        #     (self.ImageSize, self.ImageSize), Image.LANCZOS
+        # )
+
+        mel_spec_PIL = mel_spec_PIL.resize((self.ImageSize), Image.LANCZOS)
+
         mel_spec = np.array(mel_spec_PIL, dtype=np.uint8)  # Cast to int8 ? needed ?
 
         # one --> three channel rgb image
