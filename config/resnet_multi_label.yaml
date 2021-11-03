@@ -1,19 +1,20 @@
 data:
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
-  train_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-train.csv"
-  val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
-  data_root_path: "./data/libro_animalis/"
+  train_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
+  val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
+  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
+  data_root_path: "./data/local/ammod2021"
   batch_size: 202
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "audio_classificator_logging"
+  experiment_name: "210812_AMMOD_25classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 5
-  gpus: [0]
-  num_workers: 20
+  gpus: [0, 1, 2]
+  num_workers: 10
   random_seed: 236742
   deterministic: True
   max_epochs: 230
@@ -23,12 +24,12 @@ system:
 optimizer:
   # optimizers Adam SGD
   optimizer_type: "Adam"
-  learning_rate: 0.001
+  learning_rate: 0.0004
   sgd_momentum: 0.9
   sgd_weight_decay: 1e-4
   # schedulers None CosineAnnealingLR
-  scheduler_type: CosineAnnealingLR
-  cosine_annealing_lr_t_max: 15
+  scheduler_type: None #CosineAnnealingLR
+  cosine_annealing_lr_t_max: 20
 
 validation:
   complete_segment: True
@@ -53,9 +54,9 @@ augmentation:
   # time_stretch, pitch_shift, shift, add_pink_noise_snr, volume_control, add_same_class_signal
   shuffle_signal_augmentation: False
   signal_pipeline: [
-      "add_same_class_signal",
-      "add_background_noise_from_csv",
-      "add_class_signal",
+      #"add_same_class_signal",
+      #"add_background_noise_from_csv",
+      #"add_class_signal",
       "add_pink_noise_snr",
       "volume_control",
       "frequency_mask",
@@ -127,7 +128,7 @@ add_same_class_signal:
   padding_strategy: "wrap_around"
   channel_mixing_strategy: "take_one"
   data_path: "./data/libro_animalis/"
-  data_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-train.csv"
+  data_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
   # set class_list_filepath if you want to transform into class_index values
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
   index_filepath: 1
@@ -147,7 +148,7 @@ add_class_signal:
   padding_strategy: "wrap_around"
   channel_mixing_strategy: "take_one"
   data_path: "./data/libro_animalis/"
-  data_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-train.csv"
+  data_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
   # set class_list_filepath if you want to transform into class_index values
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
   index_filepath: 1
