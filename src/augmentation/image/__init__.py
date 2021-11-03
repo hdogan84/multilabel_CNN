@@ -1,2 +1,2 @@
-from albumentations import RandomBrightnessContrast, GaussianBlur, 
+from albumentations import RandomBrightnessContrast, GaussianBlur
 

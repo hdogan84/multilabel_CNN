@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from pathlib import Path
 from torchvision import transforms
-
+from logging import debug, warn
 from random import random
 
 # import simpleaudio as sa
@@ -71,36 +71,41 @@ class MultiLabelAudioSet(Dataset):
         # create  segments list of annoations intervals
         self.segments = []
         for key in self.annotation_interval_dict:
+
             annotation_interval = self.annotation_interval_dict[key]
+            # workround through away all to short files
+            # if(annotation_interval["end_time"] - annotation_interval["start_time"] < self.config.data.segment_duration):
+            #     continue
             # validation has different step size then training
-            segment_step = self.config.validation.segment_step if self.is_validation else self.config.data.segment_duration
-            # calculate how many segments can be in the annotation intervall 
+            segment_step = (
+                self.config.validation.segment_step
+                if self.is_validation
+                else self.config.data.segment_duration
+            )
+            # calculate how many segments can be in the annotation intervall
             # ceil means last one is may be longer then the annotation_intervall
             segment_count = ceil(
-                (
-                    annotation_interval["end_time"]
-                    - annotation_interval["start_time"]
-                )
+                (annotation_interval["end_time"] - annotation_interval["start_time"])
                 / segment_step
             )
             for i in range(segment_count):
-               
-                start_time =  annotation_interval["start_time"] + i * segment_step
+
+                start_time = annotation_interval["start_time"] + i * segment_step
                 end_time = start_time + self.config.data.segment_duration
                 # prevent wraparound in validation
-                if (self.is_validation and end_time > annotation_interval["end_time"]):
+                if self.is_validation and end_time > annotation_interval["end_time"]:
                     end_time = annotation_interval["end_time"]
                     start_time = end_time - self.config.data.segment_duration
+                    if start_time < 0:
+                        start_time = 0
                 self.segments.append(
                     {
                         "start_time": start_time,
                         "annotation_interval": annotation_interval,
                         "end_time": end_time,
-                        "channel": "to_mono" #TODO: other multichannel handling
-                                  
+                        "channel": "to_mono",  # TODO: other multichannel handling
                     }
                 )
-           
 
     def __get_zero_tensor(self):
         x = list(self.class_dict.values())[0]
@@ -151,10 +156,7 @@ class MultiLabelAudioSet(Dataset):
             )
 
             return self.__get_segment_parts(
-                new_start_time,
-                new_start_time + duration,
-                annotation_interval,
-                parts,
+                new_start_time, new_start_time + duration, annotation_interval, parts,
             )
 
     def __filter_in_segment_factory_(self, segment_parts):
@@ -218,6 +220,7 @@ class MultiLabelAudioSet(Dataset):
         return result
 
     def __getitem__(self, index):
+        debug("Get item index: {}".format(index))
         segment = self.segments[index]
         annotation_interval = segment["annotation_interval"]
         start_time = segment["start_time"]
@@ -236,6 +239,7 @@ class MultiLabelAudioSet(Dataset):
         # print("get item channel: {}".format(self.data_rows[index][5]))
         audio_data = None
         try:
+            debug("Read audio parts filepath: {}".format(filepath))
             audio_data = read_audio_parts(
                 filepath,
                 segment_parts,
@@ -246,6 +250,7 @@ class MultiLabelAudioSet(Dataset):
         except Exception as error:
             print(error)
             return None
+        debug("Done reading index {}".format(index))
         augmented_signal, y = audio_data = (
             self.transform_audio(
                 samples=audio_data,
@@ -255,7 +260,7 @@ class MultiLabelAudioSet(Dataset):
             if self.transform_audio is not None
             else (audio_data, class_tensor)
         )
-
+        debug("Done signal augmenting index {}".format(index))
         mel_spec = get_mel_spec(
             augmented_signal,
             self.config.audio_loading.fft_size_in_samples,
@@ -265,6 +270,7 @@ class MultiLabelAudioSet(Dataset):
             mel_start_freq=self.config.audio_loading.mel_start_freq,
             mel_end_freq=self.config.audio_loading.mel_end_freq,
         )
+        debug("Done got mel spec index {}".format(index))
         # format mel_spec to image with one channel
         h, w = mel_spec.shape
         image_data = np.empty((h, w, 1), dtype=np.uint8)
@@ -277,12 +283,9 @@ class MultiLabelAudioSet(Dataset):
             if self.transform_image is not None
             else image_data
         )
-
+        debug("Done image augmenting index {}".format(index))
         transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize(mean=0.456, std=0.224),
-            ]
+            [transforms.ToTensor(), transforms.Normalize(mean=0.456, std=0.224),]
         )
 
         tensor = transform(augmented_image_data)

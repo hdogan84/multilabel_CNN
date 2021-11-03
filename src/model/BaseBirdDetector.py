@@ -1,8 +1,8 @@
-
 import torch
 import pytorch_lightning as pl
-from torchmetrics import Accuracy, AveragePrecision, F1
+from torchmetrics import Accuracy, AveragePrecision, F1, AUC
 from sklearn.metrics import label_ranking_average_precision_score
+
 
 class BaseBirdDetector(pl.LightningModule):
     def __init__(
@@ -13,7 +13,7 @@ class BaseBirdDetector(pl.LightningModule):
         sgd_momentum: float = 0,
         sgd_weight_decay: float = 0,
         scheduler_type: str = None,
-        cosine_annealing_lr_t_max: float = 0
+        cosine_annealing_lr_t_max: float = 0,
     ):
 
         super().__init__()
@@ -30,37 +30,36 @@ class BaseBirdDetector(pl.LightningModule):
         self.isLogitOutput = True
         # init class metrics
         self.Accuracy = Accuracy(dist_sync_on_step=True, num_classes=self.num_classes)
-        self.F1 = F1(dist_sync_on_step=True,num_classes=self.num_classes)
+        self.F1 = F1(dist_sync_on_step=True, num_classes=self.num_classes)
         self.AveragePrecision = AveragePrecision(dist_sync_on_step=True)
+        self.AUC = AUC(compute_on_step=True, dist_sync_on_step=True)
 
         self.define_model()
 
     def define_model(self):
         pass
 
-
     def validation_step(self, batch, batch_idx):
 
         x, classes, segment_indices = batch
         target = classes.type(torch.int)
-        
+
         preds = self(x)
         preds_prob = 0
         preds_logit = 0
-        if(self.isLogitOutput):
+        if self.isLogitOutput:
             preds_prob = torch.sigmoid(preds)
             preds_logit = preds
         else:
             preds_prob = preds
             preds_logit = torch.logit(preds)
-          
 
         loss = self.Criterion(preds, classes)
 
         self.Accuracy(preds_prob, target)
         self.AveragePrecision(preds_prob, target)
         self.F1(preds_prob, target)
-
+        # self.AUC(preds_prob, target)
         self.log("val_step_loss", loss, prog_bar=True, sync_dist=True)
         batch_dictionary = {
             "loss": loss,
@@ -76,50 +75,47 @@ class BaseBirdDetector(pl.LightningModule):
         preds_all = torch.cat([x["preds"] for x in outputs])
         classes_all = torch.cat([x["classes"] for x in outputs])
         return {
-        "accuracy" :  self.Accuracy.compute(),
-        "average_precision" : self.AveragePrecision.compute(),
-        "f1" :  self.F1.compute(),
-        "lrap" : label_ranking_average_precision_score(
-                classes_all.cpu().data.numpy(),
-                preds_all.cpu().data.numpy(),
-            )
+            "accuracy": self.Accuracy.compute(),
+            "average_precision": self.AveragePrecision.compute(),
+            "f1": self.F1.compute(),
+            # "auc": self.AUC.compute(),
+            "lrap": label_ranking_average_precision_score(
+                classes_all.cpu().data.numpy(), preds_all.cpu().data.numpy(),
+            ),
         }
-
 
     def validation_epoch_end(self, outputs):
         metrics = self.cal_metrics(outputs)
-        accuracy = metrics["accuracy"] 
-        average_precision = metrics["average_precision"] 
-        f1 =  metrics["f1"] 
-        lrap =  metrics["lrap"] 
+        accuracy = metrics["accuracy"]
+        average_precision = metrics["average_precision"]
+        f1 = metrics["f1"]
+        lrap = metrics["lrap"]
+        # auc = metrics["auc"]
 
-
-
-        #Log metrics to terminal
-        self.log("val_accuracy", 
-           accuracy, 
-            prog_bar=True, 
-            sync_dist=True)
+        # Log metrics to terminal
+        self.log("val_accuracy", accuracy, prog_bar=True, sync_dist=True)
         self.log(
-            "val_average_precision",
-            average_precision,
-            prog_bar=True,
-            sync_dist=True,
+            "val_average_precision", average_precision, prog_bar=True, sync_dist=True,
         )
-        self.log("val_f1", 
-           f1, 
-            prog_bar=True, 
-            sync_dist=True)
+        self.log("val_f1", f1, prog_bar=True, sync_dist=True)
 
-        # Log metrics against epochs in tensorboard () 
+        self.log("val_auc", auc, prog_bar=True, sync_dist=True)
+
+        # Log metrics against epochs in tensorboard ()
         # self.logger.experiment.add_scalar("epoch_val_loss", avg_loss, self.current_epoch)
-        self.logger.experiment.add_scalar("epoch_val_accuracy", accuracy, self.current_epoch)
-        self.logger.experiment.add_scalar("epoch_val_average_precision", average_precision, self.current_epoch)
+        self.logger.experiment.add_scalar(
+            "epoch_val_accuracy", accuracy, self.current_epoch
+        )
+        self.logger.experiment.add_scalar(
+            "epoch_val_average_precision", average_precision, self.current_epoch
+        )
         self.logger.experiment.add_scalar("epoch_val_f1", f1, self.current_epoch)
         self.logger.experiment.add_scalar("epoch_val_lrap", lrap, self.current_epoch)
 
-        self.logger.experiment.add_scalar("epoch_lr", self.optimizer.param_groups[0]['lr'], self.current_epoch)
-        
+        self.logger.experiment.add_scalar(
+            "epoch_lr", self.optimizer.param_groups[0]["lr"], self.current_epoch
+        )
+
         return
 
     def test_step(self, batch, batch_idx):
@@ -128,11 +124,11 @@ class BaseBirdDetector(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         metrics = self.cal_metrics(outputs)
-        self.log("accuracy",metrics["accuracy"])
-        self.log("average_precision",metrics["average_precision"])
-        self.log("f1",  metrics["f1"])
+        self.log("accuracy", metrics["accuracy"])
+        self.log("average_precision", metrics["average_precision"])
         self.log("f1", metrics["f1"])
-        self.log("lrap",metrics["lrap"])
+        self.log("f1", metrics["f1"])
+        self.log("lrap", metrics["lrap"])
 
     def configure_optimizers(self):
         if self.optimizer_type == "SGD":
@@ -154,7 +150,7 @@ class BaseBirdDetector(pl.LightningModule):
         else:
             optimizer = None
         self.optimizer = optimizer
-        
+
         if self.scheduler_type == "CosineAnnealingLR":
             print(
                 "Scheduler CosineAnnealingLR  with t_max: {}".format(
