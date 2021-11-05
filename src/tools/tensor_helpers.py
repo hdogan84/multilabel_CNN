@@ -27,10 +27,20 @@ def pool_by_segments(
     label_count = weight.sum(dim=1)
 
     if pooling_method == "max":
+        result_list = []
+        for indices in weight:
+            values = samples[indices > 0]
+            # check for empty tensors cause max cant handle them
+            if(values.shape[0] > 0):
+                result_list.append(torch.amax(values,0))
+            else :
+                # add dummy tensor
+                result_list.append(torch.zeros(values.shape[1],device=values.get_device()))
         result_values = torch.stack(
-            [torch.max(samples[indices > 0], 0) for indices in weight]
+            result_list
         )
     elif pooling_method == "mean":
+        
         result_values = torch.stack(
             [torch.mean(samples[indices > 0], 0) for indices in weight]
         )

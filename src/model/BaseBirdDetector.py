@@ -2,7 +2,7 @@ import torch
 import pytorch_lightning as pl
 from torchmetrics import Accuracy, AveragePrecision, F1, AUC
 from sklearn.metrics import label_ranking_average_precision_score
-
+from tools.tensor_helpers import pool_by_segments
 
 class BaseBirdDetector(pl.LightningModule):
     def __init__(
@@ -33,7 +33,8 @@ class BaseBirdDetector(pl.LightningModule):
         self.F1 = F1(dist_sync_on_step=True, num_classes=self.num_classes)
         self.AveragePrecision = AveragePrecision(dist_sync_on_step=True)
         self.AUC = AUC(compute_on_step=True, dist_sync_on_step=True)
-
+        # validation type
+        self.channel_wise_validation = True
         self.define_model()
 
     def define_model(self):
@@ -42,17 +43,27 @@ class BaseBirdDetector(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
 
         x, classes, segment_indices = batch
-        target = classes.type(torch.int)
+        
+
 
         preds = self(x)
+        # pool segments 
+        classes, _ = pool_by_segments(classes,segment_indices)
+        preds , _ = pool_by_segments(preds,segment_indices,pooling_method="max")
+        target = classes.type(torch.int)
+
+        
         preds_prob = 0
         preds_logit = 0
+        
+        
         if self.isLogitOutput:
             preds_prob = torch.sigmoid(preds)
             preds_logit = preds
         else:
             preds_prob = preds
             preds_logit = torch.logit(preds)
+
 
         loss = self.Criterion(preds, classes)
 
@@ -74,6 +85,7 @@ class BaseBirdDetector(pl.LightningModule):
     def cal_metrics(self, outputs):
         preds_all = torch.cat([x["preds"] for x in outputs])
         classes_all = torch.cat([x["classes"] for x in outputs])
+        
         return {
             "accuracy": self.Accuracy.compute(),
             "average_precision": self.AveragePrecision.compute(),
@@ -120,6 +132,7 @@ class BaseBirdDetector(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         # Here we just reuse the validation_step for testing
+  
         return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):

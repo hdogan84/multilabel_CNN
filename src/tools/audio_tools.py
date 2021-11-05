@@ -120,21 +120,22 @@ def read_audio_parts(
         if result is None:
             result = audio_data
         else:
-            result = np.concatenate((result, audio_data))
+            result = np.concatenate(result, audio_data)
 
     if len(result) == 0:
         print(filepath)
         raise Exception("Error during reading file 2:".format(filepath))
     # IF more then one channel do mixing
-    if result.shape[1] > 1:
-        if channel_mixing_strategy == Mixing.TAKE_ONE:
-            result = result[:, channel]
-        elif channel_mixing_strategy == Mixing.TO_MONO:
-            result = np.sum(result, axis=1) / result.shape[1]
-        else:
-            raise NotImplementedError()
+   
+    if channel_mixing_strategy == Mixing.TAKE_ONE:
+        result = result[:, channel]
+    elif channel_mixing_strategy == Mixing.TO_MONO:
+        result = np.sum(result, axis=1) / result.shape[1]
+    elif channel_mixing_strategy == None:
+        pass
     else:
-        result = result[:, 0]
+        raise NotImplementedError()
+  
 
     # If segment smaller than desired start padding it
     desired_sample_length = round(desired_length * sample_rate)

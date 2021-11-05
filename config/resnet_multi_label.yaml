@@ -1,10 +1,10 @@
 data:
-  class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
+  class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-class-dspec-list.csv"
   train_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
   val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
-  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
-  data_root_path: "./data/local/ammod2021"
-  batch_size: 202
+  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-dspec-val.csv"
+  data_root_path: "./data/libro_animalis"
+  batch_size: 60
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
@@ -14,7 +14,7 @@ system:
   log_dir: "./logs"
   log_every_n_steps: 5
   gpus: [0, 1, 2]
-  num_workers: 10
+  num_workers: 20
   random_seed: 236742
   deterministic: True
   max_epochs: 230
