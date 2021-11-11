@@ -5,7 +5,9 @@ from augmentation.signal import (
     VolumeControl,
     AddSameClassSignal,
     AddClassSignal,
+    
 )
+from augmentation.signal.ButterFilter import ButterFilter
 import re
 from audiomentations import (
     AddBackgroundNoise,
@@ -53,6 +55,7 @@ signal_transform_dict = {
     "PolarityInversion": PolarityInversion,
     "Resample": Resample,
     "Trim": Trim,
+    "ButterFilter": ButterFilter,
 }
 
 from tools.lighning_callbacks import  LogFirstBatchAsImage
@@ -76,7 +79,8 @@ def create_signal_pipeline(transform_list: list, config: dict):
 
     transforms = []
     for transform_name in transform_list:
-        print("- {}".format(transform_name))
+        print("- {}".format(snake_to_kebab_case(transform_name)))
+        print(signal_transform_dict[snake_to_kebab_case(transform_name)])
         transforms.append(
             signal_transform_dict[snake_to_kebab_case(transform_name)](
                 **config[transform_name]

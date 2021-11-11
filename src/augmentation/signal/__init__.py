@@ -5,7 +5,7 @@ from augmentation.signal.ExtendedCompose import ExtendedCompose
 from augmentation.signal.AddClassSignal import AddClassSignal
 from augmentation.signal.AddSameClassSignal import AddSameClassSignal
 from augmentation.signal.create_signal_pipeline import create_signal_pipeline
-
+from augmentation.signal.ButterFilter import ButterFilter
 # Import Audiomentations
 from audiomentations import (
     AddBackgroundNoise,
@@ -26,4 +26,6 @@ from audiomentations import (
     TimeMask,
     TimeStretch,
     Trim,
+    HighPassFilter,
+    LowPassFilter,
 )
