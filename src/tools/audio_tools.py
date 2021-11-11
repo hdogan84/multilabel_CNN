@@ -25,16 +25,69 @@ class Mixing:
     TO_MONO = "to_mono"
 
 
+def __read_from_file__(
+    filepath,
+    sample_rate,
+    start_time=0,
+    end_time=None,
+    always_2d=True,
+    backend="soundfile",
+    to_mono=False,
+    channel_mixing_strategy=Mixing.TO_MONO,
+    channel=0,
+):
+    audio_data = None
+    if backend == "soundfile":
+        reading_start = int(start_time * sample_rate)
+        reading_stop = int(end_time * sample_rate)
+        audio_data, file_sample_rate = sf.read(
+            filepath, start=reading_start, stop=reading_stop, always_2d=True
+        )
+        print(
+            "Warning target Sample rate is not sample_rate of file use librosa as backend"
+        )
+        print("backend: {}".format(audio_data.shape))
+        audio_data = np.transpose(audio_data)
+
+    elif backend == "librosa":
+        audio_data, sr = librosa.load(
+            filepath,
+            offset=start_time,
+            duration=end_time - start_time if end_time is not None else None,
+            sr=sample_rate,
+        )
+
+        if len(audio_data.shape) == 1:
+            audio_data = np.array([audio_data])
+        audio_data = np.transpose(audio_data)
+
+    else:
+        raise ValueError("audio load unknown backend")
+    if channel_mixing_strategy == Mixing.TAKE_ONE:
+        audio_data = audio_data[:, channel]
+    elif channel_mixing_strategy == Mixing.TO_MONO:
+        if audio_data.shape[1] > 1:
+            audio_data = np.sum(audio_data, axis=1) / audio_data.shape[1]
+    elif channel_mixing_strategy == Mixing.TAKE_ALL:
+        pass
+    elif channel_mixing_strategy == None:
+        pass
+    else:
+        raise NotImplementedError()
+    return audio_data
+
+
 def read_audio_segment(
     filepath: Path,
     start: int,
     stop: int,
     desired_length: int,
     sample_rate: int,
-    channel_mixing_strategy=Mixing.TAKE_ONE,
+    channel_mixing_strategy=Mixing.TO_MONO,
     padding_strategy=Padding.SILENCE,
     randomize_audio_segment: bool = False,
     channel: int = 0,
+    backend=None,
 ):
     duration = stop - start
     audio_data = []
@@ -45,28 +98,29 @@ def read_audio_segment(
     ):  # desired_length of audio chunk is greater then wanted part
         max_offset = duration - desired_length
         offset = max_offset * random.random() if randomize_audio_segment else 0 + start
-        reading_start = int(offset * sample_rate)
-        reading_stop = reading_start + int(desired_length * sample_rate)
-        audio_data = sf.read(
-            filepath, start=reading_start, stop=reading_stop, always_2d=True
-        )[0]
+        reading_start = offset
+        reading_stop = reading_start + desired_length
+        audio_data = __read_from_file__(
+            filepath,
+            start=reading_start,
+            stop=reading_stop,
+            backend=backend,
+            channel_mixing_strategy=channel_mixing_strategy,
+        )
     else:
-        reading_start = int(start * sample_rate)
-        reading_stop = int(stop * sample_rate)
-        audio_data = sf.read(
-            filepath, start=reading_start, stop=reading_stop, always_2d=True
-        )[0]
+        reading_start = start
+        reading_stop = stop
+        audio_data = __read_from_file__(
+            filepath,
+            sample_rate,
+            start_time=reading_start,
+            stop_time=reading_stop,
+            backend=backend,
+            channel_mixing_strategy=channel_mixing_strategy,
+        )
     if len(audio_data) == 0:
-
         raise Exception("Error during reading file 1: {}".format(filepath.as_posix()))
     # IF more then one channel do mixing
-    if audio_data.shape[1] > 1:
-        if channel_mixing_strategy == Mixing.TAKE_ONE:
-            audio_data = audio_data[:, channel]
-        else:
-            raise NotImplementedError()
-    else:
-        audio_data = audio_data[:, 0]
 
     # If segment smaller than desired start padding it
     desired_sample_length = round(desired_length * sample_rate)
@@ -106,15 +160,20 @@ def read_audio_parts(
     sample_rate: int,
     channel_mixing_strategy=Mixing.TAKE_ONE,
     channel: int = 0,
+    backend="soundfile",
 ):
 
     result = None
-
     for (start_time, end_time) in parts:
-        reading_start = int(start_time * sample_rate)
-        reading_stop = int(end_time * sample_rate)
-        audio_data, sample_rate = sf.read(
-            filepath, start=reading_start, stop=reading_stop, always_2d=True
+
+        audio_data = __read_from_file__(
+            filepath,
+            sample_rate,
+            start_time=start_time,
+            end_time=end_time,
+            backend=backend,
+            channel_mixing_strategy=channel_mixing_strategy,
+            channel=channel,
         )
         audio_data
         if result is None:
@@ -125,25 +184,14 @@ def read_audio_parts(
     if len(result) == 0:
         print(filepath)
         raise Exception("Error during reading file 2:".format(filepath))
-    # IF more then one channel do mixing
-   
-    if channel_mixing_strategy == Mixing.TAKE_ONE:
-        result = result[:, channel]
-    elif channel_mixing_strategy == Mixing.TO_MONO:
-        result = np.sum(result, axis=1) / result.shape[1]
-    elif channel_mixing_strategy == None:
-        pass
-    else:
-        raise NotImplementedError()
-  
 
     # If segment smaller than desired start padding it
     desired_sample_length = round(desired_length * sample_rate)
-
     if len(result) < desired_sample_length:
         result = np.append(
             result, np.full(desired_sample_length - len(result), 0.0000001)
         )
+    print('length of audio {}'.format(result.shape))
     return result
 
 

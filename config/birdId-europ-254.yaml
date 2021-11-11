@@ -2,11 +2,13 @@ data:
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-class-dspec-list.csv"
   train_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
   val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
-  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-dspec-val.csv"
-  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/debug.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-dspec-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val-split-0.15.csv"
+  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
 
   data_root_path: "./data/libro_animalis"
-  batch_size: 60
+  batch_size: 100
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
@@ -38,9 +40,13 @@ validation:
   segment_step: 1
   batch_size_mulitplier: 3
   check_val_every_n_epoch: 1
+  signal_pipeline: [
+      "butter_filter"
+  ]
 
 audio_loading:
-  sample_rate: 32000
+  sample_rate: 22050
+  backend:  'librosa' #'soundfile' #
   # multi channel handling take_one | take_all | random_mix | to_mono
   channel_mixing_strategy: "to_mono"
   # clyclic | silence
@@ -49,9 +55,10 @@ audio_loading:
   fft_hop_size_in_samples: 360
   num_of_mel_bands: 128
   mel_start_freq: 20
-  mel_end_freq: 16000
-  normalise_mean: 0.456
-  normalize_std: 0.224
+  mel_end_freq: 10300.0
+  normalize_mean: [0.5, 0.4, 0.3]
+  normalize_std: [0.5, 0.3, 0.1]
+  use_color_channels: 'use_all' #'to_mono' 
 
 augmentation:
   # time_mask, frequency_mask, add_background_noise_from_csv, add_gaussian_noise,
@@ -61,14 +68,20 @@ augmentation:
       #"add_same_class_signal",
       #"add_background_noise_from_csv",
       #"add_class_signal",
-      "add_pink_noise_snr",
-      "volume_control",
-      "frequency_mask",
-      "time_mask",
+      #"add_pink_noise_snr",
+      #"volume_control",
+      #"frequency_mask",
+      #"time_mask",
       # "time_stretch",
-      "add_gaussian_noise",
+      #"add_gaussian_noise",
+      #butter_filter
     ]
   # Augmentation Methods Signal
+butter_filter:
+  cutoff_freq: 20
+  order: 2
+  filter_type: "highpass"
+  p: 1.0
 
 time_mask:
   min_band_part: 0.05

@@ -385,7 +385,6 @@ def cluster_color_spectorgram(
     # initial k-means clustering of colors
     # print("Initial Clustering...")
     if use_kmeans:
-
         kmeans = KMeans(n_clusters=nclus).fit(Cn)
         cluster_labels = kmeans.labels_
     else:

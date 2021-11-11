@@ -222,6 +222,7 @@ class ColorSpecAudioSet(Dataset):
 
     def __getitem__(self, index):
         debug("Get item index: {}".format(index))
+
         segment = self.segments[index]
         annotation_interval = segment["annotation_interval"]
         start_time = segment["start_time"]
@@ -239,14 +240,26 @@ class ColorSpecAudioSet(Dataset):
 
         # print("get item channel: {}".format(self.data_rows[index][5]))
         audio_data = None
+        
+        filename = "{file_id}-{start_time}".format(
+            file_id=self.segments[index]["annotation_interval"]["file_id"],
+            start_time=self.segments[index]["start_time"],
+        )
+        print(filename)
+        data_filepath = Path("./out/{}".format(filename))
+        if data_filepath.exists():
+            return torch.load(data_filepath)
         try:
+
             debug("Read audio parts filepath: {}".format(filepath))
+        
             audio_data = read_audio_parts(
                 filepath,
                 segment_parts,
                 self.config.data.segment_duration,
                 self.config.audio_loading.sample_rate,
-                channel_mixing_strategy=None,
+                channel_mixing_strategy=self.config.audio_loading.channel_mixing_strategy,
+                backend=self.config.audio_loading.backend,
             )
         except Exception as error:
             print(error)
@@ -257,6 +270,7 @@ class ColorSpecAudioSet(Dataset):
         index_list = []
         # handle channels as clusters
         # clustered_data = audio_data
+        # print("start cluster")
         clustered_data = separate_sources(
             audio_data, self.config.audio_loading.sample_rate
         )
@@ -299,4 +313,5 @@ class ColorSpecAudioSet(Dataset):
         tensor = torch.stack(tensor_list)
         y = torch.stack(y_list)
         index = torch.stack(index_list)
+        # print("end cluster")
         return tensor, y, index

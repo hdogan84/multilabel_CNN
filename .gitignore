@@ -2,7 +2,7 @@
 data/*
 logs/*
 lightning_logs
-
+out
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

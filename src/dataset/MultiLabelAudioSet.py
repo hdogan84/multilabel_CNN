@@ -246,6 +246,7 @@ class MultiLabelAudioSet(Dataset):
                 self.config.data.segment_duration,
                 self.config.audio_loading.sample_rate,
                 channel_mixing_strategy=self.config.audio_loading.channel_mixing_strategy,
+                backend=self.config.audio_loading.backend,
             )
         except Exception as error:
             print(error)
@@ -274,9 +275,12 @@ class MultiLabelAudioSet(Dataset):
         # format mel_spec to image with one channel
         h, w = mel_spec.shape
         image_data = np.empty((h, w, 1), dtype=np.uint8)
+        if(self.config.audio_loading.use_color_channels =='use_all'):
+            image_data = np.empty((h, w, 3), dtype=np.uint8)
+            image_data[:, :, 1] = mel_spec
+            image_data[:, :, 2] = mel_spec    
         image_data[:, :, 0] = mel_spec
-        # image_data[:, :, 1] = mel_spec
-        # image_data[:, :, 2] = mel_spec
+        
 
         augmented_image_data = (
             self.transform_image(image=image_data)["image"]
@@ -285,7 +289,13 @@ class MultiLabelAudioSet(Dataset):
         )
         debug("Done image augmenting index {}".format(index))
         transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean=0.456, std=0.224),]
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=self.config.audio_loading.normalize_mean,
+                    std=self.config.audio_loading.normalize_std,
+                ),
+            ]
         )
 
         tensor = transform(augmented_image_data)

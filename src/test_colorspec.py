@@ -76,7 +76,7 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
-        gpus=config.system.gpus,
+        gpus=[0],
         max_epochs=config.system.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
