@@ -1,6 +1,7 @@
 from os import error
 from pathlib import Path
 from typing import Tuple
+from librosa.core import audio
 import soundfile as sf
 import numpy as np
 import random
@@ -46,7 +47,7 @@ def __read_from_file__(
         print(
             "Warning target Sample rate is not sample_rate of file use librosa as backend"
         )
-        print("backend: {}".format(audio_data.shape))
+        # print("backend: {}".format(audio_data.shape))
         audio_data = np.transpose(audio_data)
 
     elif backend == "librosa":
@@ -55,19 +56,23 @@ def __read_from_file__(
             offset=start_time,
             duration=end_time - start_time if end_time is not None else None,
             sr=sample_rate,
+            dtype=np.float32,
+            mono=False
+
         )
 
         if len(audio_data.shape) == 1:
             audio_data = np.array([audio_data])
-        audio_data = np.transpose(audio_data)
-
+         
+        
     else:
         raise ValueError("audio load unknown backend")
+    
     if channel_mixing_strategy == Mixing.TAKE_ONE:
-        audio_data = audio_data[:, channel]
+        audio_data = audio_data[channel,: ]
     elif channel_mixing_strategy == Mixing.TO_MONO:
-        if audio_data.shape[1] > 1:
-            audio_data = np.sum(audio_data, axis=1) / audio_data.shape[1]
+        if audio_data.shape[0] > 1:
+            audio_data = np.array([np.sum(audio_data, axis=0) / audio_data.shape[0]])
     elif channel_mixing_strategy == Mixing.TAKE_ALL:
         pass
     elif channel_mixing_strategy == None:
@@ -106,6 +111,7 @@ def read_audio_segment(
             stop=reading_stop,
             backend=backend,
             channel_mixing_strategy=channel_mixing_strategy,
+            channel=channel,
         )
     else:
         reading_start = start
@@ -117,6 +123,7 @@ def read_audio_segment(
             stop_time=reading_stop,
             backend=backend,
             channel_mixing_strategy=channel_mixing_strategy,
+            channel=channel,
         )
     if len(audio_data) == 0:
         raise Exception("Error during reading file 1: {}".format(filepath.as_posix()))
@@ -175,7 +182,7 @@ def read_audio_parts(
             channel_mixing_strategy=channel_mixing_strategy,
             channel=channel,
         )
-        audio_data
+   
         if result is None:
             result = audio_data
         else:
@@ -183,15 +190,18 @@ def read_audio_parts(
 
     if len(result) == 0:
         print(filepath)
-        raise Exception("Error during reading file 2:".format(filepath))
+        raise Exception("Error during reading file:".format(filepath))
 
     # If segment smaller than desired start padding it
     desired_sample_length = round(desired_length * sample_rate)
-    if len(result) < desired_sample_length:
-        result = np.append(
-            result, np.full(desired_sample_length - len(result), 0.0000001)
+ 
+    if result.shape[1] < desired_sample_length:
+        #print('Warning desired lenght adding {} '.format(result.dtype))
+        result = np.concatenate(
+            (result, np.full((result.shape[0],desired_sample_length - result.shape[1]), 0.0000001, dtype=result.dtype)),axis=1
         )
-    print('length of audio {}'.format(result.shape))
+        #print('Warning done lenght adding')
+    #print('length of audio {}'.format(result.shape))
     return result
 
 
@@ -205,7 +215,7 @@ def get_mel_spec(
     mel_end_freq=16000.0,
 ):
     mel_spec = librosa.feature.melspectrogram(
-        y=audio_data,
+        y= audio_data,
         sr=sample_rate,
         n_fft=fft_size_in_samples,
         hop_length=fft_hop_size_in_samples,

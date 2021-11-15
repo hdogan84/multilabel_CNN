@@ -239,7 +239,7 @@ class MultiLabelAudioSet(Dataset):
         # print("get item channel: {}".format(self.data_rows[index][5]))
         audio_data = None
         try:
-            debug("Read audio parts filepath: {}".format(filepath))
+            # print("Read audio parts filepath: {} in mode {}".format(filepath,self.config.audio_loading.channel_mixing_strategy))
             audio_data = read_audio_parts(
                 filepath,
                 segment_parts,
@@ -251,54 +251,68 @@ class MultiLabelAudioSet(Dataset):
         except Exception as error:
             print(error)
             return None
-        debug("Done reading index {}".format(index))
-        augmented_signal, y = audio_data = (
-            self.transform_audio(
-                samples=audio_data,
-                sample_rate=self.config.audio_loading.sample_rate,
-                y=class_tensor,
-            )
-            if self.transform_audio is not None
-            else (audio_data, class_tensor)
-        )
-        debug("Done signal augmenting index {}".format(index))
-        mel_spec = get_mel_spec(
-            augmented_signal,
-            self.config.audio_loading.fft_size_in_samples,
-            self.config.audio_loading.fft_hop_size_in_samples,
-            self.config.audio_loading.sample_rate,
-            num_of_mel_bands=self.config.audio_loading.num_of_mel_bands,
-            mel_start_freq=self.config.audio_loading.mel_start_freq,
-            mel_end_freq=self.config.audio_loading.mel_end_freq,
-        )
-        debug("Done got mel spec index {}".format(index))
-        # format mel_spec to image with one channel
-        h, w = mel_spec.shape
-        image_data = np.empty((h, w, 1), dtype=np.uint8)
-        if(self.config.audio_loading.use_color_channels =='use_all'):
-            image_data = np.empty((h, w, 3), dtype=np.uint8)
-            image_data[:, :, 1] = mel_spec
-            image_data[:, :, 2] = mel_spec    
-        image_data[:, :, 0] = mel_spec
         
+       # print("Done reading index {} shape {}".format(index,audio_data[0,:]))
 
-        augmented_image_data = (
-            self.transform_image(image=image_data)["image"]
-            if self.transform_image is not None
-            else image_data
-        )
-        debug("Done image augmenting index {}".format(index))
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=self.config.audio_loading.normalize_mean,
-                    std=self.config.audio_loading.normalize_std,
-                ),
-            ]
-        )
+        tensor_list = []
+        y_list = []
+        index_list = []
+        for channel in range(audio_data.shape[0]):
+            augmented_signal, y = (
+                self.transform_audio(
+                    samples=audio_data[0,:],
+                    sample_rate=self.config.audio_loading.sample_rate,
+                    y=class_tensor,
+                )
+                if self.transform_audio is not None
+                else (audio_data[channel,:], class_tensor)
+            )
+            debug("Done signal augmenting index {} shape".format(index))
+            mel_spec = get_mel_spec(
+                augmented_signal,
+                self.config.audio_loading.fft_size_in_samples,
+                self.config.audio_loading.fft_hop_size_in_samples,
+                self.config.audio_loading.sample_rate,
+                num_of_mel_bands=self.config.audio_loading.num_of_mel_bands,
+                mel_start_freq=self.config.audio_loading.mel_start_freq,
+                mel_end_freq=self.config.audio_loading.mel_end_freq,
+            )
+            debug("Done got mel spec index {}".format(index))
+            # format mel_spec to image with one channel
+            h, w = mel_spec.shape
+            image_data = np.empty((h, w, 1), dtype=np.uint8)
+            if(self.config.audio_loading.use_color_channels =='use_all'):
+                image_data = np.empty((h, w, 3), dtype=np.uint8)
+                image_data[:, :, 1] = mel_spec
+                image_data[:, :, 2] = mel_spec    
+            image_data[:, :, 0] = mel_spec
+            
 
-        tensor = transform(augmented_image_data)
+            augmented_image_data = (
+                self.transform_image(image=image_data)["image"]
+                if self.transform_image is not None
+                else image_data
+            )
+            debug("Done image augmenting index {}".format(index))
+            transform = transforms.Compose(
+                [
+                    transforms.ToTensor(),
+                    transforms.Normalize(
+                        mean=self.config.audio_loading.normalize_mean,
+                        std=self.config.audio_loading.normalize_std,
+                    ),
+                ]
+            )
+            tensor = transform(augmented_image_data)
+            
+            tensor_list.append(tensor)
+            y_list.append(y)
+            index_list.append(torch.tensor(index))
+        
+        tensor = torch.stack(tensor_list)
+        # print(tensor.shape)
+        y = torch.stack(y_list)
+        index = torch.stack(index_list)
         # plt.imshow(augmented_image_data, interpolation="nearest")
         # plt.show()
         return tensor, y, index

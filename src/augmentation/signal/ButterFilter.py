@@ -8,7 +8,7 @@ class ButterFilter(BaseWaveformTransform):
     Wrapping of scipy signal butter filtering
     """
 
-    supports_multichannel = False
+    supports_multichannel = True
 
     def __init__(self, cutoff_freq=20, order=2, filter_type="highpass", p: float = 0.5):
         """
@@ -37,10 +37,15 @@ class ButterFilter(BaseWaveformTransform):
         )
 
     def apply(self, samples: np.array, sample_rate: int = None):
-        print(samples.shape)
+ 
+
         audio_segment = np.zeros(samples.shape)
-        for channel in range(samples.shape[1]):
-            audio_segment[:,channel] = sosfilt(self.parameters["sos"], samples[:,channel], axis=0)
+        if len(samples.shape) == 1:
+            # only 1 dimensional array
+            audio_segment = sosfilt(self.parameters["sos"], samples, axis=0)
+        else:   
+            for channel in range(samples.shape[0]):
+                audio_segment = sosfilt(self.parameters["sos"], samples[channel,:], axis=0)
         if (
             np.isnan(audio_segment).any()
             or np.max(audio_segment) > 1.0
@@ -48,5 +53,5 @@ class ButterFilter(BaseWaveformTransform):
         ):
             print("Warning filter instability: filter not applied")
             audio_segment = samples
-        return audio_segment
+        return samples
 

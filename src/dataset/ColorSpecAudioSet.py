@@ -272,7 +272,7 @@ class ColorSpecAudioSet(Dataset):
         # clustered_data = audio_data
         # print("start cluster")
         clustered_data = separate_sources(
-            audio_data, self.config.audio_loading.sample_rate
+            audio_data, self.config.audio_loading.sample_rate,transpose=False
         )
         for cluster_index in range(clustered_data.shape[1]):
 

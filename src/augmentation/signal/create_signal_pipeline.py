@@ -80,7 +80,6 @@ def create_signal_pipeline(transform_list: list, config: dict):
     transforms = []
     for transform_name in transform_list:
         print("- {}".format(snake_to_kebab_case(transform_name)))
-        print(signal_transform_dict[snake_to_kebab_case(transform_name)])
         transforms.append(
             signal_transform_dict[snake_to_kebab_case(transform_name)](
                 **config[transform_name]

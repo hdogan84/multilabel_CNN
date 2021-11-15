@@ -4,11 +4,11 @@ data:
   val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-dspec-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
-  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val-split-0.15.csv"
-  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
+  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val-split-0.15.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
 
   data_root_path: "./data/libro_animalis"
-  batch_size: 100
+  batch_size: 30
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
@@ -48,7 +48,7 @@ audio_loading:
   sample_rate: 22050
   backend:  'librosa' #'soundfile' #
   # multi channel handling take_one | take_all | random_mix | to_mono
-  channel_mixing_strategy: "to_mono"
+  channel_mixing_strategy: to_mono #"take_all"
   # clyclic | silence
   padding_strategy: "wrap_around"
   fft_size_in_samples: 1536
