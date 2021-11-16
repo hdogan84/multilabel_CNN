@@ -60,7 +60,7 @@ def __read_from_file__(
             mono=False
 
         )
-
+    
         if len(audio_data.shape) == 1:
             audio_data = np.array([audio_data])
          
@@ -186,7 +186,7 @@ def read_audio_parts(
         if result is None:
             result = audio_data
         else:
-            result = np.concatenate(result, audio_data)
+            result = np.concatenate((result, audio_data),axis=1)
 
     if len(result) == 0:
         print(filepath)
@@ -196,7 +196,7 @@ def read_audio_parts(
     desired_sample_length = round(desired_length * sample_rate)
  
     if result.shape[1] < desired_sample_length:
-        #print('Warning desired lenght adding {} '.format(result.dtype))
+        #If segment is to short pad with silence
         result = np.concatenate(
             (result, np.full((result.shape[0],desired_sample_length - result.shape[1]), 0.0000001, dtype=result.dtype)),axis=1
         )
