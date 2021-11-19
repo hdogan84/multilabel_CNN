@@ -1,5 +1,8 @@
 import csv
 import os
+import sys
+
+from torch.utils import data
 
 
 class ResultLogger:
@@ -9,7 +12,6 @@ class ResultLogger:
     def add_result(self, filepath, channel, start_time, end_time, results):
 
         if not filepath in self.result_dic:
-            print('not found {}'.format(filepath))
             self.result_dic[filepath] = []
         self.result_dic[filepath].append(
             [
@@ -21,16 +23,13 @@ class ResultLogger:
                 results,
             ]
         )
-    
-    def add_batch(self, predictions, segment_indices, data_set):
-        segments = data_set.segments
-        for preds, sg_ix in zip(predictions.tolist(), list(segment_indices)):
-            # print(seg_index)
-            start_time = segments[sg_ix]["start_time"]
-            end_time = segments[sg_ix]["end_time"]
-            filepath = segments[sg_ix]["annotation_interval"]["filepath"]
-            channel = segments[sg_ix]["channel"]
-           
+
+    def add_batch(self, predictions, segment_indices, data_list):
+        for preds, sg_ix in zip(predictions.tolist(), segment_indices.tolist()):
+            start_time = data_list[sg_ix]["start_time"]
+            end_time = data_list[sg_ix]["end_time"]
+            filepath = data_list[sg_ix]["filepath"]
+            channel = data_list[sg_ix]["channel"]
             self.add_result(filepath.as_posix(), channel, start_time, end_time, preds)
 
     def get_file_results(self, filepath):

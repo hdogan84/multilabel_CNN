@@ -24,7 +24,7 @@ class MultiLabelAudioSet(Dataset):
         data: DataFrame,
         class_dict: dict,
         transform_image: Callable = None,
-        transform_audio: Callable = None,
+        transform_signal: Callable = None,
         is_validation: bool = False,
         validation_step: float = 1,
     ):
@@ -37,7 +37,7 @@ class MultiLabelAudioSet(Dataset):
         """
         self.config = config
         self.class_dict = class_dict
-        self.transform_audio = transform_audio
+        self.transform_signal = transform_signal
         self.transform_image = transform_image
         self.data = data
         self.is_validation = is_validation
@@ -112,7 +112,6 @@ class MultiLabelAudioSet(Dataset):
         return torch.zeros(x.size())
 
     def __len__(self):
-        tmp = len(self.segments)
         return len(self.segments)
 
     def __mapToClassIndex__(self, index):
@@ -259,12 +258,12 @@ class MultiLabelAudioSet(Dataset):
         index_list = []
         for channel in range(audio_data.shape[0]):
             augmented_signal, y = (
-                self.transform_audio(
+                self.transform_signal(
                     samples=audio_data[0,:],
                     sample_rate=self.config.audio_loading.sample_rate,
                     y=class_tensor,
                 )
-                if self.transform_audio is not None
+                if self.transform_signal is not None
                 else (audio_data[channel,:], class_tensor)
             )
             debug("Done signal augmenting index {} shape".format(index))

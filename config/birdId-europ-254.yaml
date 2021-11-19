@@ -8,7 +8,7 @@ data:
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
 
   data_root_path: "./data/libro_animalis"
-  batch_size: 3
+  batch_size: 60
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
@@ -50,7 +50,7 @@ audio_loading:
   # multi channel handling take_one | take_all | random_mix | to_mono
   channel_mixing_strategy: to_mono #"take_all"
   # clyclic | silence
-  padding_strategy: "wrap_around"
+  padding_strategy: "silence"
   fft_size_in_samples: 1536
   fft_hop_size_in_samples: 360
   num_of_mel_bands: 128

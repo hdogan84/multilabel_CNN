@@ -13,7 +13,7 @@ def start_extract(config_filepath):
     config = load_yaml_config(config_filepath)
 
     data_module = ColorSpecAmmodMultiLabelModule(
-        config, fit_transform_audio=None, fit_transform_image=None,
+        config, fit_transform_signal=None, fit_transform_image=None,
     )
     data_module.setup(stage="test")
     data_set = data_module.test_set

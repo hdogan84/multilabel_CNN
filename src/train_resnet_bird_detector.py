@@ -28,7 +28,7 @@ import albumentations as A
 # trainer = Trainer(tpu_cores=8)
 def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=False):
     config = load_yaml_config(config_filepath)
-    fit_transform_audio = SignalCompose(
+    fit_transform_signal = SignalCompose(
         create_signal_pipeline(config.augmentation.signal_pipeline, config),
         shuffle=config.augmentation.shuffle_signal_augmentation,
     )
@@ -48,7 +48,7 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
     )
     data_module = AmmodMultiLabelModule(
         config,
-        fit_transform_audio=fit_transform_audio,
+        fit_transform_signal=fit_transform_signal,
         fit_transform_image=fit_transform_image,
     )
 

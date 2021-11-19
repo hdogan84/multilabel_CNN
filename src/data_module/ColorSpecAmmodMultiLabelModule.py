@@ -92,14 +92,14 @@ class ColorSpecAmmodMultiLabelModule(AmmodMultiLabelModule):
                 self.train_dataframe,
                 self.class_dict,
                 transform_image=self.fit_transform_image,
-                transform_audio=self.fit_transform_audio,
+                transform_signal=self.fit_transform_signal,
             )
             self.val_set = MultiLabelAudioSet(
                 self.config,
                 self.val_dataframe,
                 self.class_dict,
                 transform_image=self.val_transform_image,
-                transform_audio=self.val_transform_audio,
+                transform_signal=self.val_transform_signal,
                 is_validation=True,
             )
             print("Train set raw size: {}".format(len(self.train_set)))
@@ -110,7 +110,7 @@ class ColorSpecAmmodMultiLabelModule(AmmodMultiLabelModule):
                 self.test_dataframe,
                 self.class_dict,
                 transform_image=self.val_transform_image,
-                transform_audio=self.val_transform_audio,
+                transform_signal=self.val_transform_signal,
                 is_validation=True,
             )
             print("Test set raw size: {}".format(len(self.test_set)))

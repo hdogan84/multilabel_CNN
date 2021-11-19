@@ -5,7 +5,7 @@ import argparse
 from torchmetrics import Accuracy, AveragePrecision, F1, AUC
 from tools.tensor_helpers import pool_by_segments
 from pathlib import Path
-from tools.result_logger import ResultLogger
+
 #from data_module.ColorSpecAmmodMultiLabelModule import ColorSpecAmmodMultiLabelModule as DataModule
 from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule as DataModule
 from tools.config import load_class_list_from_index_to_name_json
@@ -13,13 +13,14 @@ from tools.tensor_helpers import (
     transform_class_tensor,
     get_class_tensor_transformation_matrix,
 )
+from tools.RunBaseTorchScriptModel import RunBaseTorchScriptModel
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
 
 import torch
 import albumentations as A
 
-device = "cuda:1"
-model_path = (
+device = "cuda"
+model_filepath = (
     "data/torchserve-models/raw/birdId-europe-254-2103/birdId-europe-254-2103.pt"
 )
 index_to_name_json_path = (
@@ -28,112 +29,75 @@ index_to_name_json_path = (
 config_path = "./config/birdId-europ-254.yaml"
 output_path = 'predictions.csv'
 
-# trainer = Trainer(tpu_cores=8)
-def validate(config_filepath,metrics=False, result_file=True,result_filepath='predictions.csv'):
-    result_logger = ResultLogger() if result_file else None
-    config = load_yaml_config(config_filepath)
 
-    NumOfLowFreqsInPixelToCutMax = 4
-    NumOfHighFreqsInPixelToCutMax = 6
-    imageHeight = 224
-    resizeFactor = imageHeight / (
-        config.audio_loading.num_of_mel_bands
-        - NumOfLowFreqsInPixelToCutMax / 2.0
-        - NumOfHighFreqsInPixelToCutMax / 2.0
-    )
-    imageWidth = int(
-        resizeFactor
-        * config.data.segment_duration
-        * config.audio_loading.sample_rate
-        / config.audio_loading.fft_hop_size_in_samples
-    )
-    print('Imagewitdh {}'.format(imageWidth))
 
-    val_transform_signal = SignalCompose(
-        create_signal_pipeline(config.validation.signal_pipeline, config),
-        shuffle=config.augmentation.shuffle_signal_augmentation,
-    )
-    val_transform_image = A.Compose(
-        [
-            # A.HorizontalFlip(p=0.2),
-            # A.VerticalFlip(p=0.5),
-            A.Resize(imageHeight, imageWidth, A.cv2.INTER_LANCZOS4, always_apply=True)
-        ]
-    )
-    data_module = DataModule(
-        config, None, None, val_transform_signal, val_transform_image,
-    )
-    data_module.setup("test")
-    num_classes = data_module.class_count
-    data_loader = data_module.test_dataloader()
-    data_set = data_module.test_set
-    model_class_list = load_class_list_from_index_to_name_json(index_to_name_json_path)
-    data_class_list = [key for key in data_module.class_dict]
-    class_tensor_transformation_matrix = get_class_tensor_transformation_matrix(
-        model_class_list, data_class_list
-    ).to(device)
-
-    accuracy = Accuracy(num_classes=num_classes).cpu() if metrics else None
-    f1 = F1(num_classes=num_classes).cpu() if metrics else None
-    averagePrecision = AveragePrecision().to("cpu") if metrics else None
-
-    # aUC = AUC(compute_on_step=True, dist_sync_on_step=True).cpu()
-    criterion = nn.BCELoss()
-    
-    with torch.no_grad():
-        model = torch.jit.load(model_path, map_location=device)
-        batch_results = []
-        batch_amount = len(data_loader)
-        for index, batch in enumerate(data_loader):
-
-            x, classes, segment_indices = batch
-        
-            x = x.to(device)
-            segment_indices = segment_indices
-
-            preds = model(x)
-            preds = transform_class_tensor(preds, class_tensor_transformation_matrix)
-            predictions = preds.cpu()
-            # pool segments
-            classes, _ = pool_by_segments(classes, segment_indices)
-            predictions, _ = pool_by_segments(
-                predictions, segment_indices, pooling_method="max"
+def validate(config_filepath, model_filepath):
+    class RunBirdDectector(RunBaseTorchScriptModel):
+        def setup_transformations(self):
+            NumOfLowFreqsInPixelToCutMax = 4
+            NumOfHighFreqsInPixelToCutMax = 6
+            imageHeight = 224
+            resizeFactor = imageHeight / (
+                self.config.audio_loading.num_of_mel_bands
+                - NumOfLowFreqsInPixelToCutMax / 2.0
+                - NumOfHighFreqsInPixelToCutMax / 2.0
             )
-            if(result_file):
-                #tmp_segment_indices = pool_by_segments(segment_indices, segment_indices)
-                result_logger.add_batch(predictions, segment_indices, data_set)
+            imageWidth = int(
+                resizeFactor
+                * self.config.data.segment_duration
+                * self.config.audio_loading.sample_rate
+                / self.config.audio_loading.fft_hop_size_in_samples
+            )
+            print('Imagewitdh {}'.format(imageWidth))
 
-            if(metrics):
-                target = classes.type(torch.int).cpu()
-                loss = criterion(predictions, classes)
-                accuracy(predictions, target)
+            transform_signal = SignalCompose(
+                create_signal_pipeline(self.config.validation.signal_pipeline, self.config),
+                shuffle=False,
+            )
+            transform_image = A.Compose(
+                [
+                    A.Resize(imageHeight, imageWidth, A.cv2.INTER_LANCZOS4, always_apply=True)
+                ]
+            )
+            return transform_signal,transform_image
 
-                averagePrecision(predictions, target)
-                f1(predictions, target)
-                # self.AUC(predictions_prob, target)
-                batch_dictionary = {
-                    "loss": loss,
-                    "predictions": predictions,
-                    "classes": classes,
-                    "segment_indices": segment_indices,
+
+        def setup_dataloader(self,transform_signal,transform_image):
+            data_module = DataModule(
+                self.config, None, None, transform_signal, transform_image,
+            )
+            data_module.setup("test")
+            num_classes = data_module.class_count
+            data_loader = data_module.test_dataloader()
+            data_set = data_module.test_set
+            data_list = [
+                {
+                    "start_time": segment["start_time"],
+                    "end_time": segment["end_time"],
+                    "filepath": segment["annotation_interval"]["filepath"],
+                    "channel": segment["channel"],
                 }
-                batch_results.append(batch_dictionary)
-            print("Batch {}/{} ".format(index+1, batch_amount))
+                for segment in data_set.segments
+            ]
+            class_list = [key for key in data_module.class_dict]
+            return data_loader, data_list, num_classes, class_list
 
-        if(metrics):
-            metrics_dict = {
-                "accuracy": accuracy.compute().item(),
-                "average_precision": averagePrecision.compute().item(),
-                "f1": f1.compute().item(),
-                # "auc": self.AUC.compute(),
-                # "lrap": label_ranking_average_precision_score(
-                #     classes_all.cpu().data.numpy(), preds_all.cpu().data.numpy(),
-                # ),
-            }
-            print(metrics_dict)
-        if(result_file):
-            result_logger.write_results_to_file(result_filepath)
 
+        def setup_class_tensor_transform_matrix(self,data_class_list):
+            model_class_list = load_class_list_from_index_to_name_json(index_to_name_json_path)
+            class_tensor_transformation_matrix = get_class_tensor_transformation_matrix(
+                model_class_list, data_class_list
+            ).to(device)
+            return class_tensor_transformation_matrix
+    runBirdDetector = RunBirdDectector(config_filepath,
+        model_filepath,
+        validation=True,
+        result_file=True,
+        result_filepath="predictions.csv",
+        device="cuda:0")
+
+    runBirdDetector.run()
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
@@ -145,26 +109,9 @@ if __name__ == "__main__":
         default=config_path,
         help="config file for all settings",
     )
-    parser.add_argument(
-        "--output",
-        metavar="path",
-        type=Path,
-        nargs="?",
-        default=output_path,
-        help="config file for all settings",
-    )
-
-    parser.add_argument(
-        "--metrics",
-        metavar="path",
-        type=Path,
-        nargs="?",
-        default=config_path,
-        help="config file for all settings",
-    )
 
     args = parser.parse_args()
     config_filepath = args.config
 
-    validate(config_filepath)
+    validate(model_filepath,config_filepath)
 

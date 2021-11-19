@@ -25,7 +25,7 @@ class ColorSpecAudioSet(Dataset):
         data: DataFrame,
         class_dict: dict,
         transform_image: Callable = None,
-        transform_audio: Callable = None,
+        transform_signal: Callable = None,
         is_validation: bool = False,
         validation_step: float = 1,
     ):
@@ -38,7 +38,7 @@ class ColorSpecAudioSet(Dataset):
         """
         self.config = config
         self.class_dict = class_dict
-        self.transform_audio = transform_audio
+        self.transform_signal = transform_signal
         self.transform_image = transform_image
         self.data = data
         self.is_validation = is_validation

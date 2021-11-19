@@ -29,8 +29,8 @@ class Mixing:
 def __read_from_file__(
     filepath,
     sample_rate,
-    start_time=0,
-    end_time=None,
+    start_time=0, #in s 
+    end_time=None, #in s
     always_2d=True,
     backend="soundfile",
     to_mono=False,
@@ -47,7 +47,6 @@ def __read_from_file__(
         print(
             "Warning target Sample rate is not sample_rate of file use librosa as backend"
         )
-        # print("backend: {}".format(audio_data.shape))
         audio_data = np.transpose(audio_data)
 
     elif backend == "librosa":
@@ -66,7 +65,7 @@ def __read_from_file__(
          
         
     else:
-        raise ValueError("audio load unknown backend")
+        raise ValueError("Audio load unknown backend")
     
     if channel_mixing_strategy == Mixing.TAKE_ONE:
         audio_data = audio_data[channel,: ]
@@ -107,8 +106,9 @@ def read_audio_segment(
         reading_stop = reading_start + desired_length
         audio_data = __read_from_file__(
             filepath,
-            start=reading_start,
-            stop=reading_stop,
+            sample_rate,
+            start_time=reading_start,
+            end_time=reading_stop,
             backend=backend,
             channel_mixing_strategy=channel_mixing_strategy,
             channel=channel,
@@ -120,7 +120,7 @@ def read_audio_segment(
             filepath,
             sample_rate,
             start_time=reading_start,
-            stop_time=reading_stop,
+            end_time=reading_stop,
             backend=backend,
             channel_mixing_strategy=channel_mixing_strategy,
             channel=channel,
@@ -132,7 +132,8 @@ def read_audio_segment(
     # If segment smaller than desired start padding it
     desired_sample_length = round(desired_length * sample_rate)
 
-    if len(audio_data) < desired_sample_length:
+    if audio_data.shape[1] < desired_sample_length:
+        #print('too short start: {}  end: {} {}'.format(reading_start,reading_stop, audio_data.shape))
         if padding_strategy == Padding.WRAP_AROUND:
             # logger.debug("cylic")
             padded_audio_data = audio_data.copy()
@@ -154,6 +155,7 @@ def read_audio_segment(
             audio_data = np.append(
                 audio_data, np.full(desired_sample_length - len(audio_data), 0.0000001)
             )
+            
         else:
             raise NotImplementedError()
 
@@ -189,7 +191,6 @@ def read_audio_parts(
             result = np.concatenate((result, audio_data),axis=1)
 
     if len(result) == 0:
-        print(filepath)
         raise Exception("Error during reading file:".format(filepath))
 
     # If segment smaller than desired start padding it
