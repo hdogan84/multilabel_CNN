@@ -41,7 +41,8 @@ class RunBaseTorchScriptModel:
         validation=False,
         result_file=True,
         result_filepath="predictions.csv",
-        device="cpu"
+        device="cpu",
+        binary_threshold=0.5
     ):
         self.config = load_yaml_config(config_filepath)
         self.model_filepath = model_filepath
@@ -50,6 +51,7 @@ class RunBaseTorchScriptModel:
         self.result_filepath = result_filepath
         self.result_logger = ResultLogger() if result_file else None
         self.device = device
+        self.binary_threshold = binary_threshold
 
     def setup_transformations(self): 
         # has to return transformation_pipline signal, transformation_pipeline image
@@ -67,16 +69,17 @@ class RunBaseTorchScriptModel:
     def setup_validation(self,num_classes): 
         # has to return a dictionary of metrics function, Key will be used as key for the results
         metrics_dict = {
-                    "accuracy" : Accuracy(num_classes=num_classes).cpu() if self.validation else None,
-                    "f1" : F1(num_classes=num_classes).cpu() if self.validation else None,
-                    "averagePrecision" : AveragePrecision().to("cpu") if self.validation else None  
+                    "accuracy" : Accuracy(num_classes=num_classes,threshold=self.binary_threshold).to(self.device) if self.validation else None,
+                    "f1" : F1(num_classes=num_classes,threshold=self.binary_threshold).to(self.device) if self.validation else None,
+                    "averagePrecision" : AveragePrecision(num_classes=num_classes).to(self.device) if self.validation else None  
                 }
         return metrics_dict
     
 
     def validation_step(self,metrics_dict,  predictions, classes):
         # every batch this step is called
-        target = classes.type(torch.int).cpu()
+        target = classes.type(torch.int)
+
         result = {}
         for key in metrics_dict:
             result[key] = metrics_dict[key](predictions, target)
@@ -92,7 +95,8 @@ class RunBaseTorchScriptModel:
         transform_signal,transform_image = self.setup_transformations()
         data_loader,data_list, num_classes, class_list = self.setup_dataloader(transform_signal,transform_image)
         class_tensor_transformation_matrix = self.setup_class_tensor_transform_matrix(class_list)
-
+     
+        # class_tensor_transformation_matrix.to(self.device)
         metrics_dict = self.setup_validation(num_classes) if self.validation else None
 
         with torch.no_grad():
@@ -103,7 +107,7 @@ class RunBaseTorchScriptModel:
             for index, batch in enumerate(data_loader):
 
                 x, classes, segment_indices = batch
-
+                classes = classes.to(self.device)
                 x = x.to(self.device)
                 segment_indices = segment_indices
 
@@ -113,7 +117,7 @@ class RunBaseTorchScriptModel:
                     preds = transform_class_tensor(
                         preds, class_tensor_transformation_matrix
                     ) 
-                predictions = preds.cpu()
+                predictions = preds
                 # pool segments
                 # pool classes only if validation
                 if(self.validation):

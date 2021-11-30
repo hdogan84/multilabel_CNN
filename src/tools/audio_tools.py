@@ -44,10 +44,12 @@ def __read_from_file__(
         audio_data, file_sample_rate = sf.read(
             filepath, start=reading_start, stop=reading_stop, always_2d=True
         )
-        print(
-            "Warning target Sample rate is not sample_rate of file use librosa as backend"
-        )
+        if file_sample_rate != sample_rate:
+            print(
+                "Warning target Sample {target} rate is not sample_rate {file} of file use librosa as backend ".format(target=sample_rate, file=file_sample_rate)
+            )
         audio_data = np.transpose(audio_data)
+        
 
     elif backend == "librosa":
         audio_data, sr = librosa.load(
@@ -78,6 +80,9 @@ def __read_from_file__(
         pass
     else:
         raise NotImplementedError()
+    if(audio_data.shape[1] == 0):
+        print('warning audiodata of file {} is 0'.format(filepath))
+        print('{} {} {} {} {} {} {} {}'.format(sample_rate,start_time,end_time,always_2d,backend,to_mono,channel_mixing_strategy,channel))
     return audio_data
 
 

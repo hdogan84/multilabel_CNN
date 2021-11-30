@@ -7,7 +7,7 @@ from torch.utils import data
 from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule as DataModule
 from tools.RunBaseTorchScriptModel import RunBaseTorchScriptModel
 
-device = "cuda:0"
+device = "cuda:1"
 model_filepath = "/home/tsa/projects/bewr/ammod-bird-detector/data/torchserve-models/raw/ammod-resnet-25-1/ammod-resnet-25-1.pt"
 config_path = "./config/resnet_multi_label.yaml"
 # trainer = Trainer(tpu_cores=8)

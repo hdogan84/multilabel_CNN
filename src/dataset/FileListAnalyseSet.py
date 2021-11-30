@@ -39,6 +39,7 @@ class FileListAnalyseSet(Dataset):
         self.transform_image = transform_image
         self.step_size = step_size
         self.segments = []
+        
         for filepath in file_list:
             duration = librosa.get_duration(filename=filepath)  # duration in s
             segment_count = ceil(duration / step_size)

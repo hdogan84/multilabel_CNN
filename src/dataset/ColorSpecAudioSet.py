@@ -274,7 +274,9 @@ class ColorSpecAudioSet(Dataset):
         clustered_data = separate_sources(
             audio_data, self.config.audio_loading.sample_rate,transpose=False
         )
-        for cluster_index in range(clustered_data.shape[1]):
+        merged_data = np.concatenate((clustered_data,audio_data),axis=0)
+
+        for cluster_index in range(merged_data.shape[1]):
 
             augmented_signal, y = (clustered_data[:, cluster_index], class_tensor)
             mel_spec = get_mel_spec(

@@ -26,10 +26,13 @@ model_filepath = (
 index_to_name_json_path = (
     "data/torchserve-models/raw/birdId-europe-254-2103/index_to_name.json"  #
 )
-config_path = "./config/birdId-europ-254.yaml"
+config_path = "./config/birdId-europe-254.yaml"
 output_path = 'predictions.csv'
 
-
+import sys
+if not sys.warnoptions:
+    import warnings
+    warnings.simplefilter("ignore")
 
 def validate(config_filepath, model_filepath):
     class RunBirdDectector(RunBaseTorchScriptModel):
@@ -94,7 +97,7 @@ def validate(config_filepath, model_filepath):
         validation=True,
         result_file=True,
         result_filepath="predictions.csv",
-        device="cuda:0")
+        device=device)
 
     runBirdDetector.run()
     

@@ -2,19 +2,19 @@ data:
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-class-dspec-list.csv"
   train_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
   val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
-  test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-dspec-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-dspec-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
-  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val-split-0.15.csv"
-  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
+  test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
 
   data_root_path: "./data/libro_animalis"
-  batch_size: 60
+  batch_size: 250
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "210812_AMMOD_25classes_resnet_logging"
+  experiment_name: "BirdId-18-8"
   log_dir: "./logs"
   log_every_n_steps: 1
   gpus: [0, 1, 2]
@@ -53,11 +53,11 @@ audio_loading:
   padding_strategy: "silence"
   fft_size_in_samples: 1536
   fft_hop_size_in_samples: 360
-  num_of_mel_bands: 128
-  mel_start_freq: 20
+  num_of_mel_bands: 310
+  mel_start_freq: 160
   mel_end_freq: 10300.0
-  normalize_mean: [0.5, 0.4, 0.3]
-  normalize_std: [0.5, 0.3, 0.1]
+  normalize_mean: [0.5, 0.5, 0.5]
+  normalize_std: [0.5, 0.5, 0.5]
   use_color_channels: 'use_all' #'to_mono' 
 
 augmentation:
