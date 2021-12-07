@@ -1,15 +1,15 @@
 data:
-  class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-class-dspec-list.csv"
-  train_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
-  val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
+  class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
+  train_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-start-end-segment-train.csv"
+  val_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/debug.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
-  #test_list_filepath: "/home/tsa/projects/bewr/ammod-bird-detector/data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
-  test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
-  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
+  test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
   data_root_path: "/home/tsa/projects/bewr/ammod-bird-detector/data/local/ammod2021"
-  batch_size: 260
+  batch_size: 160
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
@@ -18,7 +18,8 @@ system:
   experiment_name: "210812_AMMOD_25classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 5
-  gpus: [0, 1, 2]
+  gpus: [2]
+  #gpus: 0
   num_workers: 20
   random_seed: 236742
   deterministic: True
@@ -29,11 +30,11 @@ system:
 optimizer:
   # optimizers Adam SGD
   optimizer_type: "Adam"
-  learning_rate: 0.0004
+  learning_rate: 0.005
   sgd_momentum: 0.9
   sgd_weight_decay: 1e-4
   # schedulers None CosineAnnealingLR
-  scheduler_type: None #CosineAnnealingLR
+  scheduler_type: CosineAnnealingLR
   cosine_annealing_lr_t_max: 20
 
 validation:
@@ -63,14 +64,14 @@ augmentation:
   # time_stretch, pitch_shift, shift, add_pink_noise_snr, volume_control, add_same_class_signal
   shuffle_signal_augmentation: False
   signal_pipeline: [
-      #"add_same_class_signal",
-      #"add_background_noise_from_csv",
-      #"add_class_signal",
+      "add_same_class_signal",
+      "add_background_noise_from_csv",
+      "add_class_signal",
       "add_pink_noise_snr",
-      "volume_control",
+      #"volume_control",
       "frequency_mask",
       "time_mask",
-      # "time_stretch",
+      "time_stretch",
       "add_gaussian_noise",
     ]
   # Augmentation Methods Signal
@@ -135,9 +136,11 @@ add_same_class_signal:
   max_ssr: 3
   max_n: 3
   padding_strategy: "wrap_around"
-  channel_mixing_strategy: "take_one"
+  backend: 'soundfile' #'librosa' #
+  # multi channel handling take_one | take_all | random_mix | to_mono
+  channel_mixing_strategy: "to_mono"
   data_path: "./data/libro_animalis/"
-  data_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
+  data_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-start-end-segment-train.csv"
   # set class_list_filepath if you want to transform into class_index values
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
   index_filepath: 1
@@ -155,9 +158,10 @@ add_class_signal:
   max_ssr: 3
   max_n: 5
   padding_strategy: "wrap_around"
-  channel_mixing_strategy: "take_one"
+  backend: 'soundfile' #'librosa' #
+  channel_mixing_strategy: "to_mono"
   data_path: "./data/libro_animalis/"
-  data_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-train-split-0.85.csv"
+  data_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-start-end-segment-train.csv"
   # set class_list_filepath if you want to transform into class_index values
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
   index_filepath: 1

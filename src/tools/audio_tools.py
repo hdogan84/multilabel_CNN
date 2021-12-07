@@ -101,14 +101,16 @@ def read_audio_segment(
     duration = stop - start
     audio_data = []
     if filepath.exists() == False:
-        raise Exception("File does not exsts")
+        raise Exception("Error:read_audio_segment: File does not exsts: {}".format(filepath.as_posix()))
     if (
         duration >= desired_length
     ):  # desired_length of audio chunk is greater then wanted part
+        
         max_offset = duration - desired_length
         offset = max_offset * random.random() if randomize_audio_segment else 0 + start
         reading_start = offset
         reading_stop = reading_start + desired_length
+      
         audio_data = __read_from_file__(
             filepath,
             sample_rate,

@@ -24,7 +24,7 @@ class AddPinkNoiseSnr(BaseWaveformTransform):
     def apply(self, samples, sample_rate):
         a_signal = np.sqrt(samples ** 2).max()
         a_noise = a_signal / (10 ** (self.parameters["snr"] / 20))
-        pink_noise = cn.powerlaw_psd_gaussian(1, len(samples))
+        pink_noise = cn.powerlaw_psd_gaussian(samples.shape)
         a_pink = np.sqrt(pink_noise ** 2).max()
         augmented = (samples + pink_noise * 1 / a_pink * a_noise).astype(samples.dtype)
         return augmented

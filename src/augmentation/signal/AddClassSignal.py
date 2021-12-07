@@ -33,6 +33,7 @@ class AddClassSignal(BaseWaveformTransform):
         min_ssr=-40,
         max_ssr=3,
         max_n=3,
+        backend = 'soundfile',
         padding_strategy="wrap_around",
         channel_mixing_strategy="take_one",
         data_path=None,
@@ -60,6 +61,9 @@ class AddClassSignal(BaseWaveformTransform):
         self.max_ssr = max_ssr
         self.max_n = max_n
         self.restriced_to_same_class = restriced_to_same_class
+        if(backend is None):
+            raise Exception("AddClassSignal add backend to constructor choose librosa or soundfile")
+        self.backend = backend
         self.padding_strategy = padding_strategy
         self.channel_mixing_strategy = channel_mixing_strategy
         dataframe = pd.read_csv(
@@ -175,13 +179,14 @@ class AddClassSignal(BaseWaveformTransform):
                     padding_strategy=self.parameters["padding_strategies"][n],
                     randomize_audio_segment=True,
                     channel=random.randint(0, same_class_entry[5] - 1),
+                    backend=self.backend
                 )
-           
                 # alter volume
                 audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
                 result = result + audio_data
             except Exception as error:
-                print(error)
+                #print(error)
+                return result, y
                 
         return result, result_y
 
