@@ -14,6 +14,7 @@ import numpy as np
 from tools.audio_tools import (
     read_audio_parts,
     get_mel_spec,
+    Padding
 )
 
 
@@ -246,6 +247,9 @@ class MultiLabelAudioSet(Dataset):
                 self.config.audio_loading.sample_rate,
                 channel_mixing_strategy=self.config.audio_loading.channel_mixing_strategy,
                 backend=self.config.audio_loading.backend,
+                padding_strategy= Padding.SILENCE if self.is_validation else self.config.audio_loading.padding_strategy,
+                randomize_audio_segment = False if self.is_validation else True ,
+            
             )
         except Exception as error:
             print(error)
@@ -256,10 +260,11 @@ class MultiLabelAudioSet(Dataset):
         tensor_list = []
         y_list = []
         index_list = []
+    
         for channel in range(audio_data.shape[0]):
             augmented_signal, y = (
                 self.transform_signal(
-                    samples=audio_data[0,:],
+                    samples=audio_data[channel,:],
                     sample_rate=self.config.audio_loading.sample_rate,
                     y=class_tensor,
                 )
