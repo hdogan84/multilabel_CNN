@@ -104,7 +104,6 @@ class MultiLabelAudioSet(Dataset):
                         "start_time": start_time,
                         "annotation_interval": annotation_interval,
                         "end_time": end_time,
-                        "channel": "to_mono",  # TODO: other multichannel handling
                     }
                 )
 

@@ -84,15 +84,15 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
         deterministic=config.system.deterministic,
         callbacks=[
             checkpoint_callback,
-            #SaveFileToLogs(config_filepath, "config.yaml"),
-            #SaveFileToLogs(config.data.class_list_filepath, "class_list.csv"),
+            SaveFileToLogs(config_filepath, "config.yaml"),
+            SaveFileToLogs(config.data.class_list_filepath, "class_list.csv"),
             LogFirstBatchAsImage(mean=0.456, std=0.224),
         ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
         accelerator="ddp",
         resume_from_checkpoint=checkpoint_filepath,  # NNN
         auto_select_gpus=config.system.auto_select_gpus,
-        num_sanity_val_steps=2,
+        num_sanity_val_steps=1,
         plugins=DDPPlugin(find_unused_parameters=False),
         # fast_dev_run=True  # config.system.fast_dev_run,
         # Debugging Settings

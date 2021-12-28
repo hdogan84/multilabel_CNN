@@ -80,7 +80,7 @@ def __read_from_file__(
     else:
         raise NotImplementedError()
     if audio_data.shape[1] == 0:
-        raise Exception("Error during reading file:".format(filepath))
+        raise Exception("Error during reading file: {}".format(filepath))
         # print('{} {} {} {} {} {} {} {}'.format(sample_rate,start_time,end_time,always_2d,backend,to_mono,channel_mixing_strategy,channel))
 
     return audio_data
@@ -229,7 +229,7 @@ def read_audio_parts(
             result = np.concatenate((result, audio_data), axis=1)
 
     if len(result) == 0:
-        raise Exception("Error during reading file:".format(filepath))
+        raise Exception("Error during reading file: {}".format(filepath))
 
     # If segment smaller than desired start padding it
     desired_sample_length = round(desired_length * sample_rate)

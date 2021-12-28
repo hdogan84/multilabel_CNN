@@ -39,7 +39,7 @@ class ButterFilter(BaseWaveformTransform):
     def apply(self, samples: np.array, sample_rate: int = None):
  
 
-        audio_segment = np.zeros(samples.shape)
+        audio_segment = np.zeros(samples.shape,dtype=samples.dtype)
         if len(samples.shape) == 1:
             # only 1 dimensional array
             audio_segment = sosfilt(self.parameters["sos"], samples, axis=0)
@@ -53,5 +53,6 @@ class ButterFilter(BaseWaveformTransform):
         ):
             print("Warning filter instability: filter not applied")
             audio_segment = samples
+    
         return samples
 

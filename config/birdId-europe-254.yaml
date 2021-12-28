@@ -6,10 +6,11 @@ data:
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val-split-0.15.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
-  test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
-  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val-sample.csv"
+  test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
   data_root_path: "./data/libro_animalis"
-  batch_size: 60
+  batch_size: 30
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
@@ -41,15 +42,13 @@ validation:
   segment_step: 5
   batch_size_mulitplier: 3
   check_val_every_n_epoch: 1
-  signal_pipeline: [
-      "butter_filter"
-  ]
+  signal_pipeline: ["butter_filter"]
 
 audio_loading:
   sample_rate: 22050
-  backend:  'librosa' #'soundfile' #
+  backend: "librosa" #'soundfile' #
   # multi channel handling take_one | take_all | random_mix | to_mono
-  channel_mixing_strategy: to_mono #"take_all"
+  channel_mixing_strategy: take_all #"take_all"
   # clyclic | silence
   padding_strategy: "silence"
   fft_size_in_samples: 1536
@@ -59,25 +58,24 @@ audio_loading:
   mel_end_freq: 10300.0
   normalize_mean: [0.5, 0.4, 0.3]
   normalize_std: [0.5, 0.3, 0.1]
-  use_color_channels: 'to_mono'  #'use_all' #'to_mono' 
+  use_color_channels: "use_all" #'use_all' #'to_mono'
 
 augmentation:
   # time_mask, frequency_mask, add_background_noise_from_csv, add_gaussian_noise,
   # time_stretch, pitch_shift, shift, add_pink_noise_snr, volume_control, add_same_class_signal
   shuffle_signal_augmentation: False
-  signal_pipeline: [
-      #"add_same_class_signal",
-      #"add_background_noise_from_csv",
-      #"add_class_signal",
-      #"add_pink_noise_snr",
-      #"volume_control",
-      #"frequency_mask",
-      #"time_mask",
-      # "time_stretch",
-      #"add_gaussian_noise",
-      #butter_filter
-    ]
+  signal_pipeline: []
   # Augmentation Methods Signal
+#"add_same_class_signal",
+#"add_background_noise_from_csv",
+#"add_class_signal",
+#"add_pink_noise_snr",
+#"volume_control",
+#"frequency_mask",
+#"time_mask",
+# "time_stretch",
+#"add_gaussian_noise",
+#butter_filter
 butter_filter:
   cutoff_freq: 20
   order: 2
