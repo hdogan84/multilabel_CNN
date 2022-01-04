@@ -4,6 +4,7 @@ from pathlib import Path
 from tools.config import save_to_yaml, as_html
 from shutil import copyfile
 
+
 class LogFirstBatchAsImage(Callback):
     mean: float = None
     std: float = None
@@ -34,9 +35,10 @@ class SaveFileToLogs(Callback):
         self.filepath = filepath
         self.file_name = file_name
 
-    def on_sanity_check_end(self, trainer: Trainer, pl_module: LightningModule):
+    def on_fit_start(self, trainer: Trainer, pl_module: LightningModule):
+        target_file = Path(trainer.logger.log_dir).joinpath(self.file_name)
+        Path(trainer.logger.log_dir).mkdir(parents=True, exist_ok=True)
         copyfile(
-            self.filepath,
-            Path(trainer.logger.log_dir).joinpath(self.file_name),
+            self.filepath, target_file,
         )
 

@@ -85,7 +85,7 @@ class BaseBirdDetector(pl.LightningModule):
     def cal_metrics(self, outputs):
         preds_all = torch.cat([x["preds"] for x in outputs])
         classes_all = torch.cat([x["classes"] for x in outputs])
-        
+
         return {
             "accuracy": self.Accuracy.compute(),
             "average_precision": self.AveragePrecision.compute(),

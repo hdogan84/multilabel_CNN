@@ -38,6 +38,7 @@ class ResultLogger:
             grouped_values[index]["groundTruth"].append(ground_truth_list[num])
         for _, segment_result in grouped_values.items():
             segment = segment_result["segment"]
+            predictions = segment_result["predictions"]
             filepath = segment["filepath"].as_posix()
             start_time = segment["start_time"]
             end_time = segment["end_time"]
@@ -48,16 +49,17 @@ class ResultLogger:
                     "version": self.version,
                     "fileId": segment["filepath"].stem,
                     "classIds": self.class_list,
-                    "channels": [[]] * len(segment_result["predictions"]),
+                    "channels": [[] for _ in range(len(predictions))],
                 }
             file_entry = self.result_dict[filepath]
-            for channel, prediction in enumerate(segment_result["predictions"]):
+            for channel, prediction in enumerate(predictions):
+
                 file_entry["channels"][channel].append(
                     {
                         "startTime": start_time,
                         "endTime": end_time,
                         "predictions": {"probabilities": prediction,},
-                        "groudTruth": segment_result["groundTruth"][channel],
+                        "groundTruth": segment_result["groundTruth"][channel],
                     }
                 )
 
