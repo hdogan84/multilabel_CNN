@@ -80,9 +80,17 @@ class MultiLabelAudioSet(Dataset):
             # calculate how many segments can be in the annotation intervall
             # ceil means last one is may be longer then the annotation_intervall
             segment_count = ceil(
-                (annotation_interval["end_time"] - annotation_interval["start_time"])
+                (
+                    annotation_interval["end_time"]
+                    - (
+                        annotation_interval["start_time"]
+                        + self.config.data.segment_duration
+                    )
+                )
                 / segment_step
+                + 1
             )
+
             for i in range(segment_count):
 
                 start_time = annotation_interval["start_time"] + i * segment_step
