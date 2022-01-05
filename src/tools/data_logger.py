@@ -1,7 +1,18 @@
 from pathlib import Path
 import json
+import math
 
 from numpy import single
+
+import torch
+
+
+def prob_to_logit(p):
+    return torch.logit(torch.tensor(p)).item()
+
+
+def logit_to_prob(logit):
+    return torch.sigmoid(torch.tensor(logit)).item()
 
 
 class ResultLogger:
