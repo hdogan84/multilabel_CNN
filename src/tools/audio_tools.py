@@ -52,6 +52,10 @@ def __read_from_file__(
                 )
             )
         audio_data = np.transpose(audio_data)
+        if audio_data.shape[1] == 0:
+            print("start: {} end:{}".format(start_time, end_time))
+
+            print("start: {} end:{}".format(reading_start, reading_stop))
 
     elif backend == "librosa":
         audio_data, sr = librosa.load(
@@ -102,7 +106,7 @@ def pad_audio(
             ]
         while desired_sample_length > padded_audio_data.shape[1]:
             padded_audio_data = np.append(padded_audio_data, audio_data, axis=1)
-        audio_data = padded_audio_data[:, 0:desired_sample_length-1]
+        audio_data = padded_audio_data[:, 0 : desired_sample_length - 1]
     elif padding_strategy == Padding.SILENCE:
         padding_length = desired_sample_length - audio_data.shape[1]
         if randomize_audio_segment:
@@ -111,7 +115,8 @@ def pad_audio(
                     (audio_data.shape[0], int(random.random() * padding_length)),
                     0.0000001,
                 ),
-                audio_data, axis=1
+                audio_data,
+                axis=1,
             )
         audio_data = np.append(
             audio_data,
@@ -119,7 +124,7 @@ def pad_audio(
                 (audio_data.shape[0], desired_sample_length - audio_data.shape[1]),
                 0.0000001,
             ),
-            axis=1
+            axis=1,
         )
 
     else:
@@ -211,6 +216,7 @@ def read_audio_parts(
 ):
 
     result = None
+
     for (start_time, end_time) in parts:
 
         audio_data = __read_from_file__(

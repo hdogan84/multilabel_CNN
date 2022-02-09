@@ -78,7 +78,7 @@ def validate(config_filepath, model_filepath):
                 for segment in data_set.segments
             ]
             class_list = [key for key in data_module.class_dict]
-            self.batch_end_logger = ResultLogger(
+            self.logger = ResultLogger(
                 data_list,
                 model_name="birdid-18",
                 version="1",
@@ -90,12 +90,16 @@ def validate(config_filepath, model_filepath):
             return data_loader, data_list, num_classes, class_list
 
         def batch_end(self, prediction, ground_truth, segment_indices, batch_index):
-            self.batch_end_logger.log_batch(
+            self.logger.log_batch(
                 prediction, ground_truth, segment_indices, batch_index
             )
 
         def run_end(self):
-            self.batch_end_logger.write_to_json()
+            self.logger.write_to_json()
+
+        def validation_end(self, metrics_dict):
+            super().validation_end(metrics_dict)
+            self.logger.validation_end(metrics_dict)
 
         def setup_class_tensor_transform_matrix(self, data_class_list):
             model_class_list = load_class_list_from_index_to_name_json(

@@ -4,8 +4,8 @@ data:
   val_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-dspec-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/long_files_ammod-multi-val-split-0.15.csv"
-  test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
-  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
+  #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
+  test_list_filepath: ./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-val.csv
 
   data_root_path: "./data/libro_animalis"
   batch_size: 250
@@ -18,7 +18,7 @@ system:
   log_dir: "./logs"
   log_every_n_steps: 1
   gpus: [0, 1, 2]
-  num_workers: 20
+  num_workers: 10
   random_seed: 236742
   deterministic: True
   max_epochs: 230
@@ -37,7 +37,7 @@ optimizer:
 
 validation:
   complete_segment: True
-  segment_step: 5
+  segment_step: 1
   batch_size_mulitplier: 3
   check_val_every_n_epoch: 1
   signal_pipeline: ["butter_filter"]

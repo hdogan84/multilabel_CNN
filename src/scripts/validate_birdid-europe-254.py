@@ -11,7 +11,7 @@ from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_
 
 import albumentations as A
 
-device = "cuda:2"
+device = "cuda"
 model_filepath = (
     "data/torchserve-models/raw/birdId-europe-254-2103/birdId-europe-254-2103.pt"
 )

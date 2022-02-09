@@ -4,7 +4,10 @@ from torchmetrics import Accuracy, AveragePrecision, F1, AUC
 from sklearn.metrics import label_ranking_average_precision_score
 from tools.tensor_helpers import pool_by_segments
 
+
 class BaseBirdDetector(pl.LightningModule):
+    isLogitOutput = True
+
     def __init__(
         self,
         num_target_classes: int,
@@ -27,7 +30,7 @@ class BaseBirdDetector(pl.LightningModule):
         self.scheduler_type = scheduler_type
         self.cosine_annealing_lr_t_max = cosine_annealing_lr_t_max
         self.num_classes = num_target_classes
-        self.isLogitOutput = True
+
         # init class metrics
         self.Accuracy = Accuracy(dist_sync_on_step=True, num_classes=self.num_classes)
         self.F1 = F1(dist_sync_on_step=True, num_classes=self.num_classes)
@@ -43,27 +46,22 @@ class BaseBirdDetector(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
 
         x, classes, segment_indices = batch
-        
-
 
         preds = self(x)
-        # pool segments 
-        classes, _ = pool_by_segments(classes,segment_indices)
-        preds , _ = pool_by_segments(preds,segment_indices,pooling_method="max")
+        # pool segments
+        classes, _ = pool_by_segments(classes, segment_indices)
+        preds, _ = pool_by_segments(preds, segment_indices, pooling_method="max")
         target = classes.type(torch.int)
 
-        
         preds_prob = 0
         preds_logit = 0
-        
-        
+
         if self.isLogitOutput:
             preds_prob = torch.sigmoid(preds)
             preds_logit = preds
         else:
             preds_prob = preds
             preds_logit = torch.logit(preds)
-
 
         loss = self.Criterion(preds, classes)
 
@@ -111,7 +109,7 @@ class BaseBirdDetector(pl.LightningModule):
         )
         self.log("val_f1", f1, prog_bar=True, sync_dist=True)
 
-        #self.log("val_auc", auc, prog_bar=True, sync_dist=True)
+        # self.log("val_auc", auc, prog_bar=True, sync_dist=True)
 
         # Log metrics against epochs in tensorboard ()
         # self.logger.experiment.add_scalar("epoch_val_loss", avg_loss, self.current_epoch)
@@ -132,7 +130,7 @@ class BaseBirdDetector(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         # Here we just reuse the validation_step for testing
-  
+
         return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):

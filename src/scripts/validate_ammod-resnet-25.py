@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+from torch.utils import data
+
 # from data_module.ColorSpecAmmodMultiLabelModule import ColorSpecAmmodMultiLabelModule as DataModule
 from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule as DataModule
 from tools.RunBaseTorchScriptModel import RunBaseTorchScriptModel
@@ -30,6 +32,7 @@ def validate(config_filepath, model_filepath):
                 }
                 for segment in data_set.segments
             ]
+
             class_list = [key for key in data_module.class_dict]
             self.batch_end_logger = ResultLogger(
                 data_list,
@@ -46,6 +49,10 @@ def validate(config_filepath, model_filepath):
             self.batch_end_logger.log_batch(
                 prediction, ground_truth, segment_indices, batch_index
             )
+
+        def validation_end(self, metrics_dict):
+            super().validation_end(self, metrics_dict)
+            self.logger.validation_end(metrics_dict)
 
         def run_end(self):
             self.batch_end_logger.write_to_json()

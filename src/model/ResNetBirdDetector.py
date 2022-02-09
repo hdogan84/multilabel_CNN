@@ -4,6 +4,7 @@ import torchvision.models as models
 from torchmetrics.functional import accuracy, average_precision
 from model.BaseBirdDetector import BaseBirdDetector
 
+
 class ResNetBirdDetector(BaseBirdDetector):
     def define_model(self):
 
@@ -14,11 +15,11 @@ class ResNetBirdDetector(BaseBirdDetector):
         )
         self.model.fc = nn.Linear(2048, self.num_classes)
         self.sigm = nn.Sigmoid()
-        self.Criterion = nn.BCELoss()
-        self.isLogitOutput = False
+        self.Criterion = nn.BCEWithLogitsLoss()
+        self.isLogitOutput = True
 
     def forward(self, x):
-        x = self.sigm(self.model(x))
+        x = self.model(x)
         return x
 
     def training_step(self, batch, batch_idx):

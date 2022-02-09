@@ -221,10 +221,11 @@ class MultiLabelAudioSet(Dataset):
         return result
 
     def __getitem__(self, index):
-        debug("Get item index: {}".format(index))
         segment = self.segments[index]
         annotation_interval = segment["annotation_interval"]
         start_time = segment["start_time"]
+        filepath = annotation_interval["filepath"]
+
         if self.is_validation is False:
             start_time += random() * self.config.data.segment_duration
 
@@ -234,8 +235,6 @@ class MultiLabelAudioSet(Dataset):
         )
 
         class_tensor = self.__get_class_tensor__(annotation_interval, segment_parts)
-
-        filepath = annotation_interval["filepath"]
 
         # print("get item channel: {}".format(self.data_rows[index][5]))
         audio_data = None
