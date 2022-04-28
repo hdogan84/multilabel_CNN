@@ -7,7 +7,7 @@ import pandas as pd
 
 from dataset.MultiLabelAudioSet import MultiLabelAudioSet
 from pathlib import Path
-from pytorch_lightning.metrics.utils import to_onehot
+from torchmetrics.utilities.data import to_onehot
 
 
 def filter_none_values(batch):
