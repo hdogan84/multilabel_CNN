@@ -43,7 +43,7 @@ class MultiLabelAudioSet(Dataset):
         self.is_validation = is_validation
         self.validation_step = validation_step
         self.annotation_interval_dict = {}
-        annotation_interval_id = 0
+        annotation_interval_id = -1
         for _, row in data.iterrows():
 
             if row["class_id"] == "annotation_interval":
@@ -59,14 +59,25 @@ class MultiLabelAudioSet(Dataset):
                     "events": [],
                 }
             else:
-                self.annotation_interval_dict[annotation_interval_id]["events"].append(
-                    {
-                        "class_tensor": class_dict[row["class_id"]],
-                        "start_time": float(row["start_time"]),
-                        "end_time": float(row["end_time"]),
-                        "type": row["type"],
-                    }
-                )
+                if row["class_id"] in self.class_dict.keys():
+                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
+                        {
+                            "class_tensor": class_dict[row["class_id"]],
+                            "start_time": float(row["start_time"]),
+                            "end_time": float(row["end_time"]),
+                            "type": row["type"],
+                        }
+                    )
+                else:
+                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
+                        {
+                            "class_tensor": torch.zeros(len(self.class_dict)),
+                            "start_time": float(row["start_time"]),
+                            "end_time": float(row["end_time"]),
+                            "type": row["type"],
+                        }
+                    )
+
 
         # create  segments list of annoations intervals
         self.segments = []
@@ -84,6 +95,7 @@ class MultiLabelAudioSet(Dataset):
             )
             # calculate how many segments can be in the annotation intervall
             # ceil means last one is may be longer then the annotation_intervall
+            #print(annotation_interval)
             segment_count = ceil(
                 (annotation_interval["end_time"] - annotation_interval["start_time"])
                 / segment_step
@@ -246,21 +258,22 @@ class MultiLabelAudioSet(Dataset):
                 self.config.data.segment_duration,
                 self.config.audio_loading.sample_rate,
                 channel_mixing_strategy=self.config.audio_loading.channel_mixing_strategy,
-            )
+            )  
         except Exception as error:
             print(error)
             return None
         debug("Done reading index {}".format(index))
-        augmented_signal, y = audio_data = (
+
+        augmented_signal, y = (
             self.transform_audio(
                 samples=audio_data,
                 sample_rate=self.config.audio_loading.sample_rate,
                 y=class_tensor,
             )
-            if self.transform_audio is not None
-            else (audio_data, class_tensor)
+            if self.transform_audio is not None else (audio_data, class_tensor)
         )
         debug("Done signal augmenting index {}".format(index))
+        
         mel_spec = get_mel_spec(
             augmented_signal,
             self.config.audio_loading.fft_size_in_samples,
