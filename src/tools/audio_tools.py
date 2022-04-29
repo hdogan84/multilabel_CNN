@@ -6,7 +6,7 @@ import numpy as np
 import random
 import librosa
 import soundfile as sf
-from scipy.signal import butter, sosfilt
+from scipy.signal import butter, sosfilt, stft
 from enum import Enum
 import logging
 
@@ -155,6 +155,12 @@ def get_mel_spec(
     mel_start_freq=20.0,
     mel_end_freq=16000.0,
 ):
+    if np.isfinite(audio_data).all() is False:
+        raise Exception(
+            "Error: Audio content not finite {}".format(source_file_path.as_posix())
+        )
+        return
+
     mel_spec = librosa.feature.melspectrogram(
         y=audio_data,
         sr=sample_rate,
@@ -163,11 +169,17 @@ def get_mel_spec(
         n_mels=num_of_mel_bands,
         fmin=mel_start_freq,
         fmax=mel_end_freq,
+        #power=2.0,
         power=2.0,
     )
 
     # Convert power spec to dB scale (compute dB relative to peak power)
     mel_spec = librosa.power_to_db(mel_spec, ref=np.max, top_db=100)
+    # mel_spec = librosa.power_to_db(mel_spec, ref=np.mean, top_db=100)
+    # mel_spec_temp=mel_spec[abs(mel_spec)>0]
+    # mel_spec[mel_spec==0]=np.min(mel_spec_temp)
+    # mel_spec=20*np.log(mel_spec/0.00002)
+    # mel_spec[mel_spec<-70]=-70 
 
     # Flip spectrum vertically (only for better visialization, low freq. at bottom)
     mel_spec = mel_spec[::-1, ...]
