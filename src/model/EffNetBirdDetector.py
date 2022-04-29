@@ -1,4 +1,3 @@
-from pytorch_lightning.metrics.functional.classification import get_num_classes
 import torch
 from torch import nn
 from torch import tensor
@@ -10,7 +9,6 @@ from torchvision import transforms
 import pytorch_lightning as pl
 import torchvision.models as models
 from sklearn.metrics import label_ranking_average_precision_score
-from pytorch_lightning.metrics.utils import to_onehot
 from model.BaseBirdDetector import BaseBirdDetector
 
 from torchmetrics.functional import accuracy, average_precision, f1
