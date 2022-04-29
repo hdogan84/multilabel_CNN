@@ -99,7 +99,7 @@ class BaseBirdDetector(pl.LightningModule):
         )
         self.log("val_f1", f1, prog_bar=True, sync_dist=True)
 
-        self.log("val_auc", auc, prog_bar=True, sync_dist=True)
+        # self.log("val_auc", auc, prog_bar=True, sync_dist=True)
 
         # Log metrics against epochs in tensorboard ()
         # self.logger.experiment.add_scalar("epoch_val_loss", avg_loss, self.current_epoch)
