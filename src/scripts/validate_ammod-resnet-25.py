@@ -50,9 +50,9 @@ def validate(config_filepath, model_filepath):
                 prediction, ground_truth, segment_indices, batch_index
             )
 
-        def validation_end(self, metrics_dict):
-            super().validation_end(self, metrics_dict)
-            self.logger.validation_end(metrics_dict)
+        # def validation_end(self, metrics_dict):
+        #     super().validation_end(self, metrics_dict)
+        #     self.logger.validation_end(metrics_dict)
 
         def run_end(self):
             self.batch_end_logger.write_to_json()
