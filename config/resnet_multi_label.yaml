@@ -23,7 +23,7 @@ system:
   num_workers: 10
   random_seed: 236742
   deterministic: True
-  max_epochs: 1
+  max_epochs: 80
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
@@ -64,7 +64,7 @@ augmentation:
       #"add_background_noise_from_csv",
       "add_class_signal",
       #"add_pink_noise_snr",
-      "volume_control",
+      #"volume_control",
       "frequency_mask",
       "time_mask",
       # "time_stretch",
