@@ -1,13 +1,38 @@
 
-# Requirements
-USE: Docker image from kaggle
-gcr.io/kaggle-gpu-images/python
+# Project Structure
+## root level
+```bash
+* build # ouput folder of script to build torchserver models
+* config # contains all config files for training an validation scripts
+* data # contains linked to data folders
+* logs # folder contains all experiment logs an created checkpoints
+* src # src folder
+* torchserve # fodlder of torchserve runtime data an docker-compose file for development
+```
+## src folder
+```bash
+* augmentation # augementation function
+** image # all augementations on the image(spectrogram) based on https://github.com/albumentations-team/albumentations
+** signal # all augementations on the waveform based on audiomentations https://github.com/iver56/audiomentations
+* data_module # pytorch_lightning LightningDataModules 
+* dataset #  torch Datasets
+* model # models based on pl.LightningModule. Use BaseBirdDetector as Partent class for basic logging
+* scripts # scripts for different purpusis, building torchserve modles, validate models and create predicttion json files
+* tools # helper modules 
+* torchserve_handler # torchserver model handlers for production
+```
 
-pip install audiomentations
+# Best Practices
+* New Experiment new config file
+* *Better create a new datamodule/dataset/model than create to much if conditions in one Class
+
+
+
+
 # List of audiomentations
 ## Waveform transforms
 AddBackgroundNoise
-AddGaussianNoise
+AddGaussianNoise/
 AddGaussianSNR
 AddImpulseResponse
 AddShortNoises
@@ -55,9 +80,6 @@ samplevec, class_ids_vec
 * min_event_overlap_time
 * wrap_around_probability
 
-# TODO 
--Script starting docker
-
 # Build classficator for production
 1. Run Build script ./src/build.py
 2. copy mar file in build folder to your torchserver an activate it
@@ -67,14 +89,6 @@ samplevec, class_ids_vec
 # got to torchserve folder an run
 docker-compose up
 ```
-
-
-# export validation matrix
-matrix
-channel x segment x prediciton
-
-channel x segment x ground truth
-
 
 ## web-service <- classticator api
 ```js
