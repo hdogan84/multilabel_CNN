@@ -24,34 +24,36 @@
 
 # Best Practices
 * New Experiment new config file
-* *Better create a new datamodule/dataset/model than create to much if conditions in one Class
+* Better create a new datamodule/dataset/model than create to much if conditions in one Class
+* If you developing new stuff use fast_dev_run=True options of Trainer, speeds up whole training loop
+* 
 
 
 
 
 # List of audiomentations
 ## Waveform transforms
-AddBackgroundNoise
-AddGaussianNoise/
-AddGaussianSNR
-AddImpulseResponse
-AddShortNoises
-ClippingDistortion
-FrequencyMask
-Gain
-Mp3Compression
-LoudnessNormalization
-Normalize
-PitchShift
-PolarityInversion
-Resample
-Shift
-TimeMask
-TimeStretch
-Trim
+* AddBackgroundNoise
+* AddGaussianNoise/
+* AddGaussianSNR
+* AddImpulseResponse
+* AddShortNoises
+* ClippingDistortion 
+* FrequencyMask
+* Gain
+* Mp3Compression
+* LoudnessNormalization
+* Normalize
+* PitchShift
+* PolarityInversion
+* Resample
+* Shift
+* TimeMask
+* TimeStretch
+* Trim
 ## Spectrogram transforms
-SpecChannelShuffle
-SpecFrequencyMask
+* SpecChannelShuffle
+* SpecFrequencyMask
 
 # DataSet multi label
 1. file_dict (key: file_id)
