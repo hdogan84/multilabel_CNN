@@ -3,6 +3,7 @@ from pytorch_lightning import Trainer, LightningModule
 from pathlib import Path
 from tools.config import save_to_yaml, as_html
 from shutil import copyfile
+from pytorch_lightning.loggers.base import DummyLogger
 
 
 class LogFirstBatchAsImage(Callback):
@@ -36,6 +37,9 @@ class SaveFileToLogs(Callback):
         self.file_name = file_name
 
     def on_fit_start(self, trainer: Trainer, pl_module: LightningModule):
+        if isinstance(trainer.logger, DummyLogger):
+            # on fast dev run do nothing
+            return
         target_file = Path(trainer.logger.log_dir).joinpath(self.file_name)
         Path(trainer.logger.log_dir).mkdir(parents=True, exist_ok=True)
         copyfile(
