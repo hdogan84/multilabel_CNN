@@ -65,11 +65,18 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
     # dic = {"brand": "Ford", "model": "Mustang", "year": 1964}
 
     # Setup Checkpoints
-    checkpoint_callback = ModelCheckpoint(
+    checkpoint_callback_f1 = ModelCheckpoint(
         monitor="val_f1",
         save_top_k=3,
         mode="max",
-        filename="{epoch:002d}-{val_f1:.3f}-{val_accuracy:.3f}",
+        filename="{epoch:002d}-{val_f1:.3f}-{val_ap:.3f}",
+        save_last=True,
+    )
+    checkpoint_callback_ap = ModelCheckpoint(
+        monitor="val_ap",
+        save_top_k=3,
+        mode="max",
+        filename="{epoch:002d}-{val_ap:.3f}-{val_f1:.3f}",
         save_last=True,
     )
 
@@ -83,7 +90,8 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
         log_every_n_steps=config.system.log_every_n_steps,
         deterministic=config.system.deterministic,
         callbacks=[
-            checkpoint_callback,
+            checkpoint_callback_f1,
+            checkpoint_callback_ap,
             SaveFileToLogs(config_filepath, "config.yaml"),
             SaveFileToLogs(config.data.class_list_filepath, "class_list.csv"),
             LogFirstBatchAsImage(mean=0.456, std=0.224),
@@ -94,13 +102,13 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
         auto_select_gpus=config.system.auto_select_gpus,
         num_sanity_val_steps=0,
         plugins=DDPPlugin(find_unused_parameters=False),
-        # fast_dev_run=True  # config.system.fast_dev_run,
+        fast_dev_run=True,  # config.system.fast_dev_run,
         # Debugging Settings
         # profiler="simple",
         # precision=16,
         # auto_scale_batch_size="binsearch",
-        # limit_train_batches=0.01,
-        # limit_val_batches=0.1,
+        limit_train_batches=0.01,
+        limit_val_batches=0.2,
         # overfit_batches=10,
     )
     # trainer.tune(model, data_module)#

@@ -103,12 +103,13 @@ class BaseBirdDetector(pl.LightningModule):
         # auc = metrics["auc"]
 
         # Log metrics to terminal
-        self.log("val_accuracy", accuracy, prog_bar=True, sync_dist=True)
+
         self.log(
-            "val_average_precision", average_precision, prog_bar=True, sync_dist=True,
+            "val_ap", average_precision, prog_bar=True, sync_dist=True,
         )
         self.log("val_f1", f1, prog_bar=True, sync_dist=True)
 
+        self.log("val_acc", accuracy, prog_bar=True, sync_dist=True)
         # self.log("val_auc", auc, prog_bar=True, sync_dist=True)
 
         # Log metrics against epochs in tensorboard ()
