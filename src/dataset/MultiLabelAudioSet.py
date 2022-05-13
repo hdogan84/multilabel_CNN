@@ -258,50 +258,6 @@ class MultiLabelAudioSet(Dataset):
                 self.config.data.segment_duration,
                 self.config.audio_loading.sample_rate,
                 channel_mixing_strategy=self.config.audio_loading.channel_mixing_strategy,
-<<<<<<< HEAD
-            )  
-        except Exception as error:
-            print(error)
-            return None
-        debug("Done reading index {}".format(index))
-
-        augmented_signal, y = (
-            self.transform_audio(
-                samples=audio_data,
-                sample_rate=self.config.audio_loading.sample_rate,
-                y=class_tensor,
-            )
-            if self.transform_audio is not None else (audio_data, class_tensor)
-        )
-        debug("Done signal augmenting index {}".format(index))
-        
-        mel_spec = get_mel_spec(
-            augmented_signal,
-            self.config.audio_loading.fft_size_in_samples,
-            self.config.audio_loading.fft_hop_size_in_samples,
-            self.config.audio_loading.sample_rate,
-            num_of_mel_bands=self.config.audio_loading.num_of_mel_bands,
-            mel_start_freq=self.config.audio_loading.mel_start_freq,
-            mel_end_freq=self.config.audio_loading.mel_end_freq,
-        )
-        debug("Done got mel spec index {}".format(index))
-        # format mel_spec to image with one channel
-        h, w = mel_spec.shape
-        image_data = np.empty((h, w, 1), dtype=np.uint8)
-        image_data[:, :, 0] = mel_spec
-        # image_data[:, :, 1] = mel_spec
-        # image_data[:, :, 2] = mel_spec
-
-        augmented_image_data = (
-            self.transform_image(image=image_data)["image"]
-            if self.transform_image is not None
-            else image_data
-        )
-        debug("Done image augmenting index {}".format(index))
-        transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean=0.456, std=0.224),]
-        )
-=======
                 backend=self.config.audio_loading.backend,
                 padding_strategy=Padding.SILENCE
                 if self.is_validation
@@ -368,7 +324,6 @@ class MultiLabelAudioSet(Dataset):
             tensor_list.append(tensor)
             y_list.append(y)
             index_list.append(torch.tensor(index))
->>>>>>> origin
 
         tensor = torch.stack(tensor_list)
         # print(tensor.shape)

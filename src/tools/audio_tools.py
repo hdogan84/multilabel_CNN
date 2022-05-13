@@ -260,18 +260,9 @@ def get_mel_spec(
     mel_start_freq=20.0,
     mel_end_freq=16000.0,
 ):
-<<<<<<< HEAD
-    if np.isfinite(audio_data).all() is False:
-        raise Exception(
-            "Error: Audio content not finite {}".format(source_file_path.as_posix())
-        )
-        return
-
-=======
     # i hate python an it's libaries mono signal is not allowed ot be shape(1,:) has to be ndim=1
     if audio_data.shape[0] == 1:
         audio_data = audio_data[0, :]
->>>>>>> origin
     mel_spec = librosa.feature.melspectrogram(
         y=audio_data,
         sr=sample_rate,
