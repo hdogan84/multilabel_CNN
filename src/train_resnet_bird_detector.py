@@ -102,7 +102,7 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
         auto_select_gpus=config.system.auto_select_gpus,
         num_sanity_val_steps=0,
         plugins=DDPPlugin(find_unused_parameters=False),
-        fast_dev_run=True,  # config.system.fast_dev_run,
+        fast_dev_run=config.system.fast_dev_run,
         # Debugging Settings
         # profiler="simple",
         # precision=16,
