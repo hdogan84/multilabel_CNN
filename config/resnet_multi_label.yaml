@@ -8,22 +8,22 @@ data:
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
   test_list_filepath: "./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-val.csv"
-  data_root_path: "/home/tsa/projects/bewr/ammod-bird-detector/data/local/ammod2021"
+  data_root_path: "./data/local/ammod2021"
   batch_size: 120
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "220418_AMMOD_25classes_resnet_logging"
+  experiment_name: "220513_AMMOD_25classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 5
-  gpus: [0, 1, 2]
+  gpus: [0]
   #gpus: 0
   num_workers: 20
   random_seed: 236742
   deterministic: True
-  max_epochs: 80
+  max_epochs: 20
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
