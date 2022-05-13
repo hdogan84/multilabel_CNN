@@ -2,7 +2,7 @@
     "python.pythonPath": "/home/tsa/anaconda3/envs/ammod202105/bin/python",
     "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": false,
-    "python.linting.enabled": true,
+    "python.linting.enabled": false,
     "python.formatting.provider": "black",
     "python.testing.pytestArgs": [
         "src"

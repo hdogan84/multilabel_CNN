@@ -29,7 +29,8 @@ class AddSameClassSignal(BaseWaveformTransform):
         max_ssr=3,
         max_n=3,
         padding_strategy="wrap_around",
-        channel_mixing_strategy="take_one",
+        backend = 'soundfile',
+        channel_mixing_strategy="to_mono",
         data_path=None,
         data_list_filepath=None,
         class_list_filepath=None,
@@ -54,6 +55,7 @@ class AddSameClassSignal(BaseWaveformTransform):
         self.max_ssr = max_ssr
         self.max_n = max_n
         self.padding_strategy = padding_strategy
+        self.backend = backend
         self.channel_mixing_strategy = channel_mixing_strategy
         dataframe = pd.read_csv(
             data_list_filepath, delimiter=delimiter, quotechar=quotechar
@@ -165,7 +167,9 @@ class AddSameClassSignal(BaseWaveformTransform):
                 audio_data = audio_data * 10 ** (self.parameters["ssr"] / 20)
                 result = result + audio_data
             except Exception as error:
-                print(error)
+                #print(error)
+                return result, y
+
 
         return result, y
 

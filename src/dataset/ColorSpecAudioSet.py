@@ -6,15 +6,19 @@ from pathlib import Path
 from torchvision import transforms
 from logging import debug, warn
 from random import random
+from tools.color_spectogram.separate_sources import separate_sources
 
 # import simpleaudio as sa
 from math import ceil
 import numpy as np
 
-from tools.audio_tools import read_audio_parts, get_mel_spec, Padding
+from tools.audio_tools import (
+    read_audio_parts,
+    get_mel_spec,
+)
 
 
-class MultiLabelAudioSet(Dataset):
+class ColorSpecAudioSet(Dataset):
     def __init__(
         self,
         config,
@@ -23,6 +27,7 @@ class MultiLabelAudioSet(Dataset):
         transform_image: Callable = None,
         transform_signal: Callable = None,
         is_validation: bool = False,
+        validation_step: float = 1,
     ):
         """
         Args:
@@ -37,8 +42,9 @@ class MultiLabelAudioSet(Dataset):
         self.transform_image = transform_image
         self.data = data
         self.is_validation = is_validation
+        self.validation_step = validation_step
         self.annotation_interval_dict = {}
-        annotation_interval_id = -1
+        annotation_interval_id = 0
         for _, row in data.iterrows():
 
             if row["class_id"] == "annotation_interval":
@@ -54,25 +60,14 @@ class MultiLabelAudioSet(Dataset):
                     "events": [],
                 }
             else:
-                if row["class_id"] in self.class_dict.keys():
-                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
-                        {
-                            "class_tensor": class_dict[row["class_id"]],
-                            "start_time": float(row["start_time"]),
-                            "end_time": float(row["end_time"]),
-                            "type": row["type"],
-                        }
-                    )
-                else:
-                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
-                        {
-                            "class_tensor": torch.zeros(len(self.class_dict)),
-                            "start_time": float(row["start_time"]),
-                            "end_time": float(row["end_time"]),
-                            "type": row["type"],
-                        }
-                    )
-
+                self.annotation_interval_dict[annotation_interval_id]["events"].append(
+                    {
+                        "class_tensor": class_dict[row["class_id"]],
+                        "start_time": float(row["start_time"]),
+                        "end_time": float(row["end_time"]),
+                        "type": row["type"],
+                    }
+                )
 
         # create  segments list of annoations intervals
         self.segments = []
@@ -90,19 +85,10 @@ class MultiLabelAudioSet(Dataset):
             )
             # calculate how many segments can be in the annotation intervall
             # ceil means last one is may be longer then the annotation_intervall
-            #print(annotation_interval)
             segment_count = ceil(
-                (
-                    annotation_interval["end_time"]
-                    - (
-                        annotation_interval["start_time"]
-                        + self.config.data.segment_duration
-                    )
-                )
+                (annotation_interval["end_time"] - annotation_interval["start_time"])
                 / segment_step
-                + 1
             )
-
             for i in range(segment_count):
 
                 start_time = annotation_interval["start_time"] + i * segment_step
@@ -118,6 +104,7 @@ class MultiLabelAudioSet(Dataset):
                         "start_time": start_time,
                         "annotation_interval": annotation_interval,
                         "end_time": end_time,
+                        "channel": "to_mono",  # TODO: other multichannel handling
                     }
                 )
 
@@ -126,6 +113,7 @@ class MultiLabelAudioSet(Dataset):
         return torch.zeros(x.size())
 
     def __len__(self):
+        tmp = len(self.segments)
         return len(self.segments)
 
     def __mapToClassIndex__(self, index):
@@ -233,11 +221,11 @@ class MultiLabelAudioSet(Dataset):
         return result
 
     def __getitem__(self, index):
+        debug("Get item index: {}".format(index))
+
         segment = self.segments[index]
         annotation_interval = segment["annotation_interval"]
         start_time = segment["start_time"]
-        filepath = annotation_interval["filepath"]
-
         if self.is_validation is False:
             start_time += random() * self.config.data.segment_duration
 
@@ -248,87 +236,49 @@ class MultiLabelAudioSet(Dataset):
 
         class_tensor = self.__get_class_tensor__(annotation_interval, segment_parts)
 
+        filepath = annotation_interval["filepath"]
+
         # print("get item channel: {}".format(self.data_rows[index][5]))
         audio_data = None
+        
+        filename = "{file_id}-{start_time}".format(
+            file_id=self.segments[index]["annotation_interval"]["file_id"],
+            start_time=self.segments[index]["start_time"],
+        )
+        print(filename)
+        data_filepath = Path("./out/{}".format(filename))
+        if data_filepath.exists():
+            return torch.load(data_filepath)
         try:
-            # print("Read audio parts filepath: {} in mode {}".format(filepath,self.config.audio_loading.channel_mixing_strategy))
+
+            debug("Read audio parts filepath: {}".format(filepath))
+        
             audio_data = read_audio_parts(
                 filepath,
                 segment_parts,
                 self.config.data.segment_duration,
                 self.config.audio_loading.sample_rate,
                 channel_mixing_strategy=self.config.audio_loading.channel_mixing_strategy,
-<<<<<<< HEAD
-            )  
-        except Exception as error:
-            print(error)
-            return None
-        debug("Done reading index {}".format(index))
-
-        augmented_signal, y = (
-            self.transform_audio(
-                samples=audio_data,
-                sample_rate=self.config.audio_loading.sample_rate,
-                y=class_tensor,
-            )
-            if self.transform_audio is not None else (audio_data, class_tensor)
-        )
-        debug("Done signal augmenting index {}".format(index))
-        
-        mel_spec = get_mel_spec(
-            augmented_signal,
-            self.config.audio_loading.fft_size_in_samples,
-            self.config.audio_loading.fft_hop_size_in_samples,
-            self.config.audio_loading.sample_rate,
-            num_of_mel_bands=self.config.audio_loading.num_of_mel_bands,
-            mel_start_freq=self.config.audio_loading.mel_start_freq,
-            mel_end_freq=self.config.audio_loading.mel_end_freq,
-        )
-        debug("Done got mel spec index {}".format(index))
-        # format mel_spec to image with one channel
-        h, w = mel_spec.shape
-        image_data = np.empty((h, w, 1), dtype=np.uint8)
-        image_data[:, :, 0] = mel_spec
-        # image_data[:, :, 1] = mel_spec
-        # image_data[:, :, 2] = mel_spec
-
-        augmented_image_data = (
-            self.transform_image(image=image_data)["image"]
-            if self.transform_image is not None
-            else image_data
-        )
-        debug("Done image augmenting index {}".format(index))
-        transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean=0.456, std=0.224),]
-        )
-=======
                 backend=self.config.audio_loading.backend,
-                padding_strategy=Padding.SILENCE
-                if self.is_validation
-                else self.config.audio_loading.padding_strategy,
-                randomize_audio_segment=False if self.is_validation else True,
             )
         except Exception as error:
             print(error)
             return None
-
-        # print("Done reading index {} shape {}".format(index,audio_data[0,:]))
 
         tensor_list = []
         y_list = []
         index_list = []
+        # handle channels as clusters
+        # clustered_data = audio_data
+        # print("start cluster")
+        clustered_data = separate_sources(
+            audio_data, self.config.audio_loading.sample_rate,transpose=False
+        )
+        merged_data = np.concatenate((clustered_data,audio_data),axis=0)
 
-        for channel in range(audio_data.shape[0]):
-            augmented_signal, y = (
-                self.transform_signal(
-                    samples=audio_data[channel, :],
-                    sample_rate=self.config.audio_loading.sample_rate,
-                    y=class_tensor,
-                )
-                if self.transform_signal is not None
-                else (audio_data[channel, :], class_tensor)
-            )
-            debug("Done signal augmenting index {} shape".format(index))
+        for cluster_index in range(merged_data.shape[1]):
+
+            augmented_signal, y = (clustered_data[:, cluster_index], class_tensor)
             mel_spec = get_mel_spec(
                 augmented_signal,
                 self.config.audio_loading.fft_size_in_samples,
@@ -338,42 +288,32 @@ class MultiLabelAudioSet(Dataset):
                 mel_start_freq=self.config.audio_loading.mel_start_freq,
                 mel_end_freq=self.config.audio_loading.mel_end_freq,
             )
-            debug("Done got mel spec index {}".format(index))
+            # debug("Done got mel spec index {}".format(index))
             # format mel_spec to image with one channel
             h, w = mel_spec.shape
             image_data = np.empty((h, w, 1), dtype=np.uint8)
-            if self.config.audio_loading.use_color_channels == "use_all":
-                image_data = np.empty((h, w, 3), dtype=np.uint8)
-                image_data[:, :, 1] = mel_spec
-                image_data[:, :, 2] = mel_spec
             image_data[:, :, 0] = mel_spec
+            # image_data[:, :, 1] = mel_spec
+            # image_data[:, :, 2] = mel_spec
 
             augmented_image_data = (
                 self.transform_image(image=image_data)["image"]
                 if self.transform_image is not None
                 else image_data
             )
-            debug("Done image augmenting index {}".format(index))
+            # debug("Done image augmenting index {}".format(index))
             transform = transforms.Compose(
-                [
-                    transforms.ToTensor(),
-                    transforms.Normalize(
-                        mean=self.config.audio_loading.normalize_mean,
-                        std=self.config.audio_loading.normalize_std,
-                    ),
-                ]
+                [transforms.ToTensor(), transforms.Normalize(mean=0.456, std=0.224),]
             )
             tensor = transform(augmented_image_data)
-
             tensor_list.append(tensor)
             y_list.append(y)
             index_list.append(torch.tensor(index))
->>>>>>> origin
 
-        tensor = torch.stack(tensor_list)
-        # print(tensor.shape)
-        y = torch.stack(y_list)
-        index = torch.stack(index_list)
         # plt.imshow(augmented_image_data, interpolation="nearest")
         # plt.show()
+        tensor = torch.stack(tensor_list)
+        y = torch.stack(y_list)
+        index = torch.stack(index_list)
+        # print("end cluster")
         return tensor, y, index

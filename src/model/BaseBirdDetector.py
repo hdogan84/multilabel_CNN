@@ -2,9 +2,12 @@ import torch
 import pytorch_lightning as pl
 from torchmetrics import Accuracy, AveragePrecision, F1, AUC
 from sklearn.metrics import label_ranking_average_precision_score
+from tools.tensor_helpers import pool_by_segments
 
 
 class BaseBirdDetector(pl.LightningModule):
+    isLogitOutput = True
+
     def __init__(
         self,
         num_target_classes: int,
@@ -27,13 +30,14 @@ class BaseBirdDetector(pl.LightningModule):
         self.scheduler_type = scheduler_type
         self.cosine_annealing_lr_t_max = cosine_annealing_lr_t_max
         self.num_classes = num_target_classes
-        self.isLogitOutput = True
+
         # init class metrics
         self.Accuracy = Accuracy(dist_sync_on_step=True, num_classes=self.num_classes)
         self.F1 = F1(dist_sync_on_step=True, num_classes=self.num_classes)
         self.AveragePrecision = AveragePrecision(dist_sync_on_step=True)
         self.AUC = AUC(compute_on_step=True, dist_sync_on_step=True)
-
+        # validation type
+        self.channel_wise_validation = True
         self.define_model()
 
     def define_model(self):
@@ -42,11 +46,16 @@ class BaseBirdDetector(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
 
         x, classes, segment_indices = batch
-        target = classes.type(torch.int)
 
         preds = self(x)
+        # pool segments
+        classes, _ = pool_by_segments(classes, segment_indices)
+        preds, _ = pool_by_segments(preds, segment_indices, pooling_method="max")
+        target = classes.type(torch.int)
+
         preds_prob = 0
         preds_logit = 0
+
         if self.isLogitOutput:
             preds_prob = torch.sigmoid(preds)
             preds_logit = preds
@@ -74,6 +83,7 @@ class BaseBirdDetector(pl.LightningModule):
     def cal_metrics(self, outputs):
         preds_all = torch.cat([x["preds"] for x in outputs])
         classes_all = torch.cat([x["classes"] for x in outputs])
+
         return {
             "accuracy": self.Accuracy.compute(),
             "average_precision": self.AveragePrecision.compute(),
@@ -93,12 +103,16 @@ class BaseBirdDetector(pl.LightningModule):
         # auc = metrics["auc"]
 
         # Log metrics to terminal
-        self.log("val_accuracy", accuracy, prog_bar=True, sync_dist=True)
+
         self.log(
-            "val_average_precision", average_precision, prog_bar=True, sync_dist=True,
+            "val_ap", average_precision, prog_bar=True, sync_dist=True,
         )
         self.log("val_f1", f1, prog_bar=True, sync_dist=True)
 
+<<<<<<< HEAD
+=======
+        self.log("val_acc", accuracy, prog_bar=True, sync_dist=True)
+>>>>>>> origin
         # self.log("val_auc", auc, prog_bar=True, sync_dist=True)
 
         # Log metrics against epochs in tensorboard ()
@@ -120,6 +134,7 @@ class BaseBirdDetector(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         # Here we just reuse the validation_step for testing
+
         return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):

@@ -1,0 +1,58 @@
+{
+    "folders": [
+		{
+			"path": "."
+		}
+	],
+    "settings": {
+        "python.analysis.extraPaths": [
+            "${workspaceFolder}/src"
+        ],
+        "terminal.integrated.env.linux": {
+            "PYTHONPATH": "${workspaceFolder}/src",
+        },
+        "python.linting.pylintArgs": [
+            "--init-hook",
+            "--disable=C0114", // (missing-module-docstring)
+            "--disable=C0115", // (missing-class-docstring)
+            "--disable=C0116", // (missing-function-docstring)
+        ],
+        "files.watcherExclude": {
+            "**/.git/objects/**": true,
+            "**/.git/subtree-cache/**": true,
+            "**/node_modules/*/**": true,
+            "**/logs/*/**": true,
+            "**/lightning_logs/*/**": true,
+            "**/build/*/**": true,
+            "**/.pytest_cache/*/**": true,
+            "**/data/*/**": true,
+            "**/torchserve/*/**": true
+        },
+        
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-vsliveshare.vsliveshare",
+            "ms-python.vscode-pylance",
+            "eamodio.gitlens",
+            "donjayamanne.githistory",
+            "grapecity.gc-excelviewer"
+        ]
+    },
+    "launch": {
+        // Use IntelliSense to learn about possible attributes.
+        // Hover to view descriptions of existing attributes.
+        // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python: Aktuelle Datei",
+                "type": "python",
+                "request": "launch",
+                "program": "${file}",
+                "console": "integratedTerminal"
+            }
+        ]
+    }
+}

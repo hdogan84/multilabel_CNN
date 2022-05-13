@@ -4,8 +4,8 @@ from pytorch_lightning.accelerators import accelerator
 from pytorch_lightning.callbacks import ModelCheckpoint
 import argparse
 from pathlib import Path
-from model.EffNetBirdDetector import EffNetBirdDetector
-from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule
+from model.ResNetBirdDetector import ResNetBirdDetector
+from data_module.ColorSpecAmmodMultiLabelModule import ColorSpecAmmodMultiLabelModule
 from pytorch_lightning import loggers as pl_loggers
 from augmentation.signal import ExtendedCompose as SignalCompose, create_signal_pipeline
 from tools.lighning_callbacks import (
@@ -14,12 +14,10 @@ from tools.lighning_callbacks import (
 )
 from pprint import pprint
 from logging import debug, warn
-import logging
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 import albumentations as A
 
-logging.basicConfig(level=logging.DEBUG)
 # nd without changing a single line of code, you could run on GPUs/TPUs
 # 8 GPUs
 # trainer = Trainer(max_epochs=1, gpus=8)
@@ -48,22 +46,23 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
             A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0, always_apply=False, p=0.1),
         ]
     )
-    data_module = AmmodMultiLabelModule(
+    data_module = ColorSpecAmmodMultiLabelModule(
         config,
         fit_transform_signal=fit_transform_signal,
         fit_transform_image=fit_transform_image,
     )
 
     if checkpoint_filepath is None:
-        model = EffNetBirdDetector(data_module.class_count, **config.optimizer)
+        model = ResNetBirdDetector(data_module.class_count, **config.optimizer)
     else:
         # LOAD CHECKPOINT
-        model = EffNetBirdDetector.load_from_checkpoint(
+        model = ResNetBirdDetector.load_from_checkpoint(
             checkpoint_filepath.as_posix(), **config.optimizer
         )
     tb_logger = pl_loggers.TensorBoardLogger(
         config.system.log_dir, name=config.system.experiment_name
     )
+    # dic = {"brand": "Ford", "model": "Mustang", "year": 1964}
 
     # Setup Checkpoints
     checkpoint_callback = ModelCheckpoint(
@@ -73,10 +72,11 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
         filename="{epoch:002d}-{val_f1:.3f}-{val_accuracy:.3f}",
         save_last=True,
     )
+
     pl.seed_everything(config.system.random_seed)
 
     trainer = pl.Trainer(
-        gpus=config.system.gpus,
+        gpus=[0],
         max_epochs=config.system.max_epochs,
         progress_bar_refresh_rate=config.system.log_every_n_steps,
         logger=tb_logger,
@@ -89,30 +89,27 @@ def start_train(config_filepath, checkpoint_filepath: Path = None, run_test=Fals
             LogFirstBatchAsImage(mean=0.456, std=0.224),
         ],
         check_val_every_n_epoch=config.validation.check_val_every_n_epoch,
+        # accelerator="ddp",
         resume_from_checkpoint=checkpoint_filepath,  # NNN
+        #auto_select_gpus=config.system.auto_select_gpus,
         num_sanity_val_steps=0,
-        accelerator="ddp"
-        # auto_select_gpus=config.system.auto_select_gpus,
-        # fast_dev_run=config.system.fast_dev_run,
+       
+        # fast_dev_run=True  # config.system.fast_dev_run,
         # Debugging Settings
         # profiler="simple",
         # precision=16,
         # auto_scale_batch_size="binsearch",
         # limit_train_batches=0.01,
-        # limit_val_batches=0.25,
+        # limit_val_batches=0.1,
         # overfit_batches=10,
     )
-    # trainer.tune(model, data_module)
-    if run_test:
-        if checkpoint_filepath is not None:
-            trainer.test(model, ckpt_path=checkpoint_filepath, datamodule=data_module)
-        else:
-            trainer.test(model, datamodule=data_module)
+    # trainer.tune(model, data_module)#
 
-        # trainer.test()
+    if checkpoint_filepath is not None:
+        trainer.test(model, ckpt_path=checkpoint_filepath, datamodule=data_module)
     else:
-        # run train loop
-        trainer.fit(model, data_module)
+        trainer.test(model, datamodule=data_module)
+
 
 
 if __name__ == "__main__":
@@ -122,7 +119,7 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        default="./config/effnet_multi_label.yaml",
+        default="./config/resnet_multi_label.yaml",
         help="config file for all settings",
     )
     parser.add_argument(

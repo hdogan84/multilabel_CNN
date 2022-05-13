@@ -28,3 +28,11 @@ def as_html(config) -> str:
         for values in section[1].items():
             lines.append("{} : {}".format(values[0], values[1]))
     return "<br>".join(lines)
+
+def load_class_list_from_index_to_name_json(filepath):
+    with open(filepath) as f:
+        class_dict = json.load(f)
+        class_list = list(range(0,len(class_dict.items())))
+        for key in class_dict:
+            class_list[int(key)] = class_dict[key]
+        return class_list

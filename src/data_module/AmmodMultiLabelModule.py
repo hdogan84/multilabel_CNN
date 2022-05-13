@@ -10,18 +10,17 @@ from pathlib import Path
 from torchmetrics.utilities.data import to_onehot
 
 
-def filter_none_values(batch):
-    batch = list(filter(lambda x: x is not None, batch))
-    return torch.utils.data.dataloader.default_collate(batch)
+from tools.collate_functions import filter_none_values, collate_channel_dimension
 
-
+def collate_fn(batch):
+    return collate_channel_dimension(filter_none_values(batch))
 class AmmodMultiLabelModule(LightningDataModule):
     def __init__(
         self,
         config,
-        fit_transform_audio: Callable = None,
+        fit_transform_signal: Callable = None,
         fit_transform_image: Callable = None,
-        val_transform_audio: Callable = None,
+        val_transform_signal: Callable = None,
         val_transform_image: Callable = None,
         *args,
         **kwargs,
@@ -64,9 +63,9 @@ class AmmodMultiLabelModule(LightningDataModule):
         self.batch_size = config.data.batch_size
 
         # create augmentation pipelines
-        self.fit_transform_audio = fit_transform_audio
+        self.fit_transform_signal = fit_transform_signal
         self.fit_transform_image = fit_transform_image
-        self.val_transform_audio = val_transform_audio
+        self.val_transform_signal = val_transform_signal
         self.val_transform_image = val_transform_image
 
         # create class id dictionary
@@ -108,14 +107,14 @@ class AmmodMultiLabelModule(LightningDataModule):
                 self.train_dataframe,
                 self.class_dict,
                 transform_image=self.fit_transform_image,
-                transform_audio=self.fit_transform_audio,
+                transform_signal=self.fit_transform_signal,
             )
             self.val_set = MultiLabelAudioSet(
                 self.config,
                 self.val_dataframe,
                 self.class_dict,
                 transform_image=self.val_transform_image,
-                transform_audio=self.val_transform_audio,
+                transform_signal=self.val_transform_signal,
                 is_validation=True,
             )
             print("Train set raw size: {}".format(len(self.train_set)))
@@ -126,11 +125,13 @@ class AmmodMultiLabelModule(LightningDataModule):
                 self.test_dataframe,
                 self.class_dict,
                 transform_image=self.val_transform_image,
-                transform_audio=self.val_transform_audio,
+                transform_signal=self.val_transform_signal,
                 is_validation=True,
             )
             print("Test set raw size: {}".format(len(self.test_set)))
         # Assign test dataset for use in dataloader(s)
+
+
 
     def train_dataloader(self):
         return DataLoader(
@@ -140,7 +141,7 @@ class AmmodMultiLabelModule(LightningDataModule):
             num_workers=self.num_workers,
             drop_last=True,
             pin_memory=True,
-            collate_fn=filter_none_values,
+            collate_fn=collate_fn,
         )
 
     def val_dataloader(self):
@@ -151,7 +152,7 @@ class AmmodMultiLabelModule(LightningDataModule):
             num_workers=self.num_workers,
             drop_last=False,
             pin_memory=True,
-            collate_fn=filter_none_values,
+            collate_fn=collate_fn,
         )
     def test_dataloader(self):
         return DataLoader(
@@ -161,5 +162,5 @@ class AmmodMultiLabelModule(LightningDataModule):
             num_workers=self.num_workers,
             drop_last=False,
             pin_memory=True,
-            collate_fn=filter_none_values,
+            collate_fn=collate_fn,
         )
