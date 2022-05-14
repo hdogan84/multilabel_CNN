@@ -131,7 +131,7 @@ if __name__ == "__main__":
         metavar="path",
         type=Path,
         nargs="?",
-        default="./config/resnet_multi_label.yaml",
+        default="./config/resnet_multi_label_hakan.yaml",
         help="config file for all settings",
     )
     parser.add_argument(
