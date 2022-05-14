@@ -29,7 +29,6 @@ class AddClassSignal(BaseWaveformTransform):
 
     def __init__(
         self,
-        call_probs: [1,1,1,1,1,1,1], # here length doesnt matter, but in config file  
         p=0.5,
         min_ssr=-40,
         max_ssr=3,
@@ -47,7 +46,7 @@ class AddClassSignal(BaseWaveformTransform):
         index_label=3,
         index_channels=6,
         delimiter=";",
-        quotechar="|", 
+        quotechar="|",
     ):
         """
         :max_n: how offten ad maximum the same class is added
@@ -60,7 +59,6 @@ class AddClassSignal(BaseWaveformTransform):
         super().__init__(p)
         self.min_ssr = min_ssr
         self.max_ssr = max_ssr
-        self.call_probs=call_probs
         self.max_n = max_n
         self.restriced_to_same_class = restriced_to_same_class
         if(backend is None):
@@ -164,8 +162,7 @@ class AddClassSignal(BaseWaveformTransform):
             else:
                 # get Random class files
                 keys = self.class_data_dict.keys()
-                random_class_id = np.random.choice(list(keys),p=self.call_probs/np.sum(self.call_probs))
-                #random_class_id = random.choice(list(keys))
+                random_class_id = random.choice(list(keys))
                 class_files = self.class_data_dict[random_class_id]
                 result_y[random_class_id] = 1
 

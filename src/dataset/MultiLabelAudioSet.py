@@ -38,7 +38,7 @@ class MultiLabelAudioSet(Dataset):
         self.data = data
         self.is_validation = is_validation
         self.annotation_interval_dict = {}
-        annotation_interval_id = -1
+        annotation_interval_id = 0
         for _, row in data.iterrows():
 
             if row["class_id"] == "annotation_interval":
@@ -54,25 +54,14 @@ class MultiLabelAudioSet(Dataset):
                     "events": [],
                 }
             else:
-                if row["class_id"] in self.class_dict.keys():
-                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
-                        {
-                            "class_tensor": class_dict[row["class_id"]],
-                            "start_time": float(row["start_time"]),
-                            "end_time": float(row["end_time"]),
-                            "type": row["type"],
-                        }
-                    )
-                else:
-                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
-                        {
-                            "class_tensor": torch.zeros(len(self.class_dict)),
-                            "start_time": float(row["start_time"]),
-                            "end_time": float(row["end_time"]),
-                            "type": row["type"],
-                        }
-                    )
-
+                self.annotation_interval_dict[annotation_interval_id]["events"].append(
+                    {
+                        "class_tensor": class_dict[row["class_id"]],
+                        "start_time": float(row["start_time"]),
+                        "end_time": float(row["end_time"]),
+                        "type": row["type"],
+                    }
+                )
 
         # create  segments list of annoations intervals
         self.segments = []
@@ -90,7 +79,6 @@ class MultiLabelAudioSet(Dataset):
             )
             # calculate how many segments can be in the annotation intervall
             # ceil means last one is may be longer then the annotation_intervall
-            #print(annotation_interval)
             segment_count = ceil(
                 (
                     annotation_interval["end_time"]

@@ -8,22 +8,22 @@ data:
   #test_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
   test_list_filepath: "./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-val.csv"
-  data_root_path: "./data/local/ammod2021"
+  data_root_path: "./data/local/ammod2021/"
   batch_size: 120
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "220513_AMMOD_25classes_resnet_logging"
+  experiment_name: "220512_AMMOD_25classes_resnet_logging"
   log_dir: "./logs"
-  log_every_n_steps: 5
+  log_every_n_steps: 1
   gpus: [0]
   #gpus: 0
   num_workers: 20
   random_seed: 236742
   deterministic: True
-  max_epochs: 20
+  max_epochs: 300
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
@@ -80,19 +80,19 @@ time_mask:
   min_band_part: 0.05
   max_band_part: 0.5
   fade: False
-  p: 0.02
+  p: 0.2
 
 frequency_mask:
   min_frequency_band: 0.05
   max_frequency_band: 0.5
-  p: 0.02
+  p: 0.1
 
 add_background_noise_from_csv:
   filepath: "./data/libro_animalis/exported/noise_3000.csv"
   data_path: "./data/libro_animalis/"
   index_filepath: 0
   min_snr_in_db: 4
-  max_snr_in_db: 10
+  max_snr_in_db: 20
   delimiter: ";"
   quotechar: "|"
   p: 0.2
@@ -121,12 +121,12 @@ shift:
 
 add_pink_noise_snr:
   p: 0.2
-  min_snr: 3.0
-  max_snr: 6.0
+  min_snr: 5.0
+  max_snr: 20.0
 
 volume_control:
   p: 0.2
-  db_limit: 6
+  db_limit: 10
   # uniform fade cosine sine random
   mode: "cosine"
 
@@ -152,16 +152,11 @@ add_same_class_signal:
   quotechar: "|"
 
 add_class_signal:
-  # Use uniform distribution for probabilities of species during audio mixing 
-  #call_probs: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-  # Use weighted distribution. Alphabetic order of species. Based on Olaf Training Annotation
-  call_probs: [0.0022,0.0215,0.058,0.0,0.0836,0.0515,0.0777,0.0058,0.227,0.059,0.0103,0.0506,0.0414,
-                  0.105,0.0033,0.0160,0.0159,0.001,0.0,0.0,0.009,0.0024,0.1248,0.0166,0.018]
-  p: 0.3
+  p: 0.2
   restriced_to_same_class: False
-  min_ssr: -3
+  min_ssr: -20
   max_ssr: 3
-  max_n: 4
+  max_n: 5
   padding_strategy: "wrap_around"
   backend: "soundfile" #'librosa' #
   channel_mixing_strategy: "to_mono"
