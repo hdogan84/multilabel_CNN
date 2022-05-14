@@ -54,14 +54,25 @@ class MultiLabelAudioSet(Dataset):
                     "events": [],
                 }
             else:
-                self.annotation_interval_dict[annotation_interval_id]["events"].append(
-                    {
-                        "class_tensor": class_dict[row["class_id"]],
-                        "start_time": float(row["start_time"]),
-                        "end_time": float(row["end_time"]),
-                        "type": row["type"],
-                    }
-                )
+
+                if row["class_id"] in self.class_dict.keys():
+                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
+                        {
+                            "class_tensor": class_dict[row["class_id"]],
+                            "start_time": float(row["start_time"]),
+                            "end_time": float(row["end_time"]),
+                            "type": row["type"],
+                        }
+                    )
+                else:
+                    self.annotation_interval_dict[annotation_interval_id]["events"].append(
+                        {
+                            "class_tensor": torch.zeros(len(self.class_dict)),
+                            "start_time": float(row["start_time"]),
+                            "end_time": float(row["end_time"]),
+                            "type": row["type"],
+                        }
+                    )
 
         # create  segments list of annoations intervals
         self.segments = []
