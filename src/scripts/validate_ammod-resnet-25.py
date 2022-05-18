@@ -9,7 +9,8 @@ from tools.RunBaseTorchScriptModel import RunBaseTorchScriptModel
 from tools.data_logger import ResultLogger
 
 device = "cuda:2"
-model_filepath = "/home/tsa/projects/bewr/ammod-bird-detector/data/torchserve-models/raw/ammod-resnet-25-1/ammod-resnet-25-1.pt"
+#model_filepath = "/home/tsa/projects/bewr/ammod-bird-detector/data/torchserve-models/raw/ammod-resnet-25-1/ammod-resnet-25-1.pt"
+model_filepath = "/home/hakan/ammod_bird_detector/build/model.pt"
 config_path = "./config/resnet_multi_label_validation.yaml"
 # trainer = Trainer(tpu_cores=8)
 
