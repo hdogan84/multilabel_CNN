@@ -24,7 +24,7 @@ system:
   num_workers: 10
   random_seed: 236742
   deterministic: True
-  max_epochs: 380
+  max_epochs: 500
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
@@ -89,14 +89,14 @@ frequency_mask:
   p: 0.02
 
 add_background_noise_from_csv:
-  filepath: "./data/libro_animalis/exported/noise_3000.csv"
+  filepath: "./data/libro_animalis/hakan/ammod-xeno-canto-26-to-60.csv"
   data_path: "./data/libro_animalis/"
-  index_filepath: 0
-  min_snr_in_db: 4
-  max_snr_in_db: 10
+  index_filepath: 1
+  min_snr_in_db: 3
+  max_snr_in_db: 3
   delimiter: ";"
   quotechar: "|"
-  p: 0.2
+  p: 0.3
 
 add_gaussian_noise:
   min_amplitude: 0.001
