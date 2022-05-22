@@ -8,9 +8,9 @@ from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule as DataModul
 from tools.RunBaseTorchScriptModel import RunBaseTorchScriptModel
 from tools.data_logger import ResultLogger
 
-device = "cuda:2"
+device = "cuda:0"
 #model_filepath = "/home/tsa/projects/bewr/ammod-bird-detector/data/torchserve-models/raw/ammod-resnet-25-1/ammod-resnet-25-1.pt"
-model_filepath = "model.pt"
+model_filepath = "./src/scripts/model.pt"
 config_path = "./config/resnet_multi_label_validation.yaml"
 # trainer = Trainer(tpu_cores=8)
 
