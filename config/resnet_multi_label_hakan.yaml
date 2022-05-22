@@ -24,15 +24,15 @@ system:
   num_workers: 10
   random_seed: 236742
   deterministic: True
-  max_epochs: 500
+  max_epochs: 400
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
 optimizer:
   # optimizers Adam SGD
   optimizer_type: "Adam"
-  learning_rate: 0.0002
-  sgd_momentum: 0.9
+  learning_rate: 0.0004
+  sgd_momentum: 0.90
   sgd_weight_decay: 1e-4
   # schedulers None CosineAnnealingLR
   scheduler_type: None #CosineAnnealingLR
