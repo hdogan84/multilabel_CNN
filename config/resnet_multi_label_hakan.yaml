@@ -24,14 +24,14 @@ system:
   num_workers: 10
   random_seed: 236742
   deterministic: True
-  max_epochs: 400
+  max_epochs: 550
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
 optimizer:
   # optimizers Adam SGD
   optimizer_type: "Adam"
-  learning_rate: 0.0004
+  learning_rate: 0.0002
   sgd_momentum: 0.90
   sgd_weight_decay: 1e-4
   # schedulers None CosineAnnealingLR
@@ -163,7 +163,7 @@ add_class_signal:
   max_n: 4
   padding_strategy: "wrap_around"
   channel_mixing_strategy: "take_one"
-  data_path: "./data/libro_animalis/hakan/"
+  data_path: "./data/libro_animalis/"
   data_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
   # set class_list_filepath if you want to transform into class_index values
   class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
