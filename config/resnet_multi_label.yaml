@@ -9,7 +9,8 @@ data:
   class_list_filepath: "./data/libro_animalis/hakan/220326_DEVISE_2Classes/devise-class-list.csv"
   train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
   val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
-  test_list_filepath: "./data/libro_animalis/predictions/xeno-canto-ammod-val/xeno-canto-ammod-val.csv"
+  test_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
+  #test_list_filepath: "./data/libro_animalis/predictions/xeno-canto-ammod-val/xeno-canto-ammod-val.csv"
   batch_size: 202
   segment_duration: 5.0
   min_event_overlap_time: 0.2
