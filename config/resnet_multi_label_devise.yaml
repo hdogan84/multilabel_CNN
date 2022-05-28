@@ -1,10 +1,10 @@
 data:
   class_list_filepath: "./data/libro_animalis/hakan/220326_DEVISE_2Classes/devise-class-list.csv"
-  train_list_filepath: "./data/libro_animalis/hakan/ammod-britz-xc-tsa-shorts-with-negs.csv"
-  #train_list_filepath: "./data/libro_animalis/hakan/ammod-britz-xc-tsa-shorts-train.csv"
+  #train_list_filepath: "./data/libro_animalis/hakan/ammod-britz-xc-tsa-shorts-with-negs.csv"
+  train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
   val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
   test_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
-  data_root_path: "./data/libro_animalis/"
+  data_root_path: "./data/libro_animalis/hakan/"
   batch_size: 202
   segment_duration: 5.0
   min_event_overlap_time: 0.2
@@ -18,7 +18,7 @@ system:
   num_workers: 10
   random_seed: 236742
   deterministic: True
-  max_epochs: 550
+  max_epochs: 750
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
@@ -61,7 +61,7 @@ augmentation:
   signal_pipeline: [
       #"add_same_class_signal",
       #"add_background_noise_from_csv",
-      "add_class_signal",
+      #"add_class_signal",
       #"add_pink_noise_snr",
       #"volume_control",
       "frequency_mask",
