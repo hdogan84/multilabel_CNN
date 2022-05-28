@@ -1,22 +1,22 @@
 data:
-  class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
-  train_list_filepath: "./data/libro_animalis/hakan/ammod-britz-xc-tsa-shorts-with-negs.csv"
+  #class_list_filepath: "./data/libro_animalis/exported/210812_AMMOD_25Classes/ammod-multi-class-list.csv"
+  #train_list_filepath: "./data/libro_animalis/hakan/ammod-britz-xc-tsa-shorts-with-negs.csv"
   #train_list_filepath: "./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-start-end-segment-train.csv"
-  val_list_filepath: "./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-val.csv"
-  test_list_filepath: "./data/libro_animalis/predictions/ammod-val/ammod-val.csv"
+  #val_list_filepath: "./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-val.csv"
+  #test_list_filepath: "./data/libro_animalis/predictions/ammod-val/ammod-val.csv"
   data_root_path: "./data/libro_animalis/"
   #DEVISE
-  #class_list_filepath: "./data/libro_animalis/hakan/220326_DEVISE_2Classes/devise-class-list.csv"
-  #train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
-  #val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
-  #test_list_filepath: "./data/libro_animalis/predictions/xeno-canto-ammod-val/xeno-canto-ammod-val.csv"
+  class_list_filepath: "./data/libro_animalis/hakan/220326_DEVISE_2Classes/devise-class-list.csv"
+  train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
+  val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
+  test_list_filepath: "./data/libro_animalis/predictions/xeno-canto-ammod-val/xeno-canto-ammod-val.csv"
   batch_size: 202
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "220418_AMMOD_25classes_resnet_logging"
+  experiment_name: "220528_DEVISE_2classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 1
   gpus: [2]
@@ -62,7 +62,7 @@ augmentation:
   signal_pipeline: [
       #"add_same_class_signal",
       #"add_background_noise_from_csv",
-      "add_class_signal",
+      #"add_class_signal",
       #"add_pink_noise_snr",
       #"volume_control",
       "frequency_mask",
