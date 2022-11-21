@@ -2,24 +2,24 @@ data:
   data_root_path: "./data/libro_animalis/"
   #DEVISE
   class_list_filepath: "./data/libro_animalis/hakan/220326_DEVISE_2Classes/devise-class-list.csv"
-  train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
-  val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
-  test_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
+  train_list_filepath: "./data/libro_animalis/devise/WS_new/WS-MfN-ARSU2021-FVA-neg.csv"
+  val_list_filepath: "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
+  test_list_filepath: "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
   #test_list_filepath: "./data/libro_animalis/predictions/xeno-canto-ammod-val/xeno-canto-ammod-val.csv"
-  batch_size: 202
+  batch_size: 20
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "220528_DEVISE_2classes_resnet_logging"
+  experiment_name: "221117_DEVISE_2classes_resnet_logging"
   log_dir: "./logs"
-  log_every_n_steps: 1
-  gpus: [2]
+  log_every_n_steps: 3
+  gpus: [1]
   num_workers: 10
   random_seed: 236742
   deterministic: True
-  max_epochs: 80
+  max_epochs: 250
   fast_dev_run: False
   auto_select_gpus: False #True If you want randomly take free gpu set to true und gpus to an int value > 0
 
@@ -35,7 +35,7 @@ optimizer:
 
 validation:
   complete_segment: True
-  segment_step: 1
+  segment_step: 2
   batch_size_mulitplier: 3
   check_val_every_n_epoch: 1
 
