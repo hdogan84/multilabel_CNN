@@ -4,8 +4,8 @@ data:
   train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
   val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
   # test_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
-  test_list_filepath: "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
-  data_root_path: "./data/libro_animalis/hakan/"
+  test_list_filepath: "./data/libro_animalis/devise/WK_test/WK-test-pos-neg-merged.csv"
+  data_root_path: "./data/libro_animalis/"
   batch_size: 60
   segment_duration: 5.0
   min_event_overlap_time: 0.2
@@ -35,7 +35,7 @@ optimizer:
 
 validation:
   complete_segment: True
-  segment_step: 1
+  segment_step: 5
   batch_size_mulitplier: 3
   check_val_every_n_epoch: 1
 
