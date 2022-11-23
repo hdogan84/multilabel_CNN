@@ -14,7 +14,7 @@ system:
   experiment_name: "220526_DEVISE_2classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 1
-  gpus: [0]
+  gpus: [2]
   num_workers: 10
   random_seed: 236742
   deterministic: True

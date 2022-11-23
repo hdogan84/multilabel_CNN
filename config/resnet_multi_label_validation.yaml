@@ -17,7 +17,7 @@ system:
   experiment_name: "210812_AMMOD_25classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 5
-  gpus: []
+  gpus: [2]
   #gpus: 0
   num_workers: 10
   random_seed: 236742
