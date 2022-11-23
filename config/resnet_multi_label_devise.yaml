@@ -11,7 +11,7 @@ data:
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "220526_DEVISE_2classes_resnet_logging"
+  experiment_name: "221123_DEVISE_2classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 1
   gpus: [2]

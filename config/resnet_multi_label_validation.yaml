@@ -6,7 +6,7 @@ data:
   #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/xeno-canto-ammod-val.csv"
   #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val-sample.csv"
   #test_list_filepath: "./data/libro_animalis/exported/211130_AMMOD_25Classes/ammod-val.csv"
-  test_list_filepath: ./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-val.csv
+  test_list_filepath: "./data/libro_animalis/exported/220117_AMMOD_25Classes/ammod-val.csv"
   data_root_path: "./data/libro_animalis"
   batch_size: 120
   segment_duration: 5.0
