@@ -3,9 +3,10 @@ data:
   #train_list_filepath: "./data/libro_animalis/hakan/ammod-britz-xc-tsa-shorts-with-negs.csv"
   train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
   val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
-  test_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
+  # test_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
+  test_list_filepath: "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
   data_root_path: "./data/libro_animalis/hakan/"
-  batch_size: 202
+  batch_size: 60
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
