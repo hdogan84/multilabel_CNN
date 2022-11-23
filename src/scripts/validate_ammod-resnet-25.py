@@ -8,10 +8,10 @@ from data_module.AmmodMultiLabelModule import AmmodMultiLabelModule as DataModul
 from tools.RunBaseTorchScriptModel import RunBaseTorchScriptModel
 from tools.data_logger import ResultLogger
 
-device = "cuda:0"
+device = "cuda:2"
 #model_filepath = "/home/tsa/projects/bewr/ammod-bird-detector/data/torchserve-models/raw/ammod-resnet-25-1/ammod-resnet-25-1.pt"
-model_filepath = "./src/scripts/model.pt"
-config_path = "./config/resnet_multi_label_hakan.yaml"
+model_filepath = "./src/scripts/model-devise.pt"
+config_path = "./config/resnet_multi_label_devise.yaml"
 # trainer = Trainer(tpu_cores=8)
 
 
@@ -37,7 +37,7 @@ def validate(config_filepath, model_filepath):
             class_list = [key for key in data_module.class_dict]
             self.batch_end_logger = ResultLogger(
                 data_list,
-                model_name="ammod-resnet-25",
+                model_name="devise-resnet",
                 version="1",
                 output_path="./{}".format(
                     Path(self.config["data"]["test_list_filepath"]).stem
