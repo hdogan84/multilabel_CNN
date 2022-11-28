@@ -155,4 +155,5 @@ model-store
 torchserve/**
 shared-store
 
+WS-ARSU2022-pos-neg/**
 ammod-val/**
