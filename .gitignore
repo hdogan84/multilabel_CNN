@@ -1,5 +1,6 @@
 #all user files in data and logs
 data/*
+data_hkn/*
 logs/*
 lightning_logs
 out
