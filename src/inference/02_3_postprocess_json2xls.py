@@ -9,25 +9,29 @@ import json
 result_dir = "./WS-ARSU2022-pos-neg/"
 root_dir = "/mnt/z/Projekte/DeViSe/"
 
-def process_json2excel(model_name):
+def process_json2excel(model_name,class_index):
 
-    class_index = 1  #Crex crex=0  & Waldschnepfe=1
+    # class_index: Crex crex=0; Waldschnepfe=1
 
     model_dir = result_dir + model_name + "-1/"
 
     src_dir = "./data_hkn/"
-    input_xls_file = src_dir + "ScolopaxRusticolaAnnotations_v28_5s_Scores.xlsx"
-    output_xls_file = src_dir + "ScolopaxRusticolaAnnotations_v29_5s_Scores.xlsx"
+    input_xls_file = src_dir + "ScolopaxRusticolaAnnotations_v26_5s_Scores.xlsx"
+    output_xls_file = src_dir + "ScolopaxRusticolaAnnotations_v30_5s_Scores.xlsx"
+
+    #input_xls_file = src_dir + "CrexCrexAnnotations_v20_5s_Scores.xlsx"
+    #output_xls_file = src_dir + "CrexCrexAnnotations_v21_5s_Scores.xlsx"
 
     df = pd.read_excel(input_xls_file, engine='openpyxl')
     df_new = df
     df_new[model_name] = None # add new column with the model name
 
-    # !! this part needed when the input is Mario's excel file
-    #for i in range(len(df_new)):
-    #    df_new.at[i,"filename"]=df.at[i,"filename"][:-4]
+    if "file_id" not in df_new.columns: 
+        df_new["file_id"] = None
+        for i in range(len(df_new)):
+            df_new.at[i,"file_id"]=df.at[i,"filename"][:-4]
     
-    print(df_new["filename"])
+    print(df_new["file_id"])
 
     # go through results
     count=0
@@ -40,7 +44,7 @@ def process_json2excel(model_name):
         file_id = result_file["fileId"]
         result_arr = result_file["channels"][0]
         count += len(result_arr)
-        idx=df.index[df['filename']==file_id].tolist()
+        idx=df_new.index[df_new['file_id']==file_id].tolist()
         #print(idx)
         #print(len(result_arr))
         
@@ -56,7 +60,6 @@ def process_json2excel(model_name):
 
     df_new.to_excel(output_xls_file, index = False)
 
-process_json2excel("devise-221117-v1-ep150")
+process_json2excel("ammod-220412-v10-ep91",17)
 
-    
 print("Done.")

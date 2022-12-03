@@ -10,8 +10,9 @@ from tools.data_logger import ResultLogger
 
 device = "cuda:2"
 #model_filepath = "/home/tsa/projects/bewr/ammod-bird-detector/data/torchserve-models/raw/ammod-resnet-25-1/ammod-resnet-25-1.pt"
-model_filepath = "./src/inference/model-devise-221117-v1-ep150.pt"
-config_path = "./config/resnet_multi_label_devise.yaml"
+model_name = "ammod-220412-v10-ep91"
+model_filepath = "./src/inference/model-"+model_name+".pt"
+config_path = "./config/resnet_multi_label_validation.yaml"
 # trainer = Trainer(tpu_cores=8)
 
 
@@ -37,7 +38,7 @@ def validate(config_filepath, model_filepath):
             class_list = [key for key in data_module.class_dict]
             self.batch_end_logger = ResultLogger(
                 data_list,
-                model_name="devise-221117-v1-ep150",
+                model_name=model_name,
                 version="1",
                 output_path="./{}".format(
                     Path(self.config["data"]["test_list_filepath"]).stem
@@ -52,9 +53,9 @@ def validate(config_filepath, model_filepath):
                 prediction, ground_truth, segment_indices, batch_index
             )
 
-        # def validation_end(self, metrics_dict):
-        #     super().validation_end(self, metrics_dict)
-        #     self.logger.validation_end(metrics_dict)
+        #def validation_end(self, metrics_dict):
+        #    super().validation_end(self, metrics_dict)
+        #    self.logger.validation_end(metrics_dict)
 
         def run_end(self):
             self.batch_end_logger.write_to_json()

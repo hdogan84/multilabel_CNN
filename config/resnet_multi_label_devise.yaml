@@ -4,7 +4,7 @@ data:
   train_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-train.csv"
   val_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
   # test_list_filepath: "./data/libro_animalis/hakan/ammod-xc-tsa-shorts-val.csv"
-  test_list_filepath: "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
+  test_list_filepath: "./data/libro_animalis/devise/WK_test/WK-test-pos-neg-merged.csv"
   data_root_path: "./data/libro_animalis/"
   batch_size: 60
   segment_duration: 5.0
