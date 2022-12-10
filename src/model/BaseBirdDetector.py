@@ -29,9 +29,9 @@ class BaseBirdDetector(pl.LightningModule):
         self.num_classes = num_target_classes
         self.isLogitOutput = True
         # init class metrics
-        self.Accuracy = Accuracy(dist_sync_on_step=True, num_classes=self.num_classes)
-        self.F1 = F1(dist_sync_on_step=True, num_classes=self.num_classes)
-        self.AveragePrecision = AveragePrecision(dist_sync_on_step=True)
+        self.Accuracy = Accuracy(dist_sync_on_step=True, num_classes=self.num_classes,average=None)
+        self.F1 = F1(dist_sync_on_step=True, num_classes=self.num_classes, average=None)
+        self.AveragePrecision = AveragePrecision(dist_sync_on_step=True,task='multiclass')
         self.AUC = AUC(compute_on_step=True, dist_sync_on_step=True)
 
         self.define_model()
@@ -43,6 +43,7 @@ class BaseBirdDetector(pl.LightningModule):
 
         x, classes, segment_indices = batch
         target = classes.type(torch.int)
+        #print(target)
 
         preds = self(x)
         preds_prob = 0
@@ -59,7 +60,7 @@ class BaseBirdDetector(pl.LightningModule):
         self.Accuracy(preds_prob, target)
         self.AveragePrecision(preds_prob, target)
         self.F1(preds_prob, target)
-        # self.AUC(preds_prob, target)
+        #self.AUC(preds_prob, target)
         self.log("val_step_loss", loss, prog_bar=True, sync_dist=True)
         batch_dictionary = {
             "loss": loss,
@@ -75,10 +76,10 @@ class BaseBirdDetector(pl.LightningModule):
         preds_all = torch.cat([x["preds"] for x in outputs])
         classes_all = torch.cat([x["classes"] for x in outputs])
         return {
-            "accuracy": self.Accuracy.compute(),
+            "accuracy": self.Accuracy.compute()[0],
             "average_precision": self.AveragePrecision.compute(),
-            "f1": self.F1.compute(),
-            # "auc": self.AUC.compute(),
+            "f1": self.F1.compute()[0],
+            # "AUC": self.AUC.compute(),
             "lrap": label_ranking_average_precision_score(
                 classes_all.cpu().data.numpy(), preds_all.cpu().data.numpy(),
             ),
@@ -90,7 +91,7 @@ class BaseBirdDetector(pl.LightningModule):
         average_precision = metrics["average_precision"]
         f1 = metrics["f1"]
         lrap = metrics["lrap"]
-        # auc = metrics["auc"]
+        #AUC = metrics["AUC"]
 
         # Log metrics to terminal
         self.log("val_accuracy", accuracy, prog_bar=True, sync_dist=True)
@@ -99,7 +100,7 @@ class BaseBirdDetector(pl.LightningModule):
         )
         self.log("val_f1", f1, prog_bar=True, sync_dist=True)
 
-        # self.log("val_auc", auc, prog_bar=True, sync_dist=True)
+        #self.log("val_AUC", AUC, prog_bar=True, sync_dist=True)
 
         # Log metrics against epochs in tensorboard ()
         # self.logger.experiment.add_scalar("epoch_val_loss", avg_loss, self.current_epoch)

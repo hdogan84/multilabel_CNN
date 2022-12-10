@@ -2,20 +2,20 @@ data:
   data_root_path: "./data/libro_animalis/"
   #DEVISE
   class_list_filepath: "./data/libro_animalis/hakan/220326_DEVISE_2Classes/devise-class-list.csv"
-  train_list_filepath: "./data/libro_animalis/devise/WS_new/WS-MfN-ARSU2021-FVA-neg.csv"
+  train_list_filepath: "./data/libro_animalis/devise/WK_WS_new/WK-WS-train-pos-neg.csv"
   val_list_filepath: "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
-  test_list_filepath: "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
-  #test_list_filepath: "./data/libro_animalis/predictions/xeno-canto-ammod-val/xeno-canto-ammod-val.csv"
-  batch_size: 20
+  test_list_filepath: "./data/libro_animalis/devise/WK_WS_new/WK-WS-test-pos-neg.csv"
+  #test_list_filepath:  "./data/libro_animalis/devise/WS_test/WS-ARSU2022-pos-neg.csv"
+  batch_size: 120
   segment_duration: 5.0
   min_event_overlap_time: 0.2
   wrap_around_probability: 0.5
 
 system:
-  experiment_name: "221117_DEVISE_2classes_resnet_logging"
+  experiment_name: "221205_DEVISE_2classes_resnet_logging"
   log_dir: "./logs"
   log_every_n_steps: 3
-  gpus: [1]
+  gpus: [2]
   num_workers: 10
   random_seed: 236742
   deterministic: True
@@ -35,7 +35,7 @@ optimizer:
 
 validation:
   complete_segment: True
-  segment_step: 2
+  segment_step: 3
   batch_size_mulitplier: 3
   check_val_every_n_epoch: 1
 

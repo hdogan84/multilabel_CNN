@@ -1,7 +1,11 @@
 #all user files in data and logs
 data/*
+data_hkn/*
+WK-test-pos-neg-merged/*
+WS-ARSU2022-pos-neg/*
 logs/*
 lightning_logs
+src/inference/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
