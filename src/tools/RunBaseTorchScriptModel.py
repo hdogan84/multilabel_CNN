@@ -67,7 +67,7 @@ class RunBaseTorchScriptModel:
             "accuracy": Accuracy(
                 num_classes=num_classes, threshold=self.binary_threshold
             ).to(self.device),
-            "f1": F1(num_classes=num_classes, threshold=self.binary_threshold).to(
+            "f1": F1(num_classes=num_classes, threshold=self.binary_threshold, average=None).to(
                 self.device
             ),
             "averagePrecision": AveragePrecision(num_classes=num_classes).to(
@@ -92,7 +92,8 @@ class RunBaseTorchScriptModel:
             if isinstance(values, list):
                 values = [x.item() for x in values]
             else:
-                values = values.item()
+                #values = values.item()
+                values = values
             result[key] = values
         print(result)
 
