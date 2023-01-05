@@ -92,8 +92,8 @@ class RunBaseTorchScriptModel:
             if isinstance(values, list):
                 values = [x.item() for x in values]
             else:
-                #values = values.item()
-                values = values
+                values = values.item()
+                #values = values
             result[key] = values
         print(result)
 

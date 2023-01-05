@@ -2,8 +2,8 @@
 data/*
 data_hkn/*
 logs/*
-WK-test-pos-neg-merged/*
-WS-ARSU2022-pos-neg/*
+WK-test-pos-neg-merged(backup)/*
+WS-ARSU2022-pos-neg(backup)/*
 src/inference/*
 lightning_logs
 out
