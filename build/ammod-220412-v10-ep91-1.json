@@ -1,0 +1,1 @@
+{"name": "ammod-220412-v10-ep91", "version": "1", "description": "amod", "torchserve": {"initial_workers": 1, "batch_size": 1}}
