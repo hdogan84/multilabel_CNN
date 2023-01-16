@@ -1,6 +1,10 @@
 #all user files in data and logs
 data/*
+data_hkn/*
 logs/*
+src/inference/*
+WK-test-pos-neg-merged/*
+WS-ARSU2022-pos-neg/*
 lightning_logs
 
 # Byte-compiled / optimized / DLL files
